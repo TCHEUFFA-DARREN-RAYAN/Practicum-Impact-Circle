@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # ImpactCircle
 
 > **Verified Impact. Real Contribution.**
@@ -42,3 +43,4 @@ npm run dev            # dev server → http://localhost:3000
 | `npm start` | Production start |
 | `npm run seed` | Seed database with categories and admin user |
 | `npm test` | Run test suite |
+
