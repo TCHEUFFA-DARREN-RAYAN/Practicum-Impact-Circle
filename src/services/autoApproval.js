@@ -60,8 +60,13 @@ const sendReminders = async () => {
 const start = () => {
   cron.schedule('0 2 * * *', async () => {
     console.log('[CRON] Running auto-approval and reminders...');
-    await sendReminders();
-    await processAutoApprovals();
+    try {
+      await sendReminders();
+      await processAutoApprovals();
+      console.log('[CRON] Auto-approval run complete.');
+    } catch (err) {
+      console.error('[CRON] Auto-approval run failed:', err.message);
+    }
   });
   console.log('⏰  Auto-approval cron scheduled (daily at 02:00)');
 };
