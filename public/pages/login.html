@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    body { background: #0f0f0f; }
+
+    .auth-page {
+      background: #0f0f0f;
+      padding: 1.5rem;
+      align-items: center;
+    }
+
+    /* ── Split container ── */
+    .login-wrap {
+      width: 100%;
+      max-width: 960px;
+      height: 650px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 30px 70px rgba(0,0,0,0.75);
+      border: 1px solid #222;
+    }
+
+    /* ── Image Slider ── */
+    .slider-panel {
+      position: relative;
+      overflow: hidden;
+      background: #000;
+    }
+    .slider-img {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+      will-change: opacity;
+    }
+    .slider-img.active { opacity: 1; }
+    .slider-dots {
+      position: absolute;
+      bottom: 1.25rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 0.5rem;
+      z-index: 10;
+    }
+    .slider-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.35);
+      border: none; cursor: pointer; padding: 0;
+      transition: background 0.3s;
+    }
+    .slider-dot.active { background: #fff; }
+    .slider-dot:hover:not(.active) { background: rgba(255,255,255,0.65); }
+
+    /* ── Form panel ── */
+    .form-panel {
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2.75rem;
+      overflow-y: auto;
+    }
+    .form-inner { width: 100%; max-width: 320px; }
+
+    /* Typography */
+    .form-panel h1 {
+      color: #fff;
+      font-size: 1.875rem;
+      font-weight: 700;
+      margin-bottom: 0.375rem;
+      line-height: 1.2;
+    }
+    .form-panel .subtitle {
+      color: #888;
+      font-size: 0.875rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Social buttons */
+    .social-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .btn-social {
+      height: 40px;
+      background: #1a1a1a;
+      border: 1px solid #2e2e2e;
+      color: #d0d0d0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      text-decoration: none;
+    }
+    .btn-social:hover {
+      background: #252525;
+      border-color: #3a3a3a;
+      color: #fff;
+      text-decoration: none;
+    }
+    .btn-social svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+    /* OR divider — dark */
+    .or-divider {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .or-divider::before, .or-divider::after {
+      content: ''; flex: 1; height: 1px; background: #2a2a2a;
+    }
+
+    /* Labels */
+    .form-panel label {
+      color: #ccc;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 0.375rem;
+    }
+    .label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.375rem;
+    }
+    .label-row label { margin-bottom: 0; }
+    .forgot-link {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: #777;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .forgot-link:hover { color: #bbb; text-decoration: none; }
+
+    /* Inputs — dark */
+    .form-panel input[type="email"],
+    .form-panel input[type="password"] {
+      background: #0c0c0c;
+      border-color: #2e2e2e;
+      color: #fff;
+      border-radius: 8px;
+    }
+    .form-panel input::placeholder { color: #444; }
+    .form-panel input:focus {
+      border-color: #555;
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.05);
+    }
+    .form-panel input.error { border-color: #ef4444; }
+
+    /* Field error */
+    .form-panel .field-error { color: #f87171; font-size: 0.775rem; }
+
+    /* Submit — light on dark */
+    .btn-login {
+      width: 100%;
+      height: 44px;
+      background: #f0f0f0;
+      color: #0f0f0f;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.25rem;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .btn-login:hover:not(:disabled) { background: #fff; }
+    .btn-login:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    /* Spinner inside light button */
+    .btn-login .spinner {
+      width: 17px; height: 17px;
+      border: 2px solid rgba(0,0,0,0.18);
+      border-top-color: #333;
+    }
+
+    /* Sign-up footer text */
+    .signup-text {
+      text-align: center;
+      margin-top: 1.75rem;
+      font-size: 0.85rem;
+      color: #666;
+    }
+    .signup-text a { color: #c9a87c; font-weight: 600; text-decoration: none; }
+    .signup-text a:hover { color: #e0c09a; text-decoration: none; }
+
+    /* Alert — dark tint */
+    .form-panel .alert-danger {
+      background: rgba(220,38,38,0.12);
+      color: #fca5a5;
+      border-color: rgba(220,38,38,0.25);
+      margin-bottom: 1rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 767px) {
+      .login-wrap { grid-template-columns: 1fr; height: auto; max-width: 440px; }
+      .slider-panel { display: none; }
+      .form-panel { padding: 2.5rem 2rem; }
+    }
+    @media (max-width: 480px) {
+      .auth-page { padding: 0; }
+      .login-wrap { border-radius: 0; }
+      .form-panel { min-height: 100vh; padding: 2rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="auth-page">
+  <div class="login-wrap">
+
+    <!-- Left: Image Slider -->
+    <div class="slider-panel" id="sliderPanel">
+      <div class="slider-dots" id="sliderDots"></div>
+    </div>
+
+    <!-- Right: Login Form -->
+    <div class="form-panel">
+      <div class="form-inner">
+
+        <h1>Welcome Back</h1>
+        <p class="subtitle">Enter your credentials to access your account.</p>
+
+        <!-- Social buttons (UI placeholder — OAuth not yet wired) -->
+        <div class="social-btns">
+          <button type="button" class="btn-social" id="btnGoogle">
+            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12.479 14.265v-3.279h11.049c.108.571.164 1.247.164 1.979 0 2.46-.672 5.502-2.84 7.669C18.744 22.829 16.051 24 12.483 24 5.869 24 .308 18.613.308 12S5.869 0 12.483 0c3.659 0 6.265 1.436 8.223 3.307L18.392 5.62c-1.404-1.317-3.307-2.341-5.913-2.341C7.65 3.279 3.873 7.171 3.873 12s3.777 8.721 8.606 8.721c3.132 0 4.916-1.258 6.059-2.401.927-.927 1.537-2.251 1.777-4.059l-7.836.004z"/>
+            </svg>
+            Google
+          </button>
+          <button type="button" class="btn-social" id="btnApple">
+            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.54 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/>
+            </svg>
+            Apple
+          </button>
+        </div>
+
+        <!-- OR divider -->
+        <div class="or-divider">Or continue with</div>
+
+        <!-- Alert area -->
+        <div id="alertArea"></div>
+
+        <form id="loginForm" novalidate>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="m@example.com" autocomplete="email" required>
+            <span class="field-error"></span>
+          </div>
+
+          <!-- Password -->
+          <div class="form-group">
+            <div class="label-row">
+              <label for="password">Password</label>
+              <a href="#" class="forgot-link">Forgot password?</a>
+            </div>
+            <input type="password" id="password" autocomplete="current-password" required>
+            <span class="field-error"></span>
+          </div>
+
+          <button type="submit" class="btn-login" id="submitBtn">Log In</button>
+        </form>
+
+        <p class="signup-text">
+          Don't have an account? <a href="/register-volunteer">Sign up</a>
+        </p>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+  // Already logged in → redirect immediately
+  if (API.isLoggedIn()) API.redirectByRole(API.getUser());
+
+  // ─── Image Slider ───────────────────────────────────────────
+  const SLIDES = [
+    'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=800&auto=format&fit=crop&q=80',
+  ];
+
+  let current = 0;
+  const panel  = document.getElementById('sliderPanel');
+  const dotsEl = document.getElementById('sliderDots');
+
+  const imgs = SLIDES.map((src, i) => {
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = `Volunteer photo ${i + 1}`;
+    img.className = 'slider-img' + (i === 0 ? ' active' : '');
+    img.loading = i === 0 ? 'eager' : 'lazy';
+    panel.insertBefore(img, dotsEl);
+    return img;
+  });
+
+  const dots = SLIDES.map((_, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'slider-dot' + (i === 0 ? ' active' : '');
+    btn.setAttribute('aria-label', `Go to slide ${i + 1}`);
+    btn.addEventListener('click', () => goTo(i));
+    dotsEl.appendChild(btn);
+    return btn;
+  });
+
+  function goTo(index) {
+    imgs[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    current = index;
+    imgs[current].classList.add('active');
+    dots[current].classList.add('active');
+  }
+
+  setInterval(() => goTo((current + 1) % SLIDES.length), 4000);
+
+  // ─── Social button placeholders ─────────────────────────────
+  document.getElementById('btnGoogle').addEventListener('click', () =>
+    Toast.info('Google sign-in coming soon.')
+  );
+  document.getElementById('btnApple').addEventListener('click', () =>
+    Toast.info('Apple sign-in coming soon.')
+  );
+
+  // ─── Form ───────────────────────────────────────────────────
+  ['email', 'password'].forEach(id => {
+    document.getElementById(id).addEventListener('input', function () {
+      Validator.clearError(this);
+    });
+  });
+
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    document.getElementById('alertArea').innerHTML = '';
+
+    const emailEl = document.getElementById('email');
+    const pwdEl   = document.getElementById('password');
+    const email   = emailEl.value.trim();
+    const password = pwdEl.value;
+
+    let valid = true;
+    if (!Validator.email(email)) {
+      Validator.showError(emailEl, 'Please enter a valid email address.');
+      valid = false;
+    }
+    if (!password) {
+      Validator.showError(pwdEl, 'Password is required.');
+      valid = false;
+    }
+    if (!valid) return;
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Signing in...';
+
+    try {
+      const { data } = await API.post('/auth/login', { email, password });
+      API.setSession(data.token, data.user);
+      Toast.success('Welcome back!');
+      setTimeout(() => API.redirectByRole(data.user), 800);
+    } catch (err) {
+      document.getElementById('alertArea').innerHTML =
+        `<div class="alert alert-danger">${err.message || 'Login failed. Please try again.'}</div>`;
+      btn.disabled = false;
+      btn.textContent = 'Log In';
+    }
+  });
+</script>
+</body>
+</html>
