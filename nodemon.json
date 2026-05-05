@@ -1,6 +1,9 @@
 {
   "watch": ["server.js", "src/"],
   "ext": "js,json",
-  "ignore": ["src/uploads/", "tests/", "public/"],
-  "delay": 500
+  "ignore": ["src/uploads/", "tests/", "public/", "node_modules/", "*.log"],
+  "delay": 300,
+  "env": {
+    "NODE_ENV": "development"
+  }
 }
