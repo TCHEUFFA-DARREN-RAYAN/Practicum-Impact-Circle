@@ -156,6 +156,15 @@
     .reg-footer a { color: #888; text-decoration: underline; text-underline-offset: 3px; }
     .reg-footer a:hover { color: #bbb; }
 
+    .back-link {
+      position: fixed; top: 1.25rem; left: 1.5rem;
+      display: inline-flex; align-items: center; gap: 0.375rem;
+      color: #555; font-size: 0.8125rem; font-weight: 500;
+      text-decoration: none; transition: color 0.15s;
+    }
+    .back-link:hover { color: #bbb; }
+    .back-link svg { width: 14px; height: 14px; }
+
     /* Responsive */
     @media (max-width: 820px) {
       .role-cards { grid-template-columns: 1fr; max-width: 440px; }
@@ -163,6 +172,11 @@
   </style>
 </head>
 <body>
+
+<a href="/" class="back-link">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+  Back to Home
+</a>
 
 <div class="register-page">
 
