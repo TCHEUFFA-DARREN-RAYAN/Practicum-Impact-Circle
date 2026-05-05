@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ImpactCircle — Verified Impact. Real Contribution.</title>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+<nav id="navbar"></nav>
+
+<div class="hero" style="padding-top: calc(var(--nav-height) + 4rem)">
+  <div class="container">
+    <div class="badge badge-primary" style="margin: 0 auto 1rem; width: fit-content"> Greater Moncton's Volunteer Platform</div>
+    <h1>Verified Impact.<br>Real Contribution.</h1>
+    <p>ImpactCircle connects volunteers, non-profits, and CSR partners through a transparent, accountability-first volunteer ecosystem.</p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+      <a href="/register-volunteer" class="btn btn-lg" style="background:white;color:var(--primary)">Join as Volunteer</a>
+      <a href="/gigs" class="btn btn-lg" style="background:rgba(255,255,255,0.15);color:white;border-color:rgba(255,255,255,0.4)">Browse Gigs</a>
+    </div>
+    <div class="hero-stats" id="heroStats">
+      <div class="hero-stat"><div class="hero-stat-value" id="statHours">—</div><div class="hero-stat-label">Verified Hours</div></div>
+      <div class="hero-stat"><div class="hero-stat-value" id="statVolunteers">—</div><div class="hero-stat-label">Volunteers</div></div>
+      <div class="hero-stat"><div class="hero-stat-value" id="statOrgs">—</div><div class="hero-stat-label">Organizations</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="background:var(--surface)">
+  <div class="container">
+    <div class="text-center mb-4">
+      <h2 class="section-title">Impact by Category</h2>
+      <p class="section-subtitle">Every verified hour is tagged to a community impact area</p>
+    </div>
+    <div class="grid grid-4" id="categoryGrid">
+      <div class="loading-overlay"><div class="spinner spinner-lg"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="container">
+    <div class="grid grid-2 leaderboard-grid" style="gap:3rem">
+      <div class="leaderboard-column">
+        <h2 class="section-title"> Volunteer Leaderboard</h2>
+        <p class="section-subtitle">Top contributors all time</p>
+        <div class="card" id="leaderboardCard"><div class="loading-overlay"><div class="spinner"></div></div></div>
+      </div>
+      <div class="leaderboard-column">
+        <h2 class="section-title">Leading Organizations</h2>
+        <p class="section-subtitle">Most facilitated volunteer hours</p>
+        <div class="card" id="orgsCard"><div class="loading-overlay"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="background:var(--primary-dark);color:white;text-align:center">
+  <div class="container">
+    <h2 style="color:white;margin-bottom:0.5rem">Platform Differentiators</h2>
+    <p style="color:#93c5fd;margin-bottom:2.5rem">What makes ImpactCircle different</p>
+    <div class="grid grid-3">
+      <div style="padding:1.5rem">
+        <div style="font-size:2.5rem;margin-bottom:0.75rem"></div>
+        <h3 style="color:white;margin-bottom:0.5rem">Verified Hours Only</h3>
+        <p style="color:#cbd5e1;font-size:0.875rem">Zero tolerance for self-reported hours. Every hour requires organizational sign-off.</p>
+      </div>
+      <div style="padding:1.5rem">
+        <div style="font-size:2.5rem;margin-bottom:0.75rem"></div>
+        <h3 style="color:white;margin-bottom:0.5rem">Category-Based Impact</h3>
+        <p style="color:#cbd5e1;font-size:0.875rem">Track volunteering across 8 priority community sectors with sector-specific rewards.</p>
+      </div>
+      <div style="padding:1.5rem">
+        <div style="font-size:2.5rem;margin-bottom:0.75rem"></div>
+        <h3 style="color:white;margin-bottom:0.5rem">Real Rewards</h3>
+        <p style="color:#cbd5e1;font-size:0.875rem">Earn points for verified contributions and redeem CSR-sponsored perks, discounts, and certificates.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer style="background:var(--text);color:#94a3b8;padding:2rem 0;text-align:center;font-size:0.85rem">
+  <div class="container">
+    <p style="color:white;font-weight:700;font-size:1rem;margin-bottom:0.25rem">ImpactCircle</p>
+    <p>Verified Impact. Real Contribution. | Greater Moncton, NB, Canada</p>
+  </div>
+</footer>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script>
+if (API.isLoggedIn()) API.redirectByRole(API.getUser());
+(async () => {
+  try {
+    const { data } = await API.get('/public/impact');
+    document.getElementById('statHours').textContent = data.summary.totalVerifiedHours.toLocaleString();
+    document.getElementById('statVolunteers').textContent = data.summary.totalVolunteers.toLocaleString();
+    document.getElementById('statOrgs').textContent = data.summary.totalOrgs.toLocaleString();
+
+    document.getElementById('categoryGrid').innerHTML = data.categoryTotals.map(ct => `
+      <div class="card card-hover" style="text-align:center;padding:1.5rem">
+        <div style="font-size:2.5rem;margin-bottom:0.5rem">${ct.category.icon}</div>
+        <div style="font-weight:700;margin-bottom:0.25rem">${ct.category.name}</div>
+        <div style="font-size:1.5rem;font-weight:800;color:${ct.category.colorHex}">${ct.totalHours.toFixed(1)}</div>
+        <div class="text-muted" style="font-size:0.75rem">hours · ${ct.volunteerCount} volunteers</div>
+      </div>
+    `).join('') || '<p class="text-center text-muted">No data yet</p>';
+
+    document.getElementById('leaderboardCard').innerHTML = data.leaderboard.allTime.length ? `
+      ${data.leaderboard.allTime.map((v, i) => `
+        <div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid var(--border)">
+          <div style="font-weight:800;color:${i<3?'var(--warning)':'var(--text-muted)'};width:24px;text-align:center">${i+1}</div>
+          <div class="nav-avatar">${(v.userId?.email?.[0] || '?').toUpperCase()}</div>
+          <div style="flex:1"><div style="font-weight:600;font-size:0.875rem">${v.userId?.email?.split('@')[0] || 'Anonymous'}</div></div>
+          <div style="font-weight:700;color:var(--primary)">${v.totalVerifiedHours}h</div>
+        </div>
+      `).join('')}
+    ` : '<div class="empty-state"><div class="empty-icon"></div><p>No data yet</p></div>';
+
+    document.getElementById('orgsCard').innerHTML = data.topOrgs.length ? `
+      ${data.topOrgs.map((o, i) => `
+        <div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid var(--border)">
+          <div style="font-weight:800;color:${i<3?'var(--warning)':'var(--text-muted)'};width:24px;text-align:center">${i+1}</div>
+          <div style="flex:1;font-weight:600;font-size:0.875rem">${o.orgName}</div>
+          <div style="font-weight:700;color:var(--success)">${o.totalFacilitatedHours}h</div>
+        </div>
+      `).join('')}
+    ` : '<div class="empty-state"><div class="empty-icon">️</div><p>No data yet</p></div>';
+
+  } catch (err) {
+    console.error(err);
+  }
+})();
+</script>
+<style>
+.leaderboard-grid .leaderboard-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.leaderboard-grid #leaderboardCard,
+.leaderboard-grid #orgsCard {
+  flex: 1;
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+}
+</style>
+</body>
+</html>
