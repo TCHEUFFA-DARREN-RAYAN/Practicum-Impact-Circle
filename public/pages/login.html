@@ -166,6 +166,14 @@
       border-radius: 8px;
     }
     .form-panel input::placeholder { color: #444; }
+    /* Fix browser autofill blue/yellow highlight on dark inputs */
+    .form-panel input:-webkit-autofill,
+    .form-panel input:-webkit-autofill:hover,
+    .form-panel input:-webkit-autofill:focus {
+      -webkit-box-shadow: 0 0 0 1000px #0c0c0c inset;
+      -webkit-text-fill-color: #fff;
+      caret-color: #fff;
+    }
     .form-panel input:focus {
       border-color: #555;
       box-shadow: 0 0 0 3px rgba(255,255,255,0.05);
