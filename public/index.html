@@ -763,15 +763,28 @@
     }
   })();
 
-  // ── FAQ accordion ───────────────────────────────────────────
+  // ── FAQ accordion (click + keyboard) ───────────────────────
   document.querySelectorAll('.faq-q').forEach(q => {
-    q.addEventListener('click', () => {
+    q.setAttribute('tabindex', '0');
+    q.setAttribute('role', 'button');
+    const toggle = () => {
       const item = q.parentElement;
       const isOpen = item.classList.contains('open');
       document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
       if (!isOpen) item.classList.add('open');
-    });
+    };
+    q.addEventListener('click', toggle);
+    q.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
   });
+
+  // ── Scroll-to-top button ─────────────────────────────────────
+  const scrollBtn = document.createElement('button');
+  scrollBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>';
+  scrollBtn.setAttribute('aria-label', 'Scroll to top');
+  scrollBtn.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;width:40px;height:40px;border-radius:50%;background:#5b5ef4;color:white;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(91,94,244,0.4);opacity:0;transition:opacity 0.3s;z-index:999';
+  document.body.appendChild(scrollBtn);
+  window.addEventListener('scroll', () => { scrollBtn.style.opacity = window.scrollY > 400 ? '1' : '0'; });
+  scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 </script>
 </body>
 </html>
