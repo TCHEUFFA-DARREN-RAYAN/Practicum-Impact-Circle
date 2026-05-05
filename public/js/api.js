@@ -17,6 +17,11 @@ const API = (() => {
 
     const res = await fetch(`${BASE}${path}`, opts);
     const data = await res.json().catch(() => ({ success: false, message: 'Server error' }));
+    if (res.status === 401 && window.location.pathname !== '/login') {
+      clearSession();
+      window.location.replace('/login');
+      return;
+    }
     if (!res.ok) throw { status: res.status, message: data.message || 'Request failed', errors: data.errors || [] };
     return data;
   };
