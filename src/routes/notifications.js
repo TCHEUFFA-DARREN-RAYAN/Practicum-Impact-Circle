@@ -4,9 +4,19 @@ const { Notification } = require('../models/index');
 
 router.get('/', requireAuth, async (req, res, next) => {
   try {
-    const notifications = await Notification.findAll({ where: { userId: req.user.id }, order: [['createdAt', 'DESC']], limit: 50 });
+    const limit = Math.min(parseInt(req.query.limit) || 50, 100);
+    const notifications = await Notification.findAll({ where: { userId: req.user.id }, order: [['createdAt', 'DESC']], limit });
     const unreadCount = await Notification.count({ where: { userId: req.user.id, isRead: false } });
     res.json({ success: true, data: { notifications, unreadCount } });
+  } catch (err) { next(err); }
+});
+
+router.delete('/:id', requireAuth, async (req, res, next) => {
+  try {
+    const n = await Notification.findOne({ where: { id: req.params.id, userId: req.user.id } });
+    if (!n) return res.status(404).json({ success: false, message: 'Notification not found.' });
+    await n.destroy();
+    res.json({ success: true, message: 'Notification deleted.' });
   } catch (err) { next(err); }
 });
 
