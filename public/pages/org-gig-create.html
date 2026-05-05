@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Post a Gig | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="page-content">
+  <div class="container-sm">
+    <div class="page-header">
+      <a href="/org-dashboard" class="btn btn-ghost btn-sm" style="padding-left:0;margin-bottom:0.75rem">← Back to Dashboard</a>
+      <h1>Post a Volunteer Gig</h1>
+      <p class="text-muted">Fill in all details so volunteers can find and apply to your opportunity.</p>
+    </div>
+
+    <div class="card">
+      <div id="alertArea"></div>
+      <form id="gigForm" novalidate>
+        <h3 style="margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:1px solid var(--border)">Basic Information</h3>
+
+        <div class="form-group">
+          <label for="title">Gig Title <span class="required">*</span></label>
+          <input type="text" id="title" placeholder="e.g. Food Bank Sorting Volunteers">
+          <span class="field-error"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description <span class="required">*</span></label>
+          <textarea id="description" rows="5" placeholder="Describe the opportunity, what volunteers will do, and what impact they'll have. (Min 20 characters)"></textarea>
+          <div class="form-hint">Be specific — volunteers use this to decide whether to apply.</div>
+          <span class="field-error"></span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="categoryId">Impact Category <span class="required">*</span></label>
+            <select id="categoryId"><option value="">Loading categories...</option></select>
+            <span class="field-error"></span>
+          </div>
+          <div class="form-group">
+            <label for="estimatedHours">Time Commitment (hours) <span class="required">*</span></label>
+            <input type="number" id="estimatedHours" min="0.5" step="0.5" placeholder="e.g. 4">
+            <div class="form-hint">Estimated hours per session</div>
+            <span class="field-error"></span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="startDate">Start Date <span class="required">*</span></label>
+            <input type="date" id="startDate">
+            <span class="field-error"></span>
+          </div>
+          <div class="form-group">
+            <label for="endDate">End Date <span class="required">*</span></label>
+            <input type="date" id="endDate">
+            <span class="field-error"></span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <h3 style="margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:1px solid var(--border)">Location & Requirements</h3>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="locationType">Location Type <span class="required">*</span></label>
+            <select id="locationType">
+              <option value="in-person">In-Person</option>
+              <option value="remote">Remote</option>
+            </select>
+          </div>
+          <div class="form-group" id="addressGroup">
+            <label for="address">Address</label>
+            <input type="text" id="address" placeholder="123 Main St, Moncton, NB">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Required Skills / Certifications <span style="font-weight:400;color:var(--text-muted)">(Optional)</span></label>
+          <div class="tags-input" id="skillsInput"><input type="text" placeholder="Press Enter to add a skill..." id="skillTag"></div>
+        </div>
+
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;margin:0">
+            <input type="checkbox" id="verifiedOnly" style="width:auto;accent-color:var(--primary)">
+            <div>
+              <span style="font-weight:600">Verified volunteers only</span>
+              <div class="form-hint" style="margin:0">Only volunteers with the Verified badge can apply</div>
+            </div>
+          </label>
+        </div>
+
+        <div class="divider"></div>
+        <div style="display:flex;gap:1rem;justify-content:flex-end">
+          <a href="/org-dashboard" class="btn btn-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">Post Gig </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script>
+API.requireAuth('org');
+
+const skillsList = [];
+
+async function loadCategories() {
+  try {
+    const { data } = await API.get('/public/impact');
+    document.getElementById('categoryId').innerHTML = '<option value="">Select a category</option>' +
+      data.categoryTotals.map(ct => `<option value="${ct.category._id}">${ct.category.icon} ${ct.category.name}</option>`).join('');
+  } catch {}
+}
+
+function setupTagInput() {
+  const input = document.getElementById('skillTag');
+  const wrapper = document.getElementById('skillsInput');
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const val = input.value.trim().replace(/,$/, '');
+      if (val && !skillsList.includes(val)) {
+        skillsList.push(val);
+        const tag = document.createElement('div');
+        tag.className = 'tag';
+        tag.dataset.val = val;
+        tag.innerHTML = `${val}<button type="button" onclick="this.parentElement.remove();skillsList.splice(skillsList.indexOf('${val}'),1)">×</button>`;
+        wrapper.insertBefore(tag, input);
+      }
+      input.value = '';
+    }
+  });
+}
+
+document.getElementById('locationType').addEventListener('change', function() {
+  document.getElementById('addressGroup').style.display = this.value === 'remote' ? 'none' : 'block';
+  document.getElementById('address').disabled = this.value === 'remote';
+});
+
+document.getElementById('startDate').min = new Date().toISOString().split('T')[0];
+document.getElementById('gigForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  Validator.clearAll(e.target);
+  const alertArea = document.getElementById('alertArea');
+  alertArea.innerHTML = '';
+
+  const title = document.getElementById('title').value.trim();
+  const description = document.getElementById('description').value.trim();
+  const categoryId = document.getElementById('categoryId').value;
+  const estimatedHours = parseFloat(document.getElementById('estimatedHours').value);
+  const startDate = document.getElementById('startDate').value;
+  const endDate = document.getElementById('endDate').value;
+
+  let valid = true;
+  if (!title) { Validator.showError(document.getElementById('title'), 'Title is required.'); valid = false; }
+  if (description.length < 20) { Validator.showError(document.getElementById('description'), 'Min 20 characters.'); valid = false; }
+  if (!categoryId) { Validator.showError(document.getElementById('categoryId'), 'Select a category.'); valid = false; }
+  if (!estimatedHours || estimatedHours < 0.5) { Validator.showError(document.getElementById('estimatedHours'), 'At least 0.5 hours required.'); valid = false; }
+  if (!startDate) { Validator.showError(document.getElementById('startDate'), 'Start date required.'); valid = false; }
+  if (!endDate) { Validator.showError(document.getElementById('endDate'), 'End date required.'); valid = false; }
+  if (startDate && endDate && endDate < startDate) { Validator.showError(document.getElementById('endDate'), 'End date must be after start date.'); valid = false; }
+  if (!valid) return;
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.innerHTML = '<div class="spinner"></div> Posting...';
+
+  try {
+    const locType = document.getElementById('locationType').value;
+    const payload = {
+      title, description, categoryId, estimatedHours, startDate, endDate,
+      location: { type: locType, address: locType === 'remote' ? '' : document.getElementById('address').value.trim() },
+      requiredSkills: skillsList,
+      verifiedOnly: document.getElementById('verifiedOnly').checked,
+    };
+    const { data } = await API.post('/gigs', payload);
+    Toast.success('Gig posted successfully!');
+    setTimeout(() => window.location.href = '/org-dashboard', 800);
+  } catch (err) {
+    alertArea.innerHTML = `<div class="alert alert-danger"> ${err.message}${err.errors?.map(e=>` — ${e.field}: ${e.message}`).join('') || ''}</div>`;
+    btn.disabled = false; btn.textContent = 'Post Gig ';
+  }
+});
+
+loadCategories();
+setupTagInput();
+</script>
+</body>
+</html>

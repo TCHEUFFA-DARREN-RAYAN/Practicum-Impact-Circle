@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register Organization | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+<div style="min-height:100vh;background:linear-gradient(135deg,var(--primary-dark) 0%,var(--primary) 55%,var(--accent) 100%);padding:2.5rem 1rem">
+  <div style="max-width:680px;margin:0 auto">
+
+    <!-- Logo -->
+    <div style="text-align:center;margin-bottom:2rem">
+      <a href="/" style="font-size:1.75rem;font-weight:800;color:white;text-decoration:none;letter-spacing:-0.5px">
+        Impact<span style="color:#93c5fd">Circle</span>
+      </a>
+      <p style="color:rgba(255,255,255,0.75);margin-top:0.375rem;font-size:0.9rem">Register your organization and start connecting with volunteers</p>
+    </div>
+
+    <div id="alertArea"></div>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.75rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border)">
+        <div style="width:40px;height:40px;background:var(--primary-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0">&#x1F3DB;</div>
+        <div>
+          <h2 style="font-size:1.25rem;margin:0">Organization Registration</h2>
+          <p style="color:var(--text-muted);font-size:0.825rem;margin:0">Create your account and organization profile in one step.</p>
+        </div>
+      </div>
+
+      <form id="registerForm" novalidate>
+
+        <!-- ── Account Credentials ── -->
+        <h3 style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-bottom:1rem">Account Credentials</h3>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="email">Email Address <span class="required">*</span></label>
+            <input type="email" id="email" placeholder="admin@yourorg.org" autocomplete="email">
+            <span class="field-error"></span>
+          </div>
+          <div class="form-group">
+            <label for="phone">Contact Phone <span class="required">*</span></label>
+            <input type="tel" id="phone" placeholder="506-555-0100">
+            <span class="field-error"></span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="password">Password <span class="required">*</span></label>
+            <div class="input-group">
+              <input type="password" id="password" placeholder="Min 8 chars, 1 uppercase, 1 number" autocomplete="new-password">
+              <button type="button" class="btn btn-secondary" id="togglePwd" title="Show/hide password" tabindex="-1">&#x1F441;</button>
+            </div>
+            <span class="field-error"></span>
+          </div>
+          <div class="form-group">
+            <label for="confirmPwd">Confirm Password <span class="required">*</span></label>
+            <input type="password" id="confirmPwd" placeholder="Repeat your password" autocomplete="new-password">
+            <span class="field-error"></span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ── Organization Details ── -->
+        <h3 style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-bottom:1rem">Organization Details</h3>
+
+        <div class="form-group">
+          <label for="orgName">Organization Name <span class="required">*</span></label>
+          <input type="text" id="orgName" placeholder="e.g. Greater Moncton Food Bank">
+          <span class="field-error"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="missionStatement">Mission Statement <span class="required">*</span></label>
+          <textarea id="missionStatement" placeholder="Describe your organization's purpose and the impact you create in the community..." style="min-height:110px"></textarea>
+          <span class="field-error"></span>
+          <div class="form-hint">Keep it concise — this appears on your public profile.</div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="contactName">Primary Contact Name <span class="required">*</span></label>
+            <input type="text" id="contactName" placeholder="Jane Smith">
+            <span class="field-error"></span>
+          </div>
+          <div class="form-group">
+            <label for="website">Website</label>
+            <input type="url" id="website" placeholder="https://yourorg.org">
+            <span class="field-error"></span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="address">Organization Address <span class="required">*</span></label>
+          <input type="text" id="address" placeholder="123 Main St, Moncton, NB E1C 1A1">
+          <span class="field-error"></span>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ── Terms ── -->
+        <div class="form-check" style="margin-bottom:0.5rem">
+          <input type="checkbox" id="termsConsent" required>
+          <label for="termsConsent">I agree to the <a href="/terms" target="_blank">Terms &amp; Conditions</a> and <a href="/privacy" target="_blank">Privacy Policy</a> <span class="required">*</span></label>
+        </div>
+        <div class="form-check" style="margin-bottom:1.5rem">
+          <input type="checkbox" id="dataConsent">
+          <label for="dataConsent">I consent to ImpactCircle contacting my organization regarding volunteer opportunities and platform updates</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitBtn">
+          Register Organization
+        </button>
+
+      </form>
+    </div>
+
+    <div style="text-align:center;margin-top:1.25rem;font-size:0.85rem;color:rgba(255,255,255,0.7)">
+      Already have an account? <a href="/login" style="color:white;font-weight:600">Log in</a>
+      &nbsp;&middot;&nbsp;
+      Volunteering? <a href="/register-volunteer" style="color:white;font-weight:600">Register as volunteer</a>
+    </div>
+
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+  // Redirect if already logged in
+  if (API.isLoggedIn()) {
+    const user = API.getUser();
+    if (user) API.redirectByRole(user);
+  }
+
+  // Password visibility toggle
+  document.getElementById('togglePwd').addEventListener('click', () => {
+    const pwd = document.getElementById('password');
+    pwd.type = pwd.type === 'password' ? 'text' : 'password';
+  });
+
+  // Clear errors on input
+  document.querySelectorAll('input, textarea').forEach(el => {
+    el.addEventListener('input', () => Validator.clearError(el));
+  });
+
+  // Validation
+  function validate() {
+    let ok = true;
+    const alertArea = document.getElementById('alertArea');
+    alertArea.innerHTML = '';
+
+    const email    = document.getElementById('email');
+    const phone    = document.getElementById('phone');
+    const password = document.getElementById('password');
+    const confirm  = document.getElementById('confirmPwd');
+    const orgName  = document.getElementById('orgName');
+    const mission  = document.getElementById('missionStatement');
+    const contact  = document.getElementById('contactName');
+    const address  = document.getElementById('address');
+    const website  = document.getElementById('website');
+    const terms    = document.getElementById('termsConsent');
+
+    if (!Validator.email(email.value.trim())) {
+      Validator.showError(email, 'A valid email address is required.');
+      ok = false;
+    }
+    if (!Validator.required(phone.value)) {
+      Validator.showError(phone, 'Contact phone is required.');
+      ok = false;
+    }
+    if (!Validator.password(password.value)) {
+      Validator.showError(password, 'Min 8 characters, 1 uppercase letter, 1 number.');
+      ok = false;
+    }
+    if (password.value !== confirm.value) {
+      Validator.showError(confirm, 'Passwords do not match.');
+      ok = false;
+    }
+    if (!Validator.required(orgName.value)) {
+      Validator.showError(orgName, 'Organization name is required.');
+      ok = false;
+    }
+    if (!Validator.minLen(mission.value, 20)) {
+      Validator.showError(mission, 'Please provide a mission statement (at least 20 characters).');
+      ok = false;
+    }
+    if (!Validator.required(contact.value)) {
+      Validator.showError(contact, 'Primary contact name is required.');
+      ok = false;
+    }
+    if (!Validator.required(address.value)) {
+      Validator.showError(address, 'Organization address is required.');
+      ok = false;
+    }
+    if (website.value.trim() && !/^https?:\/\/.+/.test(website.value.trim())) {
+      Validator.showError(website, 'Website must start with http:// or https://');
+      ok = false;
+    }
+    if (!terms.checked) {
+      alertArea.innerHTML = '<div class="alert alert-danger">&#x26A0; You must accept the Terms &amp; Conditions to continue.</div>';
+      ok = false;
+    }
+
+    return ok;
+  }
+
+  document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!validate()) return;
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px"></div> Registering...';
+
+    try {
+      const payload = {
+        email:           document.getElementById('email').value.trim(),
+        password:        document.getElementById('password').value,
+        role:            'org',
+        orgName:         document.getElementById('orgName').value.trim(),
+        missionStatement: document.getElementById('missionStatement').value.trim(),
+        contactName:     document.getElementById('contactName').value.trim(),
+        contactEmail:    document.getElementById('email').value.trim(),
+        contactPhone:    document.getElementById('phone').value.trim(),
+        address:         document.getElementById('address').value.trim(),
+        website:         document.getElementById('website').value.trim() || undefined,
+      };
+
+      const { data } = await API.post('/auth/register', payload);
+      API.setSession(data.token, data.user);
+      Toast.success('Organization registered! Welcome to ImpactCircle.');
+      setTimeout(() => { window.location.href = '/org-dashboard'; }, 1000);
+    } catch (err) {
+      document.getElementById('alertArea').innerHTML =
+        `<div class="alert alert-danger">&#x274C; ${err.message || 'Registration failed. Please try again.'}</div>`;
+      btn.disabled = false;
+      btn.textContent = 'Register Organization';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  });
+</script>
+</body>
+</html>

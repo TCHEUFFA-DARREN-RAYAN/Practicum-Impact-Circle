@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSR Partner Registration | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+<div style="min-height:100vh;background:linear-gradient(135deg,var(--primary-dark) 0%,var(--primary) 55%,var(--accent) 100%);padding:2.5rem 1rem">
+  <div style="max-width:640px;margin:0 auto">
+
+    <!-- Logo -->
+    <div style="text-align:center;margin-bottom:2rem">
+      <a href="/" style="font-size:1.75rem;font-weight:800;color:white;text-decoration:none;letter-spacing:-0.5px">
+        Impact<span style="color:#93c5fd">Circle</span>
+      </a>
+      <p style="color:rgba(255,255,255,0.75);margin-top:0.375rem;font-size:0.9rem">Join as a CSR Partner and amplify your company's social impact</p>
+    </div>
+
+    <div id="alertArea"></div>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.75rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border)">
+        <div style="width:40px;height:40px;background:var(--info-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0">&#x1F3E2;</div>
+        <div>
+          <h2 style="font-size:1.25rem;margin:0">CSR Partner Registration</h2>
+          <p style="color:var(--text-muted);font-size:0.825rem;margin:0">Set up your corporate account and start sponsoring impact.</p>
+        </div>
+      </div>
+
+      <form id="registerForm" novalidate>
+
+        <!-- ── Account Credentials ── -->
+        <h3 style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-bottom:1rem">Account Credentials</h3>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="email">Corporate Email <span class="required">*</span></label>
+            <input type="email" id="email" placeholder="you@company.com" autocomplete="email">
+            <span class="field-error"></span>
+          </div>
+          <div class="form-group">
+            <label for="contactPhone">Contact Phone <span class="required">*</span></label>
+            <input type="tel" id="contactPhone" placeholder="506-555-0200">
+            <span class="field-error"></span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="password">Password <span class="required">*</span></label>
+            <div class="input-group">
+              <input type="password" id="password" placeholder="Min 8 chars, 1 uppercase, 1 number" autocomplete="new-password">
+              <button type="button" class="btn btn-secondary" id="togglePwd" title="Show/hide password" tabindex="-1">&#x1F441;</button>
+            </div>
+            <span class="field-error"></span>
+          </div>
+          <div class="form-group">
+            <label for="confirmPwd">Confirm Password <span class="required">*</span></label>
+            <input type="password" id="confirmPwd" placeholder="Repeat your password" autocomplete="new-password">
+            <span class="field-error"></span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ── Company Details ── -->
+        <h3 style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-bottom:1rem">Company Details</h3>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="companyName">Company Name <span class="required">*</span></label>
+            <input type="text" id="companyName" placeholder="Acme Corp Inc.">
+            <span class="field-error"></span>
+          </div>
+          <div class="form-group">
+            <label for="industry">Industry <span class="required">*</span></label>
+            <select id="industry">
+              <option value="">— Select industry —</option>
+              <option value="Technology">Technology</option>
+              <option value="Finance &amp; Banking">Finance &amp; Banking</option>
+              <option value="Healthcare">Healthcare</option>
+              <option value="Manufacturing">Manufacturing</option>
+              <option value="Retail &amp; Consumer Goods">Retail &amp; Consumer Goods</option>
+              <option value="Energy &amp; Utilities">Energy &amp; Utilities</option>
+              <option value="Transportation &amp; Logistics">Transportation &amp; Logistics</option>
+              <option value="Real Estate &amp; Construction">Real Estate &amp; Construction</option>
+              <option value="Food &amp; Beverage">Food &amp; Beverage</option>
+              <option value="Education">Education</option>
+              <option value="Non-Profit / Charity">Non-Profit / Charity</option>
+              <option value="Professional Services">Professional Services</option>
+              <option value="Media &amp; Entertainment">Media &amp; Entertainment</option>
+              <option value="Government / Public Sector">Government / Public Sector</option>
+              <option value="Other">Other</option>
+            </select>
+            <span class="field-error"></span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="contactName">Primary Contact Name <span class="required">*</span></label>
+            <input type="text" id="contactName" placeholder="John Doe">
+            <span class="field-error"></span>
+          </div>
+          <div class="form-group">
+            <label for="website">Company Website</label>
+            <input type="url" id="website" placeholder="https://company.com">
+            <span class="field-error"></span>
+          </div>
+        </div>
+
+        <!-- CSR motivation note -->
+        <div class="alert alert-info" style="margin-bottom:1rem">
+          &#x1F4CB; As a CSR Partner you can sponsor gig categories, track employee volunteer hours, and receive verified impact reports aligned with your ESG goals.
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ── Terms ── -->
+        <div class="form-check" style="margin-bottom:0.5rem">
+          <input type="checkbox" id="termsConsent" required>
+          <label for="termsConsent">I agree to the <a href="/terms" target="_blank">Terms &amp; Conditions</a> and <a href="/privacy" target="_blank">Privacy Policy</a> <span class="required">*</span></label>
+        </div>
+        <div class="form-check" style="margin-bottom:1.5rem">
+          <input type="checkbox" id="dataConsent">
+          <label for="dataConsent">I consent to ImpactCircle sharing aggregated impact data with our CSR reporting systems</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitBtn">
+          Create CSR Partner Account
+        </button>
+
+      </form>
+    </div>
+
+    <div style="text-align:center;margin-top:1.25rem;font-size:0.85rem;color:rgba(255,255,255,0.7)">
+      Already have an account? <a href="/login" style="color:white;font-weight:600">Log in</a>
+      &nbsp;&middot;&nbsp;
+      Registering an NGO? <a href="/register-org" style="color:white;font-weight:600">Register as Organization</a>
+    </div>
+
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+  // Redirect if already logged in
+  if (API.isLoggedIn()) {
+    const user = API.getUser();
+    if (user) API.redirectByRole(user);
+  }
+
+  // Password visibility toggle
+  document.getElementById('togglePwd').addEventListener('click', () => {
+    const pwd = document.getElementById('password');
+    pwd.type = pwd.type === 'password' ? 'text' : 'password';
+  });
+
+  // Clear errors on input
+  document.querySelectorAll('input, select').forEach(el => {
+    el.addEventListener('input', () => Validator.clearError(el));
+    el.addEventListener('change', () => Validator.clearError(el));
+  });
+
+  // Validation
+  function validate() {
+    let ok = true;
+    document.getElementById('alertArea').innerHTML = '';
+
+    const email       = document.getElementById('email');
+    const phone       = document.getElementById('contactPhone');
+    const password    = document.getElementById('password');
+    const confirm     = document.getElementById('confirmPwd');
+    const companyName = document.getElementById('companyName');
+    const industry    = document.getElementById('industry');
+    const contactName = document.getElementById('contactName');
+    const website     = document.getElementById('website');
+    const terms       = document.getElementById('termsConsent');
+
+    if (!Validator.email(email.value.trim())) {
+      Validator.showError(email, 'A valid email address is required.');
+      ok = false;
+    }
+    if (!Validator.required(phone.value)) {
+      Validator.showError(phone, 'Contact phone is required.');
+      ok = false;
+    }
+    if (!Validator.password(password.value)) {
+      Validator.showError(password, 'Min 8 characters, 1 uppercase letter, 1 number.');
+      ok = false;
+    }
+    if (password.value !== confirm.value) {
+      Validator.showError(confirm, 'Passwords do not match.');
+      ok = false;
+    }
+    if (!Validator.required(companyName.value)) {
+      Validator.showError(companyName, 'Company name is required.');
+      ok = false;
+    }
+    if (!industry.value) {
+      Validator.showError(industry, 'Please select your industry.');
+      ok = false;
+    }
+    if (!Validator.required(contactName.value)) {
+      Validator.showError(contactName, 'Primary contact name is required.');
+      ok = false;
+    }
+    if (website.value.trim() && !/^https?:\/\/.+/.test(website.value.trim())) {
+      Validator.showError(website, 'Website must start with http:// or https://');
+      ok = false;
+    }
+    if (!terms.checked) {
+      document.getElementById('alertArea').innerHTML =
+        '<div class="alert alert-danger">&#x26A0; You must accept the Terms &amp; Conditions to continue.</div>';
+      ok = false;
+    }
+
+    return ok;
+  }
+
+  document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!validate()) return;
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px"></div> Creating account...';
+
+    try {
+      const payload = {
+        email:        document.getElementById('email').value.trim(),
+        password:     document.getElementById('password').value,
+        role:         'csr',
+        companyName:  document.getElementById('companyName').value.trim(),
+        industry:     document.getElementById('industry').value,
+        contactName:  document.getElementById('contactName').value.trim(),
+        contactEmail: document.getElementById('email').value.trim(),
+        contactPhone: document.getElementById('contactPhone').value.trim(),
+        website:      document.getElementById('website').value.trim() || undefined,
+      };
+
+      const { data } = await API.post('/auth/register', payload);
+      API.setSession(data.token, data.user);
+      Toast.success('CSR Partner account created! Welcome to ImpactCircle.');
+      setTimeout(() => { window.location.href = '/csr-dashboard'; }, 1000);
+    } catch (err) {
+      document.getElementById('alertArea').innerHTML =
+        `<div class="alert alert-danger">&#x274C; ${err.message || 'Registration failed. Please try again.'}</div>`;
+      btn.disabled = false;
+      btn.textContent = 'Create CSR Partner Account';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  });
+</script>
+</body>
+</html>
