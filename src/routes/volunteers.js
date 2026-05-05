@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { Op } = require('sequelize');
 const { requireAuth, requireRole } = require('../middleware/auth');
-const { User, VolunteerProfile, VolunteerCategoryHours, Category, Application, Task, Reward } = require('../models/index');
+const { User, VolunteerProfile, VolunteerCategoryHours, Category, Application, Task, Reward, Organization } = require('../models/index');
 const { checkEligibility } = require('../services/points');
 
 const storage = multer.diskStorage({
