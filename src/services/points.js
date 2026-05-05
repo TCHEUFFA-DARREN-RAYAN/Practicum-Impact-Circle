@@ -1,6 +1,10 @@
 const { VolunteerProfile, VolunteerCategoryHours, HourRecord, Category, Reward } = require('../models/index');
 const { createNotification } = require('./notifications');
 
+/**
+ * Award points and hours to a volunteer after org (or auto) approval.
+ * Creates an HourRecord and updates VolunteerProfile totals + category breakdown.
+ */
 const awardPoints = async (volunteerId, task, gig, autoApproved = false) => {
   const category = await Category.findByPk(gig.categoryId);
   if (!category) throw new Error('Category not found');
