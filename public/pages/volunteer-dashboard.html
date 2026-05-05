@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Dashboard | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="page-content">
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div>
+          <h1 id="welcomeMsg">My Dashboard</h1>
+          <p class="text-muted">Track your volunteer contributions and rewards</p>
+        </div>
+        <a href="/gigs" class="btn btn-primary">Browse Gigs →</a>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-4 mb-4" id="statsGrid">
+      <div class="stat-card"><div class="stat-label">Verified Hours</div><div class="stat-value" id="statHours">—</div><div class="stat-sub">All time</div></div>
+      <div class="stat-card"><div class="stat-label">Points Balance</div><div class="stat-value" id="statPoints">—</div><div class="stat-sub">Redeemable</div></div>
+      <div class="stat-card"><div class="stat-label">Gigs Applied</div><div class="stat-value" id="statGigs">—</div><div class="stat-sub">Total</div></div>
+      <div class="stat-card"><div class="stat-label">Gigs Completed</div><div class="stat-value" id="statCompleted">—</div><div class="stat-sub">Approved</div></div>
+    </div>
+
+    <!-- Verification Banner -->
+    <div id="verifyBanner"></div>
+
+    <div class="grid grid-2" style="gap:1.5rem;align-items:start">
+      <!-- Left column -->
+      <div>
+        <!-- Category Breakdown -->
+        <div class="card mb-4">
+          <div class="card-header"><div class="card-title">Hours by Category</div></div>
+          <div id="categoryBreakdown"><div class="empty-state" style="padding:2rem"><div class="empty-icon"></div><p>No hours yet</p></div></div>
+        </div>
+
+        <!-- Eligible Rewards -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"> Available Rewards</div>
+            <a href="/rewards" class="btn btn-ghost btn-sm">View all →</a>
+          </div>
+          <div id="rewardsPreview"><div class="loading-overlay"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div>
+        <!-- Active Tasks -->
+        <div class="card mb-4">
+          <div class="card-header"><div class="card-title">Active Tasks</div></div>
+          <div id="activeTasks"><div class="loading-overlay"><div class="spinner"></div></div></div>
+        </div>
+
+        <!-- Recent Applications -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">My Applications</div></div>
+          <div id="applications"><div class="loading-overlay"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Task Action Modal -->
+<div class="modal-backdrop" id="taskModal">
+  <div class="modal">
+    <div class="modal-header"><h3 id="taskModalTitle">Task Action</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body" id="taskModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="taskModalConfirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script>
+API.requireAuth('volunteer');
+
+const STATUS_LABEL = { accepted: 'Accepted', inProgress: 'In Progress', completed: 'Pending Approval', approved: 'Approved ', rejected: 'Rejected' };
+const STATUS_CLASS = { accepted: 'badge-primary', inProgress: 'badge-info', completed: 'badge-pending', approved: 'badge-verified', rejected: 'badge-rejected' };
+
+async function load() {
+  try {
+    const { data } = await API.get('/volunteers/me/dashboard');
+    const { profile, stats, applications, tasks, eligibleRewards } = data;
+
+    document.getElementById('welcomeMsg').textContent = `Welcome, ${profile?.firstName || 'Volunteer'} `;
+    document.getElementById('statHours').textContent = stats.totalVerifiedHours.toFixed(1);
+    document.getElementById('statPoints').textContent = stats.totalPoints.toLocaleString();
+    document.getElementById('statGigs').textContent = stats.gigCount;
+    document.getElementById('statCompleted').textContent = stats.approvedCount;
+
+    const user = await API.get('/auth/me');
+    const vs = user.data.user.verificationStatus;
+    if (vs !== 'verified') {
+      document.getElementById('verifyBanner').innerHTML = `
+        <div class="alert alert-${vs === 'pending' ? 'warning' : 'danger'} mb-4">
+          ${vs === 'pending' ? '⏳ Your account is pending admin verification. Upload documents to speed up the process.' : ' Verification rejected. Please visit your profile to resubmit documents.'}
+          <a href="/volunteer-profile" class="btn btn-sm btn-secondary" style="margin-left:auto">Go to Profile →</a>
+        </div>
+      `;
+    }
+
+    // Category breakdown
+    const catHours = stats.categoryHours || {};
+    const catKeys = Object.keys(catHours);
+    document.getElementById('categoryBreakdown').innerHTML = catKeys.length ? catKeys.map(k => {
+      const hrs = catHours[k] || 0;
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.625rem 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:0.875rem">${k.substring(0,20)}</span>
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          <div style="width:100px;height:6px;background:var(--border);border-radius:3px">
+            <div style="width:${Math.min(100,(hrs/Math.max(...Object.values(catHours)))*100)}%;height:100%;background:var(--primary);border-radius:3px"></div>
+          </div>
+          <span style="font-weight:700;font-size:0.875rem;width:40px;text-align:right">${hrs}h</span>
+        </div>
+      </div>`;
+    }).join('') : '<div class="text-center text-muted" style="padding:1rem;font-size:0.875rem">Complete and get approved for gigs to see breakdown.</div>';
+
+    // Active tasks (non-approved, non-rejected)
+    const activeTasks = tasks.filter(t => ['accepted','inProgress','completed'].includes(t.status));
+    document.getElementById('activeTasks').innerHTML = activeTasks.length ? activeTasks.map(t => `
+      <div style="padding:0.875rem 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem">
+          <div>
+            <div style="font-weight:600;font-size:0.875rem">${t.gigId?.title || 'Gig'}</div>
+            <div style="font-size:0.775rem;color:var(--text-muted);margin-top:0.125rem">${fmt.date(t.createdAt)}</div>
+          </div>
+          <span class="badge ${STATUS_CLASS[t.status]}">${STATUS_LABEL[t.status]}</span>
+        </div>
+        ${t.status === 'accepted' ? `<button class="btn btn-sm btn-primary mt-2" onclick="startTask('${t._id}')">Mark In Progress</button>` : ''}
+        ${t.status === 'inProgress' ? `<button class="btn btn-sm btn-success mt-2" onclick="completeTask('${t._id}','${t.gigId?.title}')">Submit Completion</button>` : ''}
+        ${t.status === 'completed' ? `<div class="alert alert-warning" style="padding:0.5rem 0.75rem;margin-top:0.5rem;font-size:0.775rem">⏳ Awaiting organization approval (auto-approved if no response in 30 days)</div>` : ''}
+      </div>
+    `).join('') : '<div class="text-center text-muted" style="padding:1.5rem;font-size:0.875rem">No active tasks. Apply to gigs to get started!</div>';
+
+    // Applications
+    document.getElementById('applications').innerHTML = applications.slice(0, 6).length ? applications.slice(0, 6).map(a => `
+      <div style="padding:0.75rem 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:600;font-size:0.85rem">${a.gigId?.title || 'Gig'}</div>
+          <div style="font-size:0.775rem;color:var(--text-muted)">${a.gigId?.orgId?.orgName || ''} · ${fmt.date(a.createdAt)}</div>
+        </div>
+        <span class="badge ${a.status === 'approved' ? 'badge-verified' : a.status === 'rejected' ? 'badge-rejected' : 'badge-pending'}">${a.status}</span>
+      </div>
+    `).join('') : '<div class="text-center text-muted" style="padding:1.5rem;font-size:0.875rem">No applications yet. <a href="/gigs">Browse gigs →</a></div>';
+
+    // Rewards preview
+    document.getElementById('rewardsPreview').innerHTML = eligibleRewards.slice(0, 3).length ? eligibleRewards.slice(0, 3).map(r => `
+      <div style="padding:0.75rem 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:600;font-size:0.85rem">${r.name}</div>
+          <div style="font-size:0.775rem;color:var(--text-muted)">${r.pointsRequired} pts · ${r.sponsorName || 'Platform'}</div>
+        </div>
+        <a href="/rewards" class="btn btn-sm btn-primary">Redeem</a>
+      </div>
+    `).join('') + (eligibleRewards.length > 3 ? `<div style="padding:0.75rem 0;text-align:center"><a href="/rewards" class="btn btn-ghost btn-sm">View all ${eligibleRewards.length} rewards →</a></div>` : '')
+    : '<div class="text-center text-muted" style="padding:1.5rem;font-size:0.875rem">Keep volunteering to unlock rewards!</div>';
+
+  } catch (err) {
+    Toast.error('Failed to load dashboard: ' + err.message);
+  }
+}
+
+let pendingTaskId = null, pendingAction = null;
+
+async function startTask(taskId) {
+  try {
+    await API.patch(`/tasks/${taskId}/start`, {});
+    Toast.success('Task started!');
+    load();
+  } catch (err) { Toast.error(err.message); }
+}
+
+function completeTask(taskId, title) {
+  pendingTaskId = taskId; pendingAction = 'complete';
+  document.getElementById('taskModalTitle').textContent = 'Submit Task Completion';
+  document.getElementById('taskModalBody').innerHTML = `<p>Confirm that you have completed the task <strong>"${title}"</strong>.</p><p class="text-muted" style="font-size:0.875rem">The organization will receive a notification to verify your completion within 30 days.</p>`;
+  document.getElementById('taskModal').classList.add('open');
+}
+
+document.getElementById('taskModalConfirm').addEventListener('click', async () => {
+  if (!pendingTaskId) return;
+  try {
+    await API.patch(`/tasks/${pendingTaskId}/complete`, {});
+    Toast.success('Task submitted for approval!');
+    closeModal();
+    load();
+  } catch (err) { Toast.error(err.message); }
+});
+
+function closeModal() {
+  document.getElementById('taskModal').classList.remove('open');
+  pendingTaskId = null; pendingAction = null;
+}
+
+load();
+</script>
+</body>
+</html>

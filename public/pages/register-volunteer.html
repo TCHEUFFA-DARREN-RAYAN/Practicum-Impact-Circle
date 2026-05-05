@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Volunteer Registration | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+<div style="min-height:100vh;background:var(--bg);padding:2rem 1rem">
+  <div style="max-width:640px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:2rem">
+      <a href="/" style="font-size:1.5rem;font-weight:800;color:var(--primary);text-decoration:none">ImpactCircle</a>
+      <p style="color:var(--text-muted);margin-top:0.25rem">Create your volunteer account</p>
+    </div>
+
+    <div class="step-progress" id="stepProgress"></div>
+
+    <div id="alertArea"></div>
+
+    <div class="card">
+      <div class="step-panels" id="stepPanels">
+
+        <!-- Step 0: Account -->
+        <div class="active">
+          <h3 style="margin-bottom:0.25rem">Create Account</h3>
+          <p class="text-muted" style="margin-bottom:1.5rem;font-size:0.875rem">Start by creating your secure login credentials.</p>
+          <div class="form-group">
+            <label for="email">Email Address <span class="required">*</span></label>
+            <input type="email" id="email" placeholder="you@example.com">
+            <span class="field-error"></span>
+          </div>
+          <div class="form-group">
+            <label for="password">Password <span class="required">*</span></label>
+            <input type="password" id="password" placeholder="Min 8 chars, 1 uppercase, 1 number">
+            <span class="field-error"></span>
+          </div>
+          <div class="form-group">
+            <label for="confirmPwd">Confirm Password <span class="required">*</span></label>
+            <input type="password" id="confirmPwd" placeholder="Repeat your password">
+            <span class="field-error"></span>
+          </div>
+        </div>
+
+        <!-- Step 1: Basic Info -->
+        <div>
+          <h3 style="margin-bottom:0.25rem">Basic Information</h3>
+          <p class="text-muted" style="margin-bottom:1.5rem;font-size:0.875rem">Tell us a bit about yourself.</p>
+          <div class="form-row">
+            <div class="form-group"><label for="firstName">First Name <span class="required">*</span></label><input type="text" id="firstName" placeholder="Jane"><span class="field-error"></span></div>
+            <div class="form-group"><label for="lastName">Last Name <span class="required">*</span></label><input type="text" id="lastName" placeholder="Doe"><span class="field-error"></span></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label for="phone">Phone Number <span class="required">*</span></label><input type="tel" id="phone" placeholder="506-555-0001"><span class="field-error"></span></div>
+            <div class="form-group"><label for="dob">Date of Birth <span class="required">*</span></label><input type="date" id="dob"><span class="field-error"></span></div>
+          </div>
+          <div class="form-group"><label for="address">Home Address <span class="required">*</span></label><input type="text" id="address" placeholder="123 Main St, Moncton, NB"><span class="field-error"></span></div>
+        </div>
+
+        <!-- Step 2: Profile Details -->
+        <div>
+          <h3 style="margin-bottom:0.25rem">Profile Details</h3>
+          <p class="text-muted" style="margin-bottom:1.5rem;font-size:0.875rem">Help organizations match you to the right gigs.</p>
+          <div class="form-group">
+            <label>Skills (press Enter to add)</label>
+            <div class="tags-input" id="skillsInput"><input type="text" placeholder="e.g. Teamwork, Excel..." id="skillTag"></div>
+            <span class="field-error"></span>
+          </div>
+          <div class="form-group">
+            <label>Languages Spoken</label>
+            <div class="tags-input" id="langsInput"><input type="text" placeholder="e.g. English, French..." id="langTag"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label for="availHours">Weekly Availability (hrs) <span class="required">*</span></label><input type="number" id="availHours" min="1" max="80" placeholder="10"><span class="field-error"></span></div>
+            <div class="form-group"><label>Available Days</label>
+              <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.5rem" id="daysCheckboxes">
+                ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => `<label class="form-check" style="margin:0"><input type="checkbox" name="days" value="${d}"> ${d}</label>`).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Experience -->
+        <div>
+          <h3 style="margin-bottom:0.25rem">Experience & Preferences</h3>
+          <p class="text-muted" style="margin-bottom:1.5rem;font-size:0.875rem">Share your volunteering background.</p>
+          <div class="form-group">
+            <label for="history">Previous Volunteering History</label>
+            <textarea id="history" placeholder="Describe any previous volunteer work you've done..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Preferred Impact Categories</label>
+            <div id="catCheckboxes" style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;margin-top:0.5rem"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+        <!-- Step 4: Documents (Optional) -->
+        <div>
+          <h3 style="margin-bottom:0.25rem">Document Submission <span style="font-weight:400;color:var(--text-muted)">(Optional)</span></h3>
+          <p class="text-muted" style="margin-bottom:1.5rem;font-size:0.875rem">Submitting documents enables the Verified Volunteer badge. PDF, JPG, PNG — max 5MB each.</p>
+          <div class="form-group">
+            <label>Government-Issued ID</label>
+            <div class="file-upload-area" onclick="document.getElementById('govIdFile').click()">
+              <input type="file" id="govIdFile" accept=".pdf,.jpg,.jpeg,.png">
+              <div class="file-upload-icon"></div>
+              <div class="file-upload-text"><strong>Click to upload</strong> or drag & drop</div>
+              <div id="govIdName" style="margin-top:0.5rem;font-size:0.8rem;color:var(--text-muted)"></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>RCMP Background Check (if available)</label>
+            <div class="file-upload-area" onclick="document.getElementById('bgCheckFile').click()">
+              <input type="file" id="bgCheckFile" accept=".pdf,.jpg,.jpeg,.png">
+              <div class="file-upload-icon"></div>
+              <div class="file-upload-text"><strong>Click to upload</strong> or drag & drop</div>
+              <div id="bgCheckName" style="margin-top:0.5rem;font-size:0.8rem;color:var(--text-muted)"></div>
+            </div>
+          </div>
+          <div class="alert alert-info">ℹ️ Documents are stored securely and only reviewed by platform administrators.</div>
+        </div>
+
+        <!-- Step 5: Consent -->
+        <div>
+          <h3 style="margin-bottom:0.25rem">Terms & Consent</h3>
+          <p class="text-muted" style="margin-bottom:1.5rem;font-size:0.875rem">Almost done! Please review and agree to our terms.</p>
+          <div class="card" style="background:var(--bg);max-height:200px;overflow-y:auto;margin-bottom:1.25rem">
+            <h4 style="margin-bottom:0.75rem">Platform Terms of Use</h4>
+            <p style="font-size:0.825rem">By joining ImpactCircle, you agree to provide accurate information, participate in gigs responsibly, and respect the platform's code of conduct. You acknowledge that volunteer hours are only credited after explicit organizational approval, and that the platform may use your data in accordance with PIPEDA requirements to match you with volunteer opportunities.</p>
+          </div>
+          <div class="form-check">
+            <input type="checkbox" id="termsConsent" required>
+            <label for="termsConsent">I agree to the Terms & Conditions and Platform Code of Conduct <span class="required">*</span></label>
+          </div>
+          <div class="form-check">
+            <input type="checkbox" id="dataConsent">
+            <label for="dataConsent">I consent to data use as described in the Privacy Policy</label>
+          </div>
+        </div>
+
+      </div><!-- /step-panels -->
+
+      <div class="divider"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <button class="btn btn-secondary" id="prevBtn" style="display:none">← Back</button>
+        <div style="flex:1"></div>
+        <button class="btn btn-primary" id="nextBtn">Continue →</button>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:1.25rem;font-size:0.85rem;color:var(--text-muted)">
+      Already have an account? <a href="/login">Log in</a>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+const STEPS = ['Account', 'Basic Info', 'Profile', 'Experience', 'Documents', 'Consent'];
+let currentStep = 0;
+let userData = {};
+let skillsList = [], langsList = [], catList = [];
+
+function renderProgress() {
+  document.getElementById('stepProgress').innerHTML = STEPS.map((label, i) => `
+    <div class="step-item ${i < currentStep ? 'completed' : i === currentStep ? 'active' : ''}">
+      <div class="step-circle">${i < currentStep ? '' : i + 1}</div>
+      <div class="step-label">${label}</div>
+    </div>
+  `).join('');
+}
+
+function renderPanels() {
+  document.querySelectorAll('#stepPanels > div').forEach((p, i) => {
+    p.classList.toggle('active', i === currentStep);
+  });
+  document.getElementById('prevBtn').style.display = currentStep > 0 ? 'block' : 'none';
+  const nextBtn = document.getElementById('nextBtn');
+  nextBtn.textContent = currentStep === STEPS.length - 1 ? ' Complete Registration' : 'Continue →';
+}
+
+// Tags input
+function setupTagInput(inputId, wrapperId, list) {
+  const input = document.getElementById(inputId);
+  const wrapper = document.getElementById(wrapperId);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const val = input.value.trim().replace(/,$/, '');
+      if (val && !list.includes(val)) {
+        list.push(val);
+        const tag = document.createElement('div');
+        tag.className = 'tag';
+        tag.innerHTML = `${val}<button onclick="removeTag(this,'${inputId}')">×</button>`;
+        tag.dataset.val = val;
+        wrapper.insertBefore(tag, input);
+      }
+      input.value = '';
+    }
+  });
+}
+
+function removeTag(btn, listId) {
+  const tag = btn.parentElement;
+  const list = listId === 'skillTag' ? skillsList : langsList;
+  const idx = list.indexOf(tag.dataset.val);
+  if (idx > -1) list.splice(idx, 1);
+  tag.remove();
+}
+
+// File input label update
+['govId', 'bgCheck'].forEach(prefix => {
+  document.getElementById(`${prefix}File`)?.addEventListener('change', (e) => {
+    document.getElementById(`${prefix}Name`).textContent = e.target.files[0]?.name || '';
+  });
+});
+
+// Load categories for step 3
+async function loadCategories() {
+  try {
+    const { data } = await API.get('/public/impact');
+    document.getElementById('catCheckboxes').innerHTML = data.categoryTotals.map(ct => `
+      <label class="form-check" style="margin:0">
+        <input type="checkbox" name="cat" value="${ct.category._id}"> ${ct.category.icon} ${ct.category.name}
+      </label>
+    `).join('');
+  } catch {}
+}
+
+function validate() {
+  const alert = document.getElementById('alertArea');
+  alert.innerHTML = '';
+  if (currentStep === 0) {
+    const email = document.getElementById('email').value.trim();
+    const pwd = document.getElementById('password').value;
+    const cpwd = document.getElementById('confirmPwd').value;
+    let ok = true;
+    if (!Validator.email(email)) { Validator.showError(document.getElementById('email'), 'Valid email required.'); ok = false; }
+    if (!Validator.password(pwd)) { Validator.showError(document.getElementById('password'), 'Min 8 chars, 1 uppercase, 1 number.'); ok = false; }
+    if (pwd !== cpwd) { Validator.showError(document.getElementById('confirmPwd'), 'Passwords do not match.'); ok = false; }
+    return ok;
+  }
+  if (currentStep === 1) {
+    let ok = true;
+    ['firstName','lastName','phone','address'].forEach(id => {
+      if (!Validator.required(document.getElementById(id).value)) { Validator.showError(document.getElementById(id), 'This field is required.'); ok = false; }
+    });
+    if (!document.getElementById('dob').value) { Validator.showError(document.getElementById('dob'), 'Date of birth required.'); ok = false; }
+    return ok;
+  }
+  if (currentStep === 2) {
+    let ok = true;
+    if (!document.getElementById('availHours').value) { Validator.showError(document.getElementById('availHours'), 'Required.'); ok = false; }
+    return ok;
+  }
+  if (currentStep === 5) {
+    if (!document.getElementById('termsConsent').checked) {
+      alert.innerHTML = '<div class="alert alert-danger">You must accept the Terms & Conditions.</div>';
+      return false;
+    }
+  }
+  return true;
+}
+
+document.getElementById('nextBtn').addEventListener('click', async () => {
+  if (!validate()) return;
+  const btn = document.getElementById('nextBtn');
+
+  if (currentStep === 0) {
+    btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
+    try {
+      const { data } = await API.post('/auth/register', {
+        email: document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value,
+        role: 'volunteer',
+      });
+      API.setSession(data.token, data.user);
+      userData.userId = data.user._id;
+      currentStep++;
+    } catch (err) {
+      document.getElementById('alertArea').innerHTML = `<div class="alert alert-danger"> ${err.message}</div>`;
+    } finally { btn.disabled = false; }
+  } else if (currentStep === 1) {
+    btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
+    try {
+      await API.post('/volunteers/register/step/1', {
+        firstName: document.getElementById('firstName').value.trim(),
+        lastName: document.getElementById('lastName').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        dateOfBirth: document.getElementById('dob').value,
+        address: document.getElementById('address').value.trim(),
+      });
+      currentStep++;
+    } catch (err) {
+      document.getElementById('alertArea').innerHTML = `<div class="alert alert-danger"> ${err.message}</div>`;
+    } finally { btn.disabled = false; }
+  } else if (currentStep === 2) {
+    btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
+    try {
+      const days = [...document.querySelectorAll('input[name="days"]:checked')].map(c => c.value);
+      await API.post('/volunteers/register/step/2', {
+        skills: skillsList,
+        languages: langsList,
+        weeklyAvailabilityHours: parseInt(document.getElementById('availHours').value),
+        weeklyAvailabilityDays: days,
+      });
+      currentStep++;
+      loadCategories();
+    } catch (err) {
+      document.getElementById('alertArea').innerHTML = `<div class="alert alert-danger"> ${err.message}</div>`;
+    } finally { btn.disabled = false; }
+  } else if (currentStep === 3) {
+    btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
+    try {
+      const cats = [...document.querySelectorAll('input[name="cat"]:checked')].map(c => c.value);
+      await API.post('/volunteers/register/step/3', {
+        previousVolunteeringHistory: document.getElementById('history').value.trim(),
+        preferredCategories: cats,
+      });
+      currentStep++;
+    } catch (err) {
+      document.getElementById('alertArea').innerHTML = `<div class="alert alert-danger"> ${err.message}</div>`;
+    } finally { btn.disabled = false; }
+  } else if (currentStep === 4) {
+    const govFile = document.getElementById('govIdFile').files[0];
+    const bgFile = document.getElementById('bgCheckFile').files[0];
+    if (govFile || bgFile) {
+      btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
+      try {
+        const fd = new FormData();
+        if (govFile) fd.append('govId', govFile);
+        if (bgFile) fd.append('backgroundCheck', bgFile);
+        await API.upload('/volunteers/register/step/4/documents', fd);
+      } catch (err) {
+        document.getElementById('alertArea').innerHTML = `<div class="alert alert-warning">️ Document upload failed (${err.message}). You can upload later from your profile.</div>`;
+      } finally { btn.disabled = false; }
+    }
+    currentStep++;
+  } else if (currentStep === 5) {
+    btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
+    try {
+      await API.post('/volunteers/register/step/5', { consent: true });
+      Toast.success('Registration complete! Welcome to ImpactCircle ');
+      setTimeout(() => window.location.href = '/volunteer-dashboard', 1200);
+      return;
+    } catch (err) {
+      document.getElementById('alertArea').innerHTML = `<div class="alert alert-danger"> ${err.message}</div>`;
+      btn.disabled = false;
+    }
+    return;
+  } else {
+    currentStep++;
+  }
+
+  renderProgress();
+  renderPanels();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.getElementById('alertArea').innerHTML = '';
+});
+
+document.getElementById('prevBtn').addEventListener('click', () => {
+  if (currentStep > 0) { currentStep--; renderProgress(); renderPanels(); }
+});
+
+setupTagInput('skillTag', 'skillsInput', skillsList);
+setupTagInput('langTag', 'langsInput', langsList);
+
+document.querySelectorAll('#govIdFile, #bgCheckFile').forEach(el => {
+  const parent = el.closest('.file-upload-area');
+  parent?.addEventListener('dragover', (e) => { e.preventDefault(); parent.classList.add('drag-over'); });
+  parent?.addEventListener('dragleave', () => parent.classList.remove('drag-over'));
+  parent?.addEventListener('drop', (e) => { e.preventDefault(); parent.classList.remove('drag-over'); if (e.dataTransfer.files[0]) { el.files = e.dataTransfer.files; el.dispatchEvent(new Event('change')); } });
+});
+
+renderProgress();
+renderPanels();
+</script>
+</body>
+</html>

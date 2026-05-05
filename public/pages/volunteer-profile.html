@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    .profile-header {
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+      color: white;
+      border-radius: var(--radius);
+      padding: 2rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 1.5rem;
+      margin-bottom: 1.75rem;
+      flex-wrap: wrap;
+    }
+    .profile-avatar {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; font-weight: 800; color: white;
+      border: 3px solid rgba(255,255,255,0.35);
+      flex-shrink: 0;
+    }
+    .profile-info { flex: 1; min-width: 0; }
+    .profile-name { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.2rem; }
+    .profile-email { font-size: 0.875rem; opacity: 0.8; margin-bottom: 0.625rem; }
+    .section-card { margin-bottom: 1.5rem; }
+    .section-heading {
+      font-size: 0.775rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--text-muted);
+      margin-bottom: 1.125rem; padding-bottom: 0.625rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .stat-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem; }
+    .doc-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.875rem 1rem;
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); margin-bottom: 0.75rem;
+    }
+    .doc-item-info { display: flex; align-items: center; gap: 0.625rem; font-size: 0.875rem; }
+    .doc-uploaded { color: var(--success); font-size: 0.8rem; font-weight: 600; }
+    .cat-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .rejection-reason {
+      background: var(--danger-light); color: #7f1d1d;
+      border: 1px solid #fca5a5; border-radius: var(--radius-sm);
+      padding: 0.75rem 1rem; font-size: 0.85rem; margin-top: 0.5rem;
+    }
+    @media (max-width: 600px) {
+      .profile-header { flex-direction: column; }
+      .profile-avatar { width: 56px; height: 56px; font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+<nav id="navbar"></nav>
+
+<div class="page-content">
+  <div class="container-sm">
+
+    <!-- Loading state -->
+    <div id="loadingState" class="loading-overlay">
+      <div class="spinner spinner-lg"></div>
+    </div>
+
+    <!-- Error state (hidden initially) -->
+    <div id="errorState" class="empty-state hidden">
+      <div class="empty-icon">&#x26A0;</div>
+      <h3>Failed to load profile</h3>
+      <p id="errorMsg">Something went wrong. Please refresh the page.</p>
+      <button class="btn btn-primary" onclick="loadProfile()">Retry</button>
+    </div>
+
+    <!-- Main content (hidden until loaded) -->
+    <div id="mainContent" class="hidden">
+
+      <!-- Profile Header -->
+      <div class="profile-header" id="profileHeader">
+        <div class="profile-avatar" id="profileAvatar">?</div>
+        <div class="profile-info">
+          <div class="profile-name" id="profileName">—</div>
+          <div class="profile-email" id="profileEmail">—</div>
+          <div id="verificationBadge"></div>
+        </div>
+      </div>
+
+      <!-- Alert area -->
+      <div id="alertArea"></div>
+
+      <!-- ── Edit Profile Section ── -->
+      <div class="card section-card">
+        <div class="section-heading">Edit Profile</div>
+        <form id="profileForm" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="firstName">First Name <span class="required">*</span></label>
+              <input type="text" id="firstName" placeholder="Jane">
+              <span class="field-error"></span>
+            </div>
+            <div class="form-group">
+              <label for="lastName">Last Name <span class="required">*</span></label>
+              <input type="text" id="lastName" placeholder="Doe">
+              <span class="field-error"></span>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="phone">Phone Number</label>
+              <input type="tel" id="phone" placeholder="506-555-0001">
+              <span class="field-error"></span>
+            </div>
+            <div class="form-group">
+              <label for="weeklyAvailabilityHours">Weekly Availability (hours)</label>
+              <input type="number" id="weeklyAvailabilityHours" min="1" max="80" placeholder="10">
+              <span class="field-error"></span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="address">Home Address</label>
+            <input type="text" id="address" placeholder="123 Main St, Moncton, NB">
+            <span class="field-error"></span>
+          </div>
+          <div style="display:flex;justify-content:flex-end">
+            <button type="submit" class="btn btn-primary" id="saveProfileBtn">Save Changes</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ── Stats Section ── -->
+      <div class="card section-card">
+        <div class="section-heading">Volunteer Stats</div>
+        <div class="stat-row" id="statsRow">
+          <div class="stat-card">
+            <div class="stat-label">Verified Hours</div>
+            <div class="stat-value" id="statHours">—</div>
+            <div class="stat-sub">total contributed</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Impact Points</div>
+            <div class="stat-value" id="statPoints">—</div>
+            <div class="stat-sub">redeemable rewards</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Gigs Completed</div>
+            <div class="stat-value" id="statGigs">—</div>
+            <div class="stat-sub">across all categories</div>
+          </div>
+        </div>
+
+        <div id="topCatsSection" class="hidden" style="margin-top:1.25rem">
+          <div style="font-size:0.825rem;font-weight:600;color:var(--text-muted);margin-bottom:0.625rem">Top Categories</div>
+          <div class="cat-list" id="topCatsList"></div>
+        </div>
+      </div>
+
+      <!-- ── Document Upload Section ── -->
+      <div class="card section-card">
+        <div class="section-heading">Verification Documents</div>
+        <p style="font-size:0.875rem;color:var(--text-muted);margin-bottom:1.25rem">
+          Upload a government-issued ID and/or RCMP background check to earn the
+          <strong>Verified Volunteer</strong> badge. PDF, JPG, or PNG — max 5 MB each.
+        </p>
+
+        <!-- Existing docs -->
+        <div id="existingDocs"></div>
+
+        <!-- Upload form -->
+        <form id="uploadForm" novalidate>
+          <div class="form-group">
+            <label>Government-Issued ID</label>
+            <div class="file-upload-area" id="govIdDrop" onclick="document.getElementById('govIdFile').click()">
+              <input type="file" id="govIdFile" accept=".pdf,.jpg,.jpeg,.png">
+              <div class="file-upload-icon">&#x1FAA6;</div>
+              <div class="file-upload-text"><strong>Click to upload</strong> or drag &amp; drop</div>
+              <div id="govIdName" style="margin-top:0.5rem;font-size:0.8rem;color:var(--text-muted)"></div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>RCMP Background Check <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+            <div class="file-upload-area" id="bgCheckDrop" onclick="document.getElementById('bgCheckFile').click()">
+              <input type="file" id="bgCheckFile" accept=".pdf,.jpg,.jpeg,.png">
+              <div class="file-upload-icon">&#x1F4CB;</div>
+              <div class="file-upload-text"><strong>Click to upload</strong> or drag &amp; drop</div>
+              <div id="bgCheckName" style="margin-top:0.5rem;font-size:0.8rem;color:var(--text-muted)"></div>
+            </div>
+          </div>
+
+          <div id="uploadAlert"></div>
+
+          <div style="display:flex;justify-content:flex-end">
+            <button type="submit" class="btn btn-success" id="uploadBtn">
+              &#x2B06; Upload Documents
+            </button>
+          </div>
+        </form>
+      </div>
+
+    </div><!-- /mainContent -->
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script>
+  API.requireAuth('volunteer');
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function show(id)  { document.getElementById(id).classList.remove('hidden'); }
+  function hide(id)  { document.getElementById(id).classList.add('hidden'); }
+
+  function verificationBadgeHTML(status, rejectionReason) {
+    if (status === 'verified') {
+      return `<span class="verified-badge">&#x2714; Verified Volunteer</span>`;
+    }
+    if (status === 'pending') {
+      return `<span class="badge badge-pending" style="font-size:0.85rem;padding:0.4rem 0.9rem">&#x23F3; Verification Pending</span>`;
+    }
+    if (status === 'rejected') {
+      const reason = rejectionReason
+        ? `<div class="rejection-reason">&#x274C; Rejection reason: ${rejectionReason}</div>`
+        : '';
+      return `<span class="badge badge-rejected" style="font-size:0.85rem;padding:0.4rem 0.9rem">&#x26A0; Verification Rejected</span>${reason}`;
+    }
+    return `<span class="badge badge-pending" style="font-size:0.85rem;padding:0.4rem 0.9rem">&#x1F4C4; Not Verified — upload documents to begin</span>`;
+  }
+
+  function existingDocHTML(docs) {
+    if (!docs || (!docs.govId && !docs.backgroundCheck)) return '';
+    const items = [];
+    if (docs.govId) {
+      items.push(`
+        <div class="doc-item">
+          <div class="doc-item-info">
+            <span style="font-size:1.2rem">&#x1FAA6;</span>
+            <div>
+              <div style="font-weight:600">Government-Issued ID</div>
+              <div style="font-size:0.775rem;color:var(--text-muted)">${docs.govId.originalName || docs.govId.filename || 'Uploaded'}</div>
+            </div>
+          </div>
+          <span class="doc-uploaded">&#x2714; On file</span>
+        </div>
+      `);
+    }
+    if (docs.backgroundCheck) {
+      items.push(`
+        <div class="doc-item">
+          <div class="doc-item-info">
+            <span style="font-size:1.2rem">&#x1F4CB;</span>
+            <div>
+              <div style="font-weight:600">RCMP Background Check</div>
+              <div style="font-size:0.775rem;color:var(--text-muted)">${docs.backgroundCheck.originalName || docs.backgroundCheck.filename || 'Uploaded'}</div>
+            </div>
+          </div>
+          <span class="doc-uploaded">&#x2714; On file</span>
+        </div>
+      `);
+    }
+    if (items.length === 0) return '';
+    return `
+      <div style="margin-bottom:1.125rem">
+        <div style="font-size:0.8rem;font-weight:600;color:var(--text-muted);margin-bottom:0.625rem">Currently Uploaded</div>
+        ${items.join('')}
+      </div>
+    `;
+  }
+
+  // ── Load Profile ───────────────────────────────────────────────────────────
+  async function loadProfile() {
+    hide('errorState');
+    hide('mainContent');
+    show('loadingState');
+
+    try {
+      const { data } = await API.get('/volunteers/me');
+      const v = data.volunteer || data;
+
+      // Profile header
+      const fullName = [v.firstName, v.lastName].filter(Boolean).join(' ') || 'Volunteer';
+      const email    = v.email || API.getUser()?.email || '';
+      const initials = (v.firstName?.[0] || email[0] || '?').toUpperCase();
+
+      document.getElementById('profileAvatar').textContent = initials;
+      document.getElementById('profileName').textContent   = fullName;
+      document.getElementById('profileEmail').textContent  = email;
+      document.getElementById('verificationBadge').innerHTML =
+        verificationBadgeHTML(v.verificationStatus, v.rejectionReason);
+
+      // Populate form
+      document.getElementById('firstName').value               = v.firstName || '';
+      document.getElementById('lastName').value                = v.lastName  || '';
+      document.getElementById('phone').value                   = v.phone     || '';
+      document.getElementById('address').value                 = v.address   || '';
+      document.getElementById('weeklyAvailabilityHours').value = v.weeklyAvailabilityHours || '';
+
+      // Stats
+      document.getElementById('statHours').textContent  = v.totalVerifiedHours ?? v.stats?.totalVerifiedHours ?? 0;
+      document.getElementById('statPoints').textContent = (v.totalPoints ?? v.stats?.totalPoints ?? 0).toLocaleString();
+      document.getElementById('statGigs').textContent   = v.completedGigs ?? v.stats?.completedGigs ?? 0;
+
+      // Top categories
+      const cats = v.topCategories || v.stats?.topCategories || [];
+      if (cats.length > 0) {
+        show('topCatsSection');
+        document.getElementById('topCatsList').innerHTML = cats.map(c => {
+          const name = c.category?.name || c.name || c;
+          const icon = c.category?.icon || c.icon || '';
+          return `<span class="badge badge-primary">${icon} ${name}</span>`;
+        }).join('');
+      }
+
+      // Existing documents
+      document.getElementById('existingDocs').innerHTML = existingDocHTML(v.documents || v.docs);
+
+      hide('loadingState');
+      show('mainContent');
+
+    } catch (err) {
+      hide('loadingState');
+      document.getElementById('errorMsg').textContent = err.message || 'Failed to load profile.';
+      show('errorState');
+    }
+  }
+
+  // ── Save Profile ───────────────────────────────────────────────────────────
+  document.getElementById('profileForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    Validator.clearAll(document.getElementById('profileForm'));
+    document.getElementById('alertArea').innerHTML = '';
+
+    let ok = true;
+    const firstName = document.getElementById('firstName');
+    const lastName  = document.getElementById('lastName');
+    const hours     = document.getElementById('weeklyAvailabilityHours');
+
+    if (!Validator.required(firstName.value)) {
+      Validator.showError(firstName, 'First name is required.'); ok = false;
+    }
+    if (!Validator.required(lastName.value)) {
+      Validator.showError(lastName, 'Last name is required.'); ok = false;
+    }
+    if (hours.value && (parseInt(hours.value) < 1 || parseInt(hours.value) > 80)) {
+      Validator.showError(hours, 'Enter a value between 1 and 80.'); ok = false;
+    }
+    if (!ok) return;
+
+    const btn = document.getElementById('saveProfileBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px"></div> Saving...';
+
+    try {
+      const payload = {
+        firstName:              document.getElementById('firstName').value.trim(),
+        lastName:               document.getElementById('lastName').value.trim(),
+        phone:                  document.getElementById('phone').value.trim() || undefined,
+        address:                document.getElementById('address').value.trim() || undefined,
+        weeklyAvailabilityHours: parseInt(document.getElementById('weeklyAvailabilityHours').value) || undefined,
+      };
+
+      await API.put('/volunteers/me', payload);
+
+      // Refresh displayed name
+      const fullName = [payload.firstName, payload.lastName].filter(Boolean).join(' ');
+      document.getElementById('profileName').textContent   = fullName;
+      document.getElementById('profileAvatar').textContent = (payload.firstName[0] || '?').toUpperCase();
+
+      Toast.success('Profile updated successfully.');
+      document.getElementById('alertArea').innerHTML =
+        '<div class="alert alert-success">&#x2714; Your profile has been saved.</div>';
+    } catch (err) {
+      document.getElementById('alertArea').innerHTML =
+        `<div class="alert alert-danger">&#x274C; ${err.message || 'Failed to save profile.'}</div>`;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Save Changes';
+    }
+  });
+
+  // ── Upload Documents ───────────────────────────────────────────────────────
+  // File name display
+  document.getElementById('govIdFile').addEventListener('change', (e) => {
+    document.getElementById('govIdName').textContent = e.target.files[0]?.name || '';
+  });
+  document.getElementById('bgCheckFile').addEventListener('change', (e) => {
+    document.getElementById('bgCheckName').textContent = e.target.files[0]?.name || '';
+  });
+
+  // Drag & drop
+  ['govIdDrop', 'bgCheckDrop'].forEach(id => {
+    const area = document.getElementById(id);
+    const fileInputId = id === 'govIdDrop' ? 'govIdFile' : 'bgCheckFile';
+    const nameId      = id === 'govIdDrop' ? 'govIdName'  : 'bgCheckName';
+    area.addEventListener('dragover',  (e) => { e.preventDefault(); area.classList.add('drag-over'); });
+    area.addEventListener('dragleave', ()  => area.classList.remove('drag-over'));
+    area.addEventListener('drop', (e) => {
+      e.preventDefault();
+      area.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        const input = document.getElementById(fileInputId);
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        document.getElementById(nameId).textContent = file.name;
+      }
+    });
+  });
+
+  document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const uploadAlert = document.getElementById('uploadAlert');
+    uploadAlert.innerHTML = '';
+
+    const govFile = document.getElementById('govIdFile').files[0];
+    const bgFile  = document.getElementById('bgCheckFile').files[0];
+
+    if (!govFile && !bgFile) {
+      uploadAlert.innerHTML = '<div class="alert alert-warning">&#x26A0; Please select at least one file to upload.</div>';
+      return;
+    }
+
+    // 5 MB limit
+    const MAX = 5 * 1024 * 1024;
+    if (govFile && govFile.size > MAX) {
+      uploadAlert.innerHTML = '<div class="alert alert-danger">&#x274C; Government ID file exceeds 5 MB limit.</div>';
+      return;
+    }
+    if (bgFile && bgFile.size > MAX) {
+      uploadAlert.innerHTML = '<div class="alert alert-danger">&#x274C; Background check file exceeds 5 MB limit.</div>';
+      return;
+    }
+
+    const btn = document.getElementById('uploadBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px"></div> Uploading...';
+
+    try {
+      const fd = new FormData();
+      if (govFile) fd.append('govId', govFile);
+      if (bgFile)  fd.append('backgroundCheck', bgFile);
+
+      await API.upload('/volunteers/me/documents', fd);
+
+      Toast.success('Documents uploaded. Your verification is now under review.');
+      uploadAlert.innerHTML =
+        '<div class="alert alert-success">&#x2714; Documents submitted. An admin will review them shortly.</div>';
+
+      // Clear file inputs
+      document.getElementById('govIdFile').value  = '';
+      document.getElementById('bgCheckFile').value = '';
+      document.getElementById('govIdName').textContent  = '';
+      document.getElementById('bgCheckName').textContent = '';
+
+      // Reload profile to show updated doc status
+      await loadProfile();
+
+    } catch (err) {
+      uploadAlert.innerHTML =
+        `<div class="alert alert-danger">&#x274C; Upload failed: ${err.message || 'Please try again.'}</div>`;
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '&#x2B06; Upload Documents';
+    }
+  });
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  loadProfile();
+</script>
+</body>
+</html>
