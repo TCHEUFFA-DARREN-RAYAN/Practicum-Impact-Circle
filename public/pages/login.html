@@ -159,11 +159,34 @@
 
     /* Inputs — dark */
     .form-panel input[type="email"],
-    .form-panel input[type="password"] {
+    .form-panel input[type="password"],
+    .form-panel input[type="text"] {
       background: #0c0c0c;
       border-color: #2e2e2e;
       color: #fff;
       border-radius: 8px;
+    }
+    .password-field { position: relative; }
+    .password-field input { padding-right: 2.75rem; }
+    .password-toggle {
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      border: none;
+      background: transparent;
+      color: #7a7a7a;
+      cursor: pointer;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      padding: 0;
+      line-height: 1;
+    }
+    .password-toggle:hover { color: #b7b7b7; }
+    .password-toggle:focus-visible {
+      outline: 2px solid #666;
+      outline-offset: 2px;
+      border-radius: 4px;
     }
     .form-panel input::placeholder { color: #444; }
     /* Fix browser autofill blue/yellow highlight on dark inputs */
@@ -316,7 +339,10 @@
               <label for="password">Password</label>
               <a href="#" class="forgot-link">Forgot password?</a>
             </div>
-            <input type="password" id="password" autocomplete="current-password" required>
+            <div class="password-field">
+              <input type="password" id="password" autocomplete="current-password" required>
+              <button type="button" class="password-toggle" id="passwordToggle" aria-label="Show password">Show</button>
+            </div>
             <span class="field-error"></span>
           </div>
 
@@ -393,6 +419,16 @@
     document.getElementById(id).addEventListener('input', function () {
       Validator.clearError(this);
     });
+  });
+
+  const passwordEl = document.getElementById('password');
+  const passwordToggleEl = document.getElementById('passwordToggle');
+
+  passwordToggleEl.addEventListener('click', () => {
+    const isHidden = passwordEl.type === 'password';
+    passwordEl.type = isHidden ? 'text' : 'password';
+    passwordToggleEl.textContent = isHidden ? 'Hide' : 'Show';
+    passwordToggleEl.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
   });
 
   document.getElementById('loginForm').addEventListener('submit', async (e) => {

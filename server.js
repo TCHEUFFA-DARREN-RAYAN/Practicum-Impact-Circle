@@ -4,7 +4,6 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
-const rateLimit = require('express-rate-limit');
 
 const { connectDB } = require('./src/config/db');
 require('./src/models/index');
@@ -34,14 +33,9 @@ app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-const globalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 200, standardHeaders: true, legacyHeaders: false });
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, message: { success: false, message: 'Too many attempts, try again in 15 minutes.' } });
-
-app.use(globalLimiter);
-
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/volunteers', volunteerRoutes);
 app.use('/api/orgs', orgRoutes);
 app.use('/api/gigs', gigRoutes);
