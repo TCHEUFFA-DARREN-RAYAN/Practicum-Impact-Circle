@@ -20,7 +20,7 @@ router.post('/register', [
     const { email, password, role, orgName, companyName } = req.body;
 
     const existing = await User.findOne({ where: { email } });
-    if (existing) return res.status(409).json({ success: false, message: 'Email already registered.' });
+    if (existing) return res.status(409).json({ success: false, message: 'An account with that email already exists. Please sign in or use a different email.' });
 
     const user = await User.create({ email, passwordHash: password, role });
 
