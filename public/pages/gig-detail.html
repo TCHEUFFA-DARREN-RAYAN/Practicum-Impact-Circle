@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gig Detail | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="page-content">
+  <div class="container" style="max-width:900px">
+    <div id="gigContent"><div class="loading-overlay"><div class="spinner spinner-lg"></div></div></div>
+  </div>
+</div>
+
+<!-- Apply Modal -->
+<div class="modal-backdrop" id="applyModal">
+  <div class="modal">
+    <div class="modal-header"><h3>Apply for this Gig</h3><button class="modal-close" onclick="closeApply()">×</button></div>
+    <div class="modal-body">
+      <div id="applyAlert"></div>
+      <div class="form-group">
+        <label for="statement">Personal Statement <span class="required">*</span></label>
+        <textarea id="statement" rows="5" placeholder="Tell the organization why you want to volunteer for this gig and what skills you bring. (Min 20 characters)"></textarea>
+        <div class="form-hint">Minimum 20 characters</div>
+        <span class="field-error"></span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeApply()">Cancel</button>
+      <button class="btn btn-primary" id="submitApply">Submit Application</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script>
+const gigId = window.location.pathname.split('/').pop();
+
+async function load() {
+  try {
+    const { data } = await API.get(`/gigs/${gigId}`);
+    const { gig } = data;
+
+    document.title = `${gig.title} | ImpactCircle`;
+
+    document.getElementById('gigContent').innerHTML = `
+      <div style="margin-bottom:1.5rem">
+        <a href="/gigs" class="btn btn-ghost btn-sm" style="padding-left:0">← Back to Gigs</a>
+      </div>
+      <div class="grid" style="grid-template-columns:2fr 1fr;gap:1.5rem;align-items:start">
+        <div>
+          <div class="card mb-4">
+            <div style="margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center">
+              <span class="cat-pill" style="background:${gig.categoryId?.colorHex}22;color:${gig.categoryId?.colorHex}">${gig.categoryId?.icon} ${gig.categoryId?.name}</span>
+              <span class="badge ${gig.status === 'open' ? 'badge-open' : 'badge-closed'}">${gig.status}</span>
+              ${gig.verifiedOnly ? '<span class="verified-lock"> Verified volunteers only</span>' : ''}
+            </div>
+            <h1 style="font-size:1.5rem;margin-bottom:0.5rem">${gig.title}</h1>
+            <div style="color:var(--text-muted);font-size:0.875rem;margin-bottom:1.25rem">${gig.orgId?.orgName || ''}</div>
+            <div class="divider"></div>
+            <h3 style="margin-bottom:0.75rem">About This Opportunity</h3>
+            <p style="font-size:0.9rem;line-height:1.7;color:var(--text-muted)">${gig.description.replace(/\n/g, '<br>')}</p>
+            ${gig.requiredSkills?.length ? `
+              <div style="margin-top:1.25rem">
+                <h4 style="margin-bottom:0.5rem">Required Skills</h4>
+                <div style="display:flex;flex-wrap:wrap;gap:0.375rem">${gig.requiredSkills.map(s => `<span class="badge badge-primary">${s}</span>`).join('')}</div>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+        <div>
+          <div class="card mb-4" style="position:sticky;top:calc(var(--nav-height)+1rem)">
+            <h3 style="margin-bottom:1rem">Gig Details</h3>
+            <div style="display:flex;flex-direction:column;gap:0.875rem">
+              <div style="display:flex;gap:0.75rem;align-items:flex-start">
+                <span style="font-size:1.25rem"></span>
+                <div><div style="font-size:0.775rem;font-weight:700;text-transform:uppercase;color:var(--text-muted)">Dates</div><div style="font-size:0.875rem;margin-top:0.125rem">${fmt.date(gig.startDate)} — ${fmt.date(gig.endDate)}</div></div>
+              </div>
+              <div style="display:flex;gap:0.75rem;align-items:flex-start">
+                <span style="font-size:1.25rem">⏱️</span>
+                <div><div style="font-size:0.775rem;font-weight:700;text-transform:uppercase;color:var(--text-muted)">Time Commitment</div><div style="font-size:0.875rem;margin-top:0.125rem">${gig.estimatedHours} hours</div></div>
+              </div>
+              <div style="display:flex;gap:0.75rem;align-items:flex-start">
+                <span style="font-size:1.25rem"></span>
+                <div><div style="font-size:0.775rem;font-weight:700;text-transform:uppercase;color:var(--text-muted)">Location</div><div style="font-size:0.875rem;margin-top:0.125rem">${gig.location?.type === 'remote' ? ' Remote' : gig.location?.address || 'In-Person'}</div></div>
+              </div>
+              <div style="display:flex;gap:0.75rem;align-items:flex-start">
+                <span style="font-size:1.25rem"></span>
+                <div><div style="font-size:0.775rem;font-weight:700;text-transform:uppercase;color:var(--text-muted)">Applicants</div><div style="font-size:0.875rem;margin-top:0.125rem">${gig.applicantCount || 0} applied</div></div>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div id="applySection">
+              ${gig.status === 'open' ? `<button class="btn btn-primary btn-block btn-lg" onclick="openApply()">Apply Now</button>` : `<div class="alert alert-warning">This gig is no longer accepting applications.</div>`}
+              ${gig.verifiedOnly ? `<div class="form-hint" style="text-align:center;margin-top:0.5rem"> Requires Verified Volunteer badge</div>` : ''}
+            </div>
+          </div>
+          <div class="card">
+            <h4 style="margin-bottom:0.75rem">About ${gig.orgId?.orgName || 'the Organization'}</h4>
+            ${gig.orgId?.missionStatement ? `<p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem">${gig.orgId.missionStatement}</p>` : ''}
+            ${gig.orgId?.address ? `<div class="gig-meta-item" style="font-size:0.8rem"> ${gig.orgId.address}</div>` : ''}
+            ${gig.orgId?.contactEmail ? `<div class="gig-meta-item" style="font-size:0.8rem">️ ${gig.orgId.contactEmail}</div>` : ''}
+            ${gig.orgId?.website ? `<div class="gig-meta-item" style="font-size:0.8rem"> <a href="${gig.orgId.website}" target="_blank">${gig.orgId.website}</a></div>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  } catch (err) {
+    document.getElementById('gigContent').innerHTML = `<div class="empty-state"><div class="empty-icon"></div><h3>Gig not found</h3><p>${err.message}</p><a href="/gigs" class="btn btn-primary">Back to Gigs</a></div>`;
+  }
+}
+
+function openApply() {
+  if (!API.isLoggedIn()) { window.location.href = '/login'; return; }
+  document.getElementById('applyModal').classList.add('open');
+}
+function closeApply() { document.getElementById('applyModal').classList.remove('open'); document.getElementById('applyAlert').innerHTML = ''; }
+
+document.getElementById('submitApply').addEventListener('click', async () => {
+  const stmt = document.getElementById('statement').value.trim();
+  const alertEl = document.getElementById('applyAlert');
+  if (stmt.length < 20) { Validator.showError(document.getElementById('statement'), 'Minimum 20 characters required.'); return; }
+
+  const btn = document.getElementById('submitApply');
+  btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
+  try {
+    await API.post(`/gigs/${gigId}/apply`, { personalStatement: stmt });
+    closeApply();
+    Toast.success('Application submitted successfully! ');
+    document.getElementById('applySection').innerHTML = `<div class="alert alert-success"> Application submitted! You'll be notified of the decision.</div>`;
+  } catch (err) {
+    alertEl.innerHTML = `<div class="alert alert-danger"> ${err.message}</div>`;
+    btn.disabled = false; btn.textContent = 'Submit Application';
+  }
+});
+
+load();
+</script>
+</body>
+</html>
