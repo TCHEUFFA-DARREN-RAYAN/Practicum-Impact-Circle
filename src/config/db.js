@@ -5,6 +5,7 @@ const path = require('path');
 const dbPassword = process.env.DB_PASS || process.env.DB_PASSWORD || '';
 const sslEnabled = String(process.env.DB_SSL_ENABLED || 'false').toLowerCase() === 'true';
 const sslCaPath = process.env.DB_SSL_CA_PATH;
+const syncAlterEnabled = String(process.env.DB_SYNC_ALTER || 'false').toLowerCase() === 'true';
 const dialectOptions = sslEnabled
   ? {
       ssl: {
@@ -34,8 +35,12 @@ const connectDB = async () => {
   try {
     await sequelize.authenticate();
     console.log('  MySQL connected');
-    await sequelize.sync({ alter: true });
-    console.log('  Tables synced');
+    if (syncAlterEnabled) {
+      await sequelize.sync({ alter: true });
+      console.log('  Tables synced (alter=true)');
+    } else {
+      console.log('  Schema sync skipped (set DB_SYNC_ALTER=true to enable)');
+    }
   } catch (err) {
     console.error('  MySQL connection failed:', err.message);
     process.exit(1);
