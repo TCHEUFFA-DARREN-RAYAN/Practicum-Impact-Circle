@@ -66,13 +66,19 @@
       <a href="/" class="nav-brand">Impact<span>Circle</span></a>
       <nav class="nav-links">${linksHTML}</nav>
       <div class="nav-right">${rightHTML}</div>
-      <button class="nav-hamburger" id="hamburger" aria-label="Menu"></button>
+      <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
     </div>
     <div class="nav-mobile-menu" id="mobileMenu">${mobileHTML}</div>
   `;
 
-  document.getElementById('hamburger')?.addEventListener('click', () => {
-    document.getElementById('mobileMenu').classList.toggle('open');
+  const hamburger = document.getElementById('hamburger');
+  hamburger?.addEventListener('click', () => {
+    const menu = document.getElementById('mobileMenu');
+    const isOpen = menu.classList.toggle('open');
+    hamburger.setAttribute('aria-expanded', isOpen);
+    hamburger.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
   });
 
   if (isLoggedIn) {
