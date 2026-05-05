@@ -10,6 +10,13 @@
 <nav id="navbar"></nav>
 <div class="page-content">
   <div class="container" style="max-width:900px">
+    <nav style="font-size:0.8125rem;color:var(--text-muted);margin-bottom:1.25rem;display:flex;align-items:center;gap:0.5rem">
+      <a href="/" style="color:var(--text-muted);text-decoration:none" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">Home</a>
+      <span>›</span>
+      <a href="/gigs" style="color:var(--text-muted);text-decoration:none" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">Browse Gigs</a>
+      <span>›</span>
+      <span id="breadcrumbTitle" style="color:var(--text)">Loading…</span>
+    </nav>
     <div id="gigContent"><div class="loading-overlay"><div class="spinner spinner-lg"></div></div></div>
   </div>
 </div>
@@ -43,6 +50,8 @@ async function load() {
   try {
     const { data } = await API.get(`/gigs/${gigId}`);
     const { gig } = data;
+    document.getElementById('breadcrumbTitle').textContent = gig.title || 'Gig Detail';
+    document.title = `${gig.title} | ImpactCircle`;
 
     document.title = `${gig.title} | ImpactCircle`;
 
