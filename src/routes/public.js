@@ -7,6 +7,8 @@ const CACHE_TTL = 5 * 60 * 1000;
 const getCache = (k) => { const e = cache.get(k); if (e && Date.now() - e.ts < CACHE_TTL) return e.data; return null; };
 const setCache = (k, d) => cache.set(k, { data: d, ts: Date.now() });
 
+router.get('/health', (req, res) => res.json({ success: true, message: 'API is running.', uptime: process.uptime() }));
+
 router.get('/impact', async (req, res, next) => {
   try {
     const cached = getCache('impact');
