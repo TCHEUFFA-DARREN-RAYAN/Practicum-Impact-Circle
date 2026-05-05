@@ -74,7 +74,13 @@
             <div class="form-group"><label for="availHours">Weekly Availability (hrs) <span class="required">*</span></label><input type="number" id="availHours" min="1" max="80" placeholder="10"><span class="field-error"></span></div>
             <div class="form-group"><label>Available Days</label>
               <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.5rem" id="daysCheckboxes">
-                ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => `<label class="form-check" style="margin:0"><input type="checkbox" name="days" value="${d}"> ${d}</label>`).join('')}
+                <label class="form-check" style="margin:0"><input type="checkbox" name="days" value="Mon"> Mon</label>
+                <label class="form-check" style="margin:0"><input type="checkbox" name="days" value="Tue"> Tue</label>
+                <label class="form-check" style="margin:0"><input type="checkbox" name="days" value="Wed"> Wed</label>
+                <label class="form-check" style="margin:0"><input type="checkbox" name="days" value="Thu"> Thu</label>
+                <label class="form-check" style="margin:0"><input type="checkbox" name="days" value="Fri"> Fri</label>
+                <label class="form-check" style="margin:0"><input type="checkbox" name="days" value="Sat"> Sat</label>
+                <label class="form-check" style="margin:0"><input type="checkbox" name="days" value="Sun"> Sun</label>
               </div>
             </div>
           </div>
@@ -157,13 +163,20 @@
 <script>
 const STEPS = ['Account', 'Basic Info', 'Profile', 'Experience', 'Documents', 'Consent'];
 let currentStep = 0;
-let userData = {};
-let skillsList = [], langsList = [], catList = [];
 
+// All form data is held locally — NO API calls until the final consent step
+const local = {
+  email: '', password: '',
+  step1: null, step2: null, step3: null,
+  govFile: null, bgFile: null,
+};
+let skillsList = [], langsList = [];
+
+// ── Render helpers ────────────────────────────────────────────
 function renderProgress() {
   document.getElementById('stepProgress').innerHTML = STEPS.map((label, i) => `
     <div class="step-item ${i < currentStep ? 'completed' : i === currentStep ? 'active' : ''}">
-      <div class="step-circle">${i < currentStep ? '' : i + 1}</div>
+      <div class="step-circle">${i < currentStep ? '✓' : i + 1}</div>
       <div class="step-label">${label}</div>
     </div>
   `).join('');
@@ -174,28 +187,33 @@ function renderPanels() {
     p.classList.toggle('active', i === currentStep);
   });
   document.getElementById('prevBtn').style.display = currentStep > 0 ? 'block' : 'none';
-  const nextBtn = document.getElementById('nextBtn');
-  nextBtn.textContent = currentStep === STEPS.length - 1 ? ' Complete Registration' : 'Continue →';
+  document.getElementById('nextBtn').textContent =
+    currentStep === STEPS.length - 1 ? '✓ Complete Registration' : 'Continue →';
 }
 
-// Tags input
+function showAlert(html) {
+  const el = document.getElementById('alertArea');
+  el.innerHTML = html;
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function clearAlert() { document.getElementById('alertArea').innerHTML = ''; }
+
+// ── Tag inputs ────────────────────────────────────────────────
 function setupTagInput(inputId, wrapperId, list) {
   const input = document.getElementById(inputId);
   const wrapper = document.getElementById(wrapperId);
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      const val = input.value.trim().replace(/,$/, '');
-      if (val && !list.includes(val)) {
-        list.push(val);
-        const tag = document.createElement('div');
-        tag.className = 'tag';
-        tag.innerHTML = `${val}<button onclick="removeTag(this,'${inputId}')">×</button>`;
-        tag.dataset.val = val;
-        wrapper.insertBefore(tag, input);
-      }
-      input.value = '';
-    }
+  input.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ',') return;
+    e.preventDefault();
+    const val = input.value.trim().replace(/,$/, '');
+    if (!val || list.includes(val)) return;
+    list.push(val);
+    const tag = document.createElement('div');
+    tag.className = 'tag';
+    tag.dataset.val = val;
+    tag.innerHTML = `${val}<button type="button" onclick="removeTag(this,'${inputId}')">×</button>`;
+    wrapper.insertBefore(tag, input);
+    input.value = '';
   });
 }
 
@@ -207,169 +225,185 @@ function removeTag(btn, listId) {
   tag.remove();
 }
 
-// File input label update
+// ── File inputs ───────────────────────────────────────────────
 ['govId', 'bgCheck'].forEach(prefix => {
-  document.getElementById(`${prefix}File`)?.addEventListener('change', (e) => {
+  document.getElementById(`${prefix}File`)?.addEventListener('change', e => {
     document.getElementById(`${prefix}Name`).textContent = e.target.files[0]?.name || '';
   });
 });
 
-// Load categories for step 3
+document.querySelectorAll('#govIdFile, #bgCheckFile').forEach(el => {
+  const area = el.closest('.file-upload-area');
+  area?.addEventListener('dragover', e => { e.preventDefault(); area.classList.add('drag-over'); });
+  area?.addEventListener('dragleave', () => area.classList.remove('drag-over'));
+  area?.addEventListener('drop', e => {
+    e.preventDefault(); area.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) { el.files = e.dataTransfer.files; el.dispatchEvent(new Event('change')); }
+  });
+});
+
+// ── Categories (loaded when entering step 3) ──────────────────
 async function loadCategories() {
   try {
     const { data } = await API.get('/public/impact');
     document.getElementById('catCheckboxes').innerHTML = data.categoryTotals.map(ct => `
       <label class="form-check" style="margin:0">
-        <input type="checkbox" name="cat" value="${ct.category._id}"> ${ct.category.icon} ${ct.category.name}
+        <input type="checkbox" name="cat" value="${ct.category._id}">
+        ${ct.category.icon || ''} ${ct.category.name}
       </label>
-    `).join('');
-  } catch {}
+    `).join('') || '<p class="text-muted" style="font-size:0.85rem">No categories loaded.</p>';
+  } catch {
+    document.getElementById('catCheckboxes').innerHTML =
+      '<p class="text-muted" style="font-size:0.85rem">Could not load categories.</p>';
+  }
 }
 
+// ── Validation ────────────────────────────────────────────────
 function validate() {
-  const alert = document.getElementById('alertArea');
-  alert.innerHTML = '';
+  clearAlert();
   if (currentStep === 0) {
     const email = document.getElementById('email').value.trim();
-    const pwd = document.getElementById('password').value;
-    const cpwd = document.getElementById('confirmPwd').value;
+    const pwd   = document.getElementById('password').value;
+    const cpwd  = document.getElementById('confirmPwd').value;
     let ok = true;
-    if (!Validator.email(email)) { Validator.showError(document.getElementById('email'), 'Valid email required.'); ok = false; }
-    if (!Validator.password(pwd)) { Validator.showError(document.getElementById('password'), 'Min 8 chars, 1 uppercase, 1 number.'); ok = false; }
-    if (pwd !== cpwd) { Validator.showError(document.getElementById('confirmPwd'), 'Passwords do not match.'); ok = false; }
+    if (!Validator.email(email))    { Validator.showError(document.getElementById('email'),      'Valid email required.'); ok = false; }
+    if (!Validator.password(pwd))   { Validator.showError(document.getElementById('password'),   'Min 8 chars, 1 uppercase, 1 number.'); ok = false; }
+    if (pwd !== cpwd)               { Validator.showError(document.getElementById('confirmPwd'), 'Passwords do not match.'); ok = false; }
     return ok;
   }
   if (currentStep === 1) {
     let ok = true;
     ['firstName','lastName','phone','address'].forEach(id => {
-      if (!Validator.required(document.getElementById(id).value)) { Validator.showError(document.getElementById(id), 'This field is required.'); ok = false; }
+      if (!Validator.required(document.getElementById(id).value))
+        { Validator.showError(document.getElementById(id), 'This field is required.'); ok = false; }
     });
-    if (!document.getElementById('dob').value) { Validator.showError(document.getElementById('dob'), 'Date of birth required.'); ok = false; }
+    if (!document.getElementById('dob').value)
+      { Validator.showError(document.getElementById('dob'), 'Date of birth required.'); ok = false; }
     return ok;
   }
   if (currentStep === 2) {
-    let ok = true;
-    if (!document.getElementById('availHours').value) { Validator.showError(document.getElementById('availHours'), 'Required.'); ok = false; }
-    return ok;
+    if (!document.getElementById('availHours').value)
+      { Validator.showError(document.getElementById('availHours'), 'Required.'); return false; }
   }
   if (currentStep === 5) {
     if (!document.getElementById('termsConsent').checked) {
-      alert.innerHTML = '<div class="alert alert-danger">You must accept the Terms & Conditions.</div>';
+      showAlert('<div class="alert alert-danger">You must accept the Terms & Conditions to continue.</div>');
       return false;
     }
   }
   return true;
 }
 
+// ── Main click handler ────────────────────────────────────────
 document.getElementById('nextBtn').addEventListener('click', async () => {
   if (!validate()) return;
+
   const btn = document.getElementById('nextBtn');
 
+  // Steps 0–4: save data locally, no network calls
   if (currentStep === 0) {
-    btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
-    try {
-      const { data } = await API.post('/auth/register', {
-        email: document.getElementById('email').value.trim(),
-        password: document.getElementById('password').value,
-        role: 'volunteer',
-      });
-      API.setSession(data.token, data.user);
-      userData.userId = data.user._id;
-      currentStep++;
-    } catch (err) {
-      document.getElementById('alertArea').innerHTML = `<div class="alert alert-danger"> ${err.message}</div>`;
-    } finally { btn.disabled = false; }
-  } else if (currentStep === 1) {
-    btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
-    try {
-      await API.post('/volunteers/register/step/1', {
-        firstName: document.getElementById('firstName').value.trim(),
-        lastName: document.getElementById('lastName').value.trim(),
-        phone: document.getElementById('phone').value.trim(),
-        dateOfBirth: document.getElementById('dob').value,
-        address: document.getElementById('address').value.trim(),
-      });
-      currentStep++;
-    } catch (err) {
-      document.getElementById('alertArea').innerHTML = `<div class="alert alert-danger"> ${err.message}</div>`;
-    } finally { btn.disabled = false; }
-  } else if (currentStep === 2) {
-    btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
-    try {
-      const days = [...document.querySelectorAll('input[name="days"]:checked')].map(c => c.value);
-      await API.post('/volunteers/register/step/2', {
-        skills: skillsList,
-        languages: langsList,
-        weeklyAvailabilityHours: parseInt(document.getElementById('availHours').value),
-        weeklyAvailabilityDays: days,
-      });
-      currentStep++;
-      loadCategories();
-    } catch (err) {
-      document.getElementById('alertArea').innerHTML = `<div class="alert alert-danger"> ${err.message}</div>`;
-    } finally { btn.disabled = false; }
-  } else if (currentStep === 3) {
-    btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
-    try {
-      const cats = [...document.querySelectorAll('input[name="cat"]:checked')].map(c => c.value);
-      await API.post('/volunteers/register/step/3', {
-        previousVolunteeringHistory: document.getElementById('history').value.trim(),
-        preferredCategories: cats,
-      });
-      currentStep++;
-    } catch (err) {
-      document.getElementById('alertArea').innerHTML = `<div class="alert alert-danger"> ${err.message}</div>`;
-    } finally { btn.disabled = false; }
-  } else if (currentStep === 4) {
-    const govFile = document.getElementById('govIdFile').files[0];
-    const bgFile = document.getElementById('bgCheckFile').files[0];
-    if (govFile || bgFile) {
-      btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
-      try {
-        const fd = new FormData();
-        if (govFile) fd.append('govId', govFile);
-        if (bgFile) fd.append('backgroundCheck', bgFile);
-        await API.upload('/volunteers/register/step/4/documents', fd);
-      } catch (err) {
-        document.getElementById('alertArea').innerHTML = `<div class="alert alert-warning">️ Document upload failed (${err.message}). You can upload later from your profile.</div>`;
-      } finally { btn.disabled = false; }
-    }
-    currentStep++;
-  } else if (currentStep === 5) {
-    btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
-    try {
-      await API.post('/volunteers/register/step/5', { consent: true });
-      Toast.success('Registration complete! Welcome to ImpactCircle ');
-      setTimeout(() => window.location.href = '/volunteer-dashboard', 1200);
-      return;
-    } catch (err) {
-      document.getElementById('alertArea').innerHTML = `<div class="alert alert-danger"> ${err.message}</div>`;
-      btn.disabled = false;
-    }
-    return;
-  } else {
-    currentStep++;
-  }
+    local.email    = document.getElementById('email').value.trim();
+    local.password = document.getElementById('password').value;
+    advance();
 
+  } else if (currentStep === 1) {
+    local.step1 = {
+      firstName:   document.getElementById('firstName').value.trim(),
+      lastName:    document.getElementById('lastName').value.trim(),
+      phone:       document.getElementById('phone').value.trim(),
+      dateOfBirth: document.getElementById('dob').value,
+      address:     document.getElementById('address').value.trim(),
+    };
+    advance();
+
+  } else if (currentStep === 2) {
+    local.step2 = {
+      skills:                  skillsList.slice(),
+      languages:               langsList.slice(),
+      weeklyAvailabilityHours: parseInt(document.getElementById('availHours').value) || 0,
+      weeklyAvailabilityDays:  [...document.querySelectorAll('input[name="days"]:checked')].map(c => c.value),
+    };
+    advance();
+    loadCategories();
+
+  } else if (currentStep === 3) {
+    local.step3 = {
+      previousVolunteeringHistory: document.getElementById('history').value.trim(),
+      preferredCategories: [...document.querySelectorAll('input[name="cat"]:checked')].map(c => c.value),
+    };
+    advance();
+
+  } else if (currentStep === 4) {
+    local.govFile = document.getElementById('govIdFile').files[0] || null;
+    local.bgFile  = document.getElementById('bgCheckFile').files[0] || null;
+    advance();
+
+  } else if (currentStep === 5) {
+    // ── Final step: create everything now ──
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px"></div> Creating your account…';
+
+    try {
+      // 1. Create user account
+      const { data: auth } = await API.post('/auth/register', {
+        email: local.email, password: local.password, role: 'volunteer',
+      });
+      API.setSession(auth.token, auth.user);
+
+      // 2–4. Save profile steps (best-effort — profile can be edited later)
+      if (local.step1) await API.post('/volunteers/register/step/1', local.step1);
+      if (local.step2) await API.post('/volunteers/register/step/2', local.step2);
+      if (local.step3) await API.post('/volunteers/register/step/3', local.step3);
+
+      // 5. Upload documents if provided
+      if (local.govFile || local.bgFile) {
+        try {
+          const fd = new FormData();
+          if (local.govFile) fd.append('govId',            local.govFile);
+          if (local.bgFile)  fd.append('backgroundCheck',  local.bgFile);
+          await API.upload('/volunteers/register/step/4/documents', fd);
+        } catch (uploadErr) {
+          showAlert(`<div class="alert alert-warning">⚠️ Document upload failed (${uploadErr.message}). You can upload them later from your profile.</div>`);
+        }
+      }
+
+      // 6. Finalise consent
+      await API.post('/volunteers/register/step/5', { consent: true });
+
+      Toast.success('Welcome to ImpactCircle! Registration complete.');
+      setTimeout(() => window.location.href = '/volunteer-dashboard', 1200);
+
+    } catch (err) {
+      // Duplicate email → send user back to step 0 so they can correct it
+      if (err.status === 409) {
+        API.clearSession();
+        showAlert(`<div class="alert alert-danger">⚠️ That email address is already registered. <a href="/login">Sign in instead</a>, or go back to step 1 and use a different email.</div>`);
+        currentStep = 0;
+        renderProgress();
+        renderPanels();
+      } else {
+        showAlert(`<div class="alert alert-danger">⚠️ ${err.message || 'Registration failed. Please try again.'}</div>`);
+      }
+      btn.disabled = false;
+      btn.textContent = '✓ Complete Registration';
+    }
+  }
+});
+
+function advance() {
+  clearAlert();
+  currentStep++;
   renderProgress();
   renderPanels();
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  document.getElementById('alertArea').innerHTML = '';
-});
+}
 
 document.getElementById('prevBtn').addEventListener('click', () => {
-  if (currentStep > 0) { currentStep--; renderProgress(); renderPanels(); }
+  if (currentStep > 0) { clearAlert(); currentStep--; renderProgress(); renderPanels(); }
 });
 
 setupTagInput('skillTag', 'skillsInput', skillsList);
-setupTagInput('langTag', 'langsInput', langsList);
-
-document.querySelectorAll('#govIdFile, #bgCheckFile').forEach(el => {
-  const parent = el.closest('.file-upload-area');
-  parent?.addEventListener('dragover', (e) => { e.preventDefault(); parent.classList.add('drag-over'); });
-  parent?.addEventListener('dragleave', () => parent.classList.remove('drag-over'));
-  parent?.addEventListener('drop', (e) => { e.preventDefault(); parent.classList.remove('drag-over'); if (e.dataTransfer.files[0]) { el.files = e.dataTransfer.files; el.dispatchEvent(new Event('change')); } });
-});
+setupTagInput('langTag',  'langsInput',  langsList);
 
 renderProgress();
 renderPanels();
