@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="page-content">
+  <div class="container">
+    <div class="page-header">
+      <h1> Admin Dashboard</h1>
+      <p class="text-muted">Platform overview and management tools</p>
+    </div>
+
+    <div class="grid grid-4 mb-4" id="statsGrid">
+      <div class="stat-card"><div class="stat-label">Total Users</div><div class="stat-value" id="sUsers">—</div></div>
+      <div class="stat-card"><div class="stat-label">Active Orgs</div><div class="stat-value" id="sOrgs">—</div></div>
+      <div class="stat-card"><div class="stat-label">Total Gigs</div><div class="stat-value" id="sGigs">—</div></div>
+      <div class="stat-card"><div class="stat-label">Verified Hours</div><div class="stat-value" id="sHours">—</div></div>
+      <div class="stat-card"><div class="stat-label" style="color:var(--warning)">Pending Verifications</div><div class="stat-value" id="sPending">—</div></div>
+      <div class="stat-card"><div class="stat-label" style="color:var(--warning)">Pending Task Approvals</div><div class="stat-value" id="sTasks">—</div></div>
+      <div class="stat-card"><div class="stat-label">Auto-Approval Rate</div><div class="stat-value" id="sAuto">—%</div><div class="stat-sub">Target: &lt; 10%</div></div>
+    </div>
+
+    <div class="grid grid-3">
+      <a href="/admin/verify" class="card card-hover" style="text-decoration:none;display:block">
+        <div style="font-size:2rem;margin-bottom:0.5rem"></div>
+        <h3>Verification Queue</h3>
+        <p class="text-muted" style="font-size:0.875rem;margin-top:0.25rem">Review volunteer and organization documents</p>
+      </a>
+      <a href="/admin/categories" class="card card-hover" style="text-decoration:none;display:block">
+        <div style="font-size:2rem;margin-bottom:0.5rem">️</div>
+        <h3>Category Management</h3>
+        <p class="text-muted" style="font-size:0.875rem;margin-top:0.25rem">Add, edit, and archive impact categories</p>
+      </a>
+      <a href="/admin/rewards" class="card card-hover" style="text-decoration:none;display:block">
+        <div style="font-size:2rem;margin-bottom:0.5rem"></div>
+        <h3>Reward Management</h3>
+        <p class="text-muted" style="font-size:0.875rem;margin-top:0.25rem">Manage the reward catalogue and eligibility rules</p>
+      </a>
+      <a href="/admin/disputes" class="card card-hover" style="text-decoration:none;display:block">
+        <div style="font-size:2rem;margin-bottom:0.5rem">️</div>
+        <h3>Disputes</h3>
+        <p class="text-muted" style="font-size:0.875rem;margin-top:0.25rem">Override task decisions and resolve escalations</p>
+      </a>
+      <a href="/admin/audit" class="card card-hover" style="text-decoration:none;display:block">
+        <div style="font-size:2rem;margin-bottom:0.5rem"></div>
+        <h3>Audit Log</h3>
+        <p class="text-muted" style="font-size:0.875rem;margin-top:0.25rem">Immutable record of all platform actions</p>
+      </a>
+      <a href="/admin/analytics" class="card card-hover" style="text-decoration:none;display:block">
+        <div style="font-size:2rem;margin-bottom:0.5rem"></div>
+        <h3>Analytics</h3>
+        <p class="text-muted" style="font-size:0.875rem;margin-top:0.25rem">Platform health metrics and CSV export</p>
+      </a>
+    </div>
+  </div>
+</div>
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script>
+API.requireAuth('admin');
+(async () => {
+  try {
+    const { data } = await API.get('/admin/dashboard');
+    const s = data.stats;
+    document.getElementById('sUsers').textContent = s.totalUsers;
+    document.getElementById('sOrgs').textContent = s.totalOrgs;
+    document.getElementById('sGigs').textContent = s.totalGigs;
+    document.getElementById('sHours').textContent = s.totalVerifiedHours.toFixed(1);
+    document.getElementById('sPending').textContent = s.pendingVerifications;
+    document.getElementById('sTasks').textContent = s.pendingTasks;
+    document.getElementById('sAuto').textContent = s.autoApprovalRate + '%';
+    if (s.autoApprovalRate >= 10) document.getElementById('sAuto').style.color = 'var(--danger)';
+  } catch (err) { Toast.error(err.message); }
+})();
+</script>
+</body>
+</html>

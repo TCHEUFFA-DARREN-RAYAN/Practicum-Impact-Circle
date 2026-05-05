@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audit Log | Admin | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="page-content">
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><h1> Audit Log</h1><p class="text-muted">Immutable record of all platform actions. No entries can be deleted.</p></div>
+        <a href="/admin" class="btn btn-secondary">← Admin Home</a>
+      </div>
+    </div>
+
+    <div class="filters mb-4">
+      <div class="filters-row">
+        <div class="filter-group"><label>Date From</label><input type="date" id="dateFrom"></div>
+        <div class="filter-group"><label>Date To</label><input type="date" id="dateTo"></div>
+        <div class="filter-group"><label>Event Type</label><input type="text" id="eventType" placeholder="e.g. POST:/api/gigs"></div>
+        <div class="filter-group"><label>Actor ID</label><input type="text" id="actorId" placeholder="User ObjectId"></div>
+        <button class="btn btn-primary" onclick="load(1)">Search</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Timestamp</th><th>Event</th><th>Method</th><th>Actor</th><th>Role</th><th>Status</th></tr></thead>
+          <tbody id="auditTable"><tr><td colspan="6" style="text-align:center;padding:2rem"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem 0 0">
+        <div id="auditInfo" class="text-muted" style="font-size:0.8rem"></div>
+        <div style="display:flex;gap:0.5rem">
+          <button class="btn btn-secondary btn-sm" id="prevPage" onclick="changePage(-1)" disabled>← Prev</button>
+          <button class="btn btn-secondary btn-sm" id="nextPage" onclick="changePage(1)" disabled>Next →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script>
+API.requireAuth('admin');
+let page = 1, totalPages = 1;
+
+async function load(p = 1) {
+  page = p;
+  const q = new URLSearchParams({ page, limit: 50 });
+  const df = document.getElementById('dateFrom').value;
+  const dt = document.getElementById('dateTo').value;
+  const et = document.getElementById('eventType').value.trim();
+  const ai = document.getElementById('actorId').value.trim();
+  if (df) q.set('dateFrom', df);
+  if (dt) q.set('dateTo', dt);
+  if (et) q.set('eventType', et);
+  if (ai) q.set('actorId', ai);
+
+  document.getElementById('auditTable').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem"><div class="spinner"></div></td></tr>';
+  try {
+    const { data } = await API.get(`/admin/audit?${q}`);
+    totalPages = data.pages;
+    document.getElementById('auditInfo').textContent = `${data.total} entries · Page ${data.page} of ${data.pages}`;
+    document.getElementById('prevPage').disabled = page <= 1;
+    document.getElementById('nextPage').disabled = page >= totalPages;
+
+    const methodColors = { POST: 'var(--success)', PATCH: 'var(--warning)', PUT: 'var(--info)', DELETE: 'var(--danger)' };
+    document.getElementById('auditTable').innerHTML = data.logs.length ? data.logs.map(l => `
+      <tr>
+        <td style="font-size:0.775rem;white-space:nowrap">${fmt.datetime(l.timestamp)}</td>
+        <td style="font-size:0.775rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${l.eventType}">${l.eventType}</td>
+        <td><span style="font-size:0.7rem;font-weight:700;color:${methodColors[l.method]||'var(--text)'}">${l.method}</span></td>
+        <td style="font-size:0.775rem">${l.actorId ? l.actorId.toString().substring(0,10)+'...' : '—'}</td>
+        <td><span class="badge badge-primary" style="font-size:0.65rem">${l.actorRole}</span></td>
+        <td><span style="font-size:0.75rem;font-weight:700;color:${l.statusCode >= 400 ? 'var(--danger)' : 'var(--success)'}">${l.statusCode || '—'}</span></td>
+      </tr>
+    `).join('') : '<tr><td colspan="6" class="text-center text-muted" style="padding:2rem">No audit entries found for this filter.</td></tr>';
+  } catch (err) { Toast.error(err.message); }
+}
+
+function changePage(dir) { if (page + dir >= 1 && page + dir <= totalPages) load(page + dir); }
+load();
+</script>
+</body>
+</html>

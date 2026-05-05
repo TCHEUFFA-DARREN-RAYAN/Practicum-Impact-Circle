@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Category Management | Admin | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="page-content">
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><h1>️ Category Management</h1><p class="text-muted">Manage the 8 impact categories and points-per-hour rates</p></div>
+        <div style="display:flex;gap:0.75rem">
+          <a href="/admin" class="btn btn-secondary">← Admin Home</a>
+          <button class="btn btn-primary" onclick="openCreate()">+ Add Category</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Icon</th><th>Name</th><th>Description</th><th>Pts/Hour</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="catTable"><tr><td colspan="6" style="text-align:center;padding:2rem"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="catModal">
+  <div class="modal">
+    <div class="modal-header"><h3 id="catModalTitle">Add Category</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <div id="catAlert"></div>
+      <input type="hidden" id="catId">
+      <div class="form-row">
+        <div class="form-group"><label for="catIcon">Icon (emoji)</label><input type="text" id="catIcon" placeholder="" maxlength="4"></div>
+        <div class="form-group"><label for="catColorHex">Color (hex)</label><input type="color" id="catColorHex" value="#2563eb" style="padding:0.25rem;height:42px"></div>
+      </div>
+      <div class="form-group"><label for="catName">Name <span class="required">*</span></label><input type="text" id="catName" placeholder="e.g. Food Security"><span class="field-error"></span></div>
+      <div class="form-group"><label for="catDesc">Description</label><textarea id="catDesc" rows="2" placeholder="Describe this category..."></textarea></div>
+      <div class="form-group"><label for="catPts">Points per Hour <span class="required">*</span></label><input type="number" id="catPts" min="1" placeholder="10"><span class="field-error"></span></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="catSaveBtn" onclick="saveCategory()">Save Category</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script>
+API.requireAuth('admin');
+
+async function load() {
+  try {
+    const { data } = await API.get('/admin/categories');
+    document.getElementById('catTable').innerHTML = data.categories.map(c => `
+      <tr>
+        <td style="font-size:1.5rem">${c.icon}</td>
+        <td style="font-weight:600">${c.name}</td>
+        <td style="font-size:0.8rem;color:var(--text-muted);max-width:250px">${c.description || '—'}</td>
+        <td><strong>${c.pointsPerHour}</strong> pts/h</td>
+        <td><span class="badge ${c.isActive ? 'badge-verified' : 'badge-rejected'}">${c.isActive ? 'Active' : 'Archived'}</span></td>
+        <td><div class="table-actions">
+          <button class="btn btn-sm btn-secondary" onclick='editCategory(${JSON.stringify(c).replace(/'/g,"\\'")}  )'>Edit</button>
+          ${c.isActive ? `<button class="btn btn-sm btn-danger" onclick="archiveCat('${c._id}')">Archive</button>` : ''}
+        </div></td>
+      </tr>
+    `).join('');
+  } catch (err) { Toast.error(err.message); }
+}
+
+function openCreate() {
+  document.getElementById('catId').value = '';
+  document.getElementById('catName').value = '';
+  document.getElementById('catDesc').value = '';
+  document.getElementById('catPts').value = '10';
+  document.getElementById('catIcon').value = '';
+  document.getElementById('catColorHex').value = '#2563eb';
+  document.getElementById('catModalTitle').textContent = 'Add Category';
+  document.getElementById('catAlert').innerHTML = '';
+  document.getElementById('catModal').classList.add('open');
+}
+
+function editCategory(c) {
+  document.getElementById('catId').value = c._id;
+  document.getElementById('catName').value = c.name;
+  document.getElementById('catDesc').value = c.description || '';
+  document.getElementById('catPts').value = c.pointsPerHour;
+  document.getElementById('catIcon').value = c.icon || '';
+  document.getElementById('catColorHex').value = c.colorHex || '#2563eb';
+  document.getElementById('catModalTitle').textContent = 'Edit Category';
+  document.getElementById('catAlert').innerHTML = '';
+  document.getElementById('catModal').classList.add('open');
+}
+
+async function saveCategory() {
+  const id = document.getElementById('catId').value;
+  const name = document.getElementById('catName').value.trim();
+  const pph = parseInt(document.getElementById('catPts').value);
+  if (!name) { Validator.showError(document.getElementById('catName'), 'Name required.'); return; }
+  if (!pph || pph < 1) { Validator.showError(document.getElementById('catPts'), 'Must be ≥ 1.'); return; }
+
+  const payload = { name, description: document.getElementById('catDesc').value.trim(), pointsPerHour: pph, icon: document.getElementById('catIcon').value, colorHex: document.getElementById('catColorHex').value };
+  try {
+    if (id) await API.put(`/admin/categories/${id}`, payload);
+    else await API.post('/admin/categories', payload);
+    Toast.success('Category saved!');
+    closeModal(); load();
+  } catch (err) { document.getElementById('catAlert').innerHTML = `<div class="alert alert-danger">${err.message}</div>`; }
+}
+
+async function archiveCat(id) {
+  if (!confirm('Archive this category?')) return;
+  try { await API.patch(`/admin/categories/${id}/archive`, {}); Toast.success('Category archived.'); load(); } catch (err) { Toast.error(err.message); }
+}
+
+function closeModal() { document.getElementById('catModal').classList.remove('open'); }
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSR Dashboard | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="page-content">
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div id="headerText"><h1>CSR Dashboard</h1><p class="text-muted">Your social impact investments and employee engagement</p></div>
+        <a href="/api/csr/me/report.csv" class="btn btn-secondary">⬇️ Export Report (CSV)</a>
+      </div>
+    </div>
+
+    <div class="grid grid-4 mb-4">
+      <div class="stat-card"><div class="stat-label">Total Employee Hours</div><div class="stat-value" id="sHours">—</div></div>
+      <div class="stat-card"><div class="stat-label">Employees Tracked</div><div class="stat-value" id="sEmp">—</div></div>
+      <div class="stat-card"><div class="stat-label">Sponsored Rewards</div><div class="stat-value" id="sRewards">—</div></div>
+      <div class="stat-card"><div class="stat-label">Total Redemptions</div><div class="stat-value" id="sRedeem">—</div></div>
+    </div>
+
+    <div class="grid grid-2" style="align-items:start">
+      <div>
+        <div class="card mb-4">
+          <div class="card-header"><div class="card-title"> Impact by Category</div></div>
+          <div id="catBreakdown">
+            <div class="empty-state" style="padding:1.5rem"><div class="empty-icon"></div><p style="font-size:0.875rem">No employee hours tracked yet.</p></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card mb-4">
+          <div class="card-header"><div class="card-title"> Sponsored Rewards</div></div>
+          <div id="sponsoredRewards"><div class="loading-overlay"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">Company Profile</div><button class="btn btn-secondary btn-sm" onclick="editProfile()">Edit Profile</button></div>
+      <div id="profileInfo"><div class="loading-overlay"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="editModal">
+  <div class="modal">
+    <div class="modal-header"><h3>Edit CSR Profile</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <div id="editAlert"></div>
+      <div class="form-row">
+        <div class="form-group"><label for="companyName">Company Name</label><input type="text" id="companyName"></div>
+        <div class="form-group"><label for="industry">Industry</label><input type="text" id="industry"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label for="contactName">Contact Name</label><input type="text" id="contactName"></div>
+        <div class="form-group"><label for="website">Website</label><input type="url" id="website"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProfile()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script>
+API.requireAuth('csr');
+let partner = null;
+
+async function load() {
+  try {
+    const { data } = await API.get('/csr/me/dashboard');
+    partner = data.partner;
+    const s = data.stats;
+
+    document.getElementById('headerText').innerHTML = `<h1>${partner.companyName} — Impact Dashboard</h1><p class="text-muted">Your social impact investments and employee engagement</p>`;
+    document.getElementById('sHours').textContent = s.totalEmployeeHours.toFixed(1) + 'h';
+    document.getElementById('sEmp').textContent = s.employeeCount;
+    document.getElementById('sRewards').textContent = s.sponsoredRewardsCount;
+    document.getElementById('sRedeem').textContent = s.totalRedemptions;
+
+    const catKeys = Object.keys(s.categoryBreakdown || {});
+    document.getElementById('catBreakdown').innerHTML = catKeys.length ? catKeys.map(k => {
+      const hrs = s.categoryBreakdown[k];
+      const pct = Math.round((hrs / s.totalEmployeeHours) * 100) || 0;
+      return `
+        <div style="margin-bottom:0.875rem">
+          <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:0.25rem">
+            <span>${k.substring(0, 22)}</span><strong>${hrs}h (${pct}%)</strong>
+          </div>
+          <div style="height:6px;background:var(--border);border-radius:3px">
+            <div style="width:${pct}%;height:100%;background:var(--primary);border-radius:3px"></div>
+          </div>
+        </div>
+      `;
+    }).join('') : '<div class="empty-state" style="padding:1.5rem"><p style="font-size:0.875rem">No employee hours data yet.</p></div>';
+
+    document.getElementById('sponsoredRewards').innerHTML = data.sponsoredRewards.length ? data.sponsoredRewards.map(r => `
+      <div style="padding:0.75rem 0;border-bottom:1px solid var(--border)">
+        <div style="font-weight:600;font-size:0.875rem">${r.name}</div>
+        <div style="font-size:0.775rem;color:var(--text-muted)">${r.pointsRequired} pts · ${r.categoryHoursRequired}h in category</div>
+        <span class="badge ${r.isActive ? 'badge-verified' : 'badge-rejected'}" style="margin-top:0.25rem">${r.isActive ? 'Active' : 'Inactive'}</span>
+      </div>
+    `).join('') : '<div class="empty-state" style="padding:1.5rem"><p style="font-size:0.875rem">No sponsored rewards. Contact admin to add rewards.</p></div>';
+
+    document.getElementById('profileInfo').innerHTML = `
+      <div class="grid grid-2">
+        <div><span class="stat-label">Company</span><div style="font-weight:600">${partner.companyName}</div></div>
+        <div><span class="stat-label">Industry</span><div>${partner.industry || '—'}</div></div>
+        <div><span class="stat-label">Contact</span><div>${partner.contactName || '—'}</div></div>
+        <div><span class="stat-label">Email</span><div>${partner.contactEmail || '—'}</div></div>
+        <div><span class="stat-label">Website</span><div>${partner.website ? `<a href="${partner.website}" target="_blank">${partner.website}</a>` : '—'}</div></div>
+      </div>
+    `;
+  } catch (err) { Toast.error(err.message); }
+}
+
+function editProfile() {
+  if (!partner) return;
+  document.getElementById('companyName').value = partner.companyName || '';
+  document.getElementById('industry').value = partner.industry || '';
+  document.getElementById('contactName').value = partner.contactName || '';
+  document.getElementById('website').value = partner.website || '';
+  document.getElementById('editAlert').innerHTML = '';
+  document.getElementById('editModal').classList.add('open');
+}
+
+async function saveProfile() {
+  try {
+    await API.put('/csr/me', {
+      companyName: document.getElementById('companyName').value.trim(),
+      industry: document.getElementById('industry').value.trim(),
+      contactName: document.getElementById('contactName').value.trim(),
+      website: document.getElementById('website').value.trim(),
+    });
+    Toast.success('Profile updated!');
+    closeModal(); load();
+  } catch (err) { document.getElementById('editAlert').innerHTML = `<div class="alert alert-danger">${err.message}</div>`; }
+}
+
+function closeModal() { document.getElementById('editModal').classList.remove('open'); }
+load();
+</script>
+</body>
+</html>
