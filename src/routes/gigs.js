@@ -9,7 +9,7 @@ const { sendEmail, templates } = require('../services/email');
 
 router.get('/', optionalAuth, async (req, res, next) => {
   try {
-    const { category, location, dateFrom, dateTo, org, search, page = 1, limit = 12 } = req.query;
+    const { category, location, dateFrom, dateTo, org, search, page = 1, limit = Math.min(parseInt(req.query.limit) || 12, 50) } = req.query;
     const where = { status: 'open' };
     if (category) where.categoryId = parseInt(category);
     if (location) where.locationType = location;
