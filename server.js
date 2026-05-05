@@ -85,6 +85,13 @@ pages.forEach(([route, file]) => {
   });
 });
 
+app.use((req, res) => {
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ success: false, message: 'API endpoint not found.' });
+  }
+  res.status(404).sendFile(path.join(__dirname, 'public', 'pages', '404.html'));
+});
+
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
