@@ -107,8 +107,6 @@
 <script src="/js/api.js"></script>
 <script src="/js/nav.js"></script>
 <script>
-  API.requireAuth();
-
   // ── State ──────────────────────────────────────────────────────────────────
   let currentPage = 1;
   const PAGE_SIZE = 12;
@@ -144,10 +142,17 @@
       const sel = document.getElementById('filterCategory');
       (data.categoryTotals || []).forEach(ct => {
         const opt = document.createElement('option');
-        opt.value = ct.category._id;
-        opt.textContent = `${ct.category.icon || ''} ${ct.category.name}`.trim();
+        opt.value = ct.category.id;
+        opt.textContent = ct.category.name;
         sel.appendChild(opt);
       });
+      // Pre-select category from URL param (e.g. /gigs?category=Food+Security)
+      const urlCat = new URLSearchParams(window.location.search).get('category');
+      if (urlCat) {
+        const opts = Array.from(sel.options);
+        const match = opts.find(o => o.textContent.toLowerCase() === urlCat.toLowerCase());
+        if (match) sel.value = match.value;
+      }
     } catch (_) {}
   }
 
@@ -173,7 +178,7 @@
   // ── Render Gig Card ────────────────────────────────────────────────────────
   function renderGigCard(gig) {
     const catName  = gig.category?.name || 'General';
-    const catId    = gig.category?._id || 'default';
+    const catId    = gig.category?.id || 'default';
     const catIcon  = gig.category?.icon || '';
     const pillCls  = getCatPillClass(catId);
     const lockBadge = gig.verifiedOnly
@@ -181,7 +186,7 @@
       : '';
 
     return `
-      <div class="gig-card" onclick="goToGig('${gig._id}')">
+      <div class="gig-card" onclick="goToGig('${gig.id}')">
         <div class="gig-card-top">
           <div style="flex:1;min-width:0">
             <div class="gig-title truncate">${gig.title}</div>
@@ -201,7 +206,7 @@
 
         <div class="gig-card-footer">
           ${lockBadge || '<span></span>'}
-          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();goToGig('${gig._id}')">
+          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();goToGig('${gig.id}')">
             View &amp; Apply &#x2192;
           </button>
         </div>
@@ -227,7 +232,7 @@
       const { data } = await API.get('/gigs?' + buildQuery());
       const gigs  = data.gigs || data.results || [];
       const total = data.total || data.totalCount || gigs.length;
-      totalPages  = data.totalPages || Math.ceil(total / PAGE_SIZE) || 1;
+      totalPages  = data.pages || data.totalPages || Math.ceil(total / PAGE_SIZE) || 1;
 
       if (gigs.length === 0) {
         container.innerHTML = `

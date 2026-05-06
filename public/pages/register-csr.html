@@ -66,7 +66,10 @@
           </div>
           <div class="form-group">
             <label for="confirmPwd">Confirm Password <span class="required">*</span></label>
-            <input type="password" id="confirmPwd" placeholder="Repeat your password" autocomplete="new-password">
+            <div class="input-group">
+              <input type="password" id="confirmPwd" placeholder="Repeat your password" autocomplete="new-password">
+              <button type="button" class="btn btn-secondary" id="toggleConfirmPwd" title="Show/hide password" tabindex="-1">&#x1F441;</button>
+            </div>
             <span class="field-error"></span>
           </div>
         </div>
@@ -160,10 +163,14 @@
     if (user) API.redirectByRole(user);
   }
 
-  // Password visibility toggle
+  // Password visibility toggles
   document.getElementById('togglePwd').addEventListener('click', () => {
     const pwd = document.getElementById('password');
     pwd.type = pwd.type === 'password' ? 'text' : 'password';
+  });
+  document.getElementById('toggleConfirmPwd').addEventListener('click', () => {
+    const el = document.getElementById('confirmPwd');
+    el.type = el.type === 'password' ? 'text' : 'password';
   });
 
   // Clear errors on input

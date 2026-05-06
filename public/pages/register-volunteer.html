@@ -43,7 +43,10 @@
           </div>
           <div class="form-group">
             <label for="confirmPwd">Confirm Password <span class="required">*</span></label>
-            <input type="password" id="confirmPwd" placeholder="Repeat your password">
+            <div class="input-group">
+              <input type="password" id="confirmPwd" placeholder="Repeat your password">
+              <button type="button" class="btn btn-secondary" id="toggleConfirmPwd" title="Show/hide password" tabindex="-1">&#x1F441;</button>
+            </div>
             <span class="field-error"></span>
           </div>
         </div>
@@ -74,7 +77,15 @@
           </div>
           <div class="form-group">
             <label>Languages Spoken</label>
-            <div class="tags-input" id="langsInput"><input type="text" placeholder="e.g. English, French..." id="langTag"></div>
+            <div class="tags-input" id="langsInput">
+              <div style="position:relative;display:inline-flex;flex:1;min-width:200px;align-items:center">
+                <input type="text" id="langSearch" placeholder="Search a language..." autocomplete="off"
+                  style="border:none;outline:none;flex:1;min-width:150px;font-size:0.875rem;padding:0.2rem 0.25rem">
+                <div id="langDropdown"
+                  style="display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:220px;background:#fff;border:1px solid #d1d5db;border-radius:6px;max-height:210px;overflow-y:auto;z-index:200;box-shadow:0 6px 18px rgba(0,0,0,.12)">
+                </div>
+              </div>
+            </div>
           </div>
           <div class="form-row">
             <div class="form-group"><label for="availHours">Weekly Availability (hrs) <span class="required">*</span></label><input type="number" id="availHours" min="1" max="80" placeholder="10"><span class="field-error"></span></div>
@@ -102,7 +113,15 @@
           </div>
           <div class="form-group">
             <label>Preferred Impact Categories</label>
-            <div id="catCheckboxes" style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;margin-top:0.5rem"><div class="spinner"></div></div>
+            <div class="tags-input" id="catTagsWrapper">
+              <div style="position:relative;display:inline-flex;flex:1;min-width:200px;align-items:center">
+                <input type="text" id="catSearch" placeholder="Search a category..." autocomplete="off"
+                  style="border:none;outline:none;flex:1;min-width:150px;font-size:0.875rem;padding:0.2rem 0.25rem">
+                <div id="catDropdown"
+                  style="display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:220px;background:#fff;border:1px solid #d1d5db;border-radius:6px;max-height:210px;overflow-y:auto;z-index:200;box-shadow:0 6px 18px rgba(0,0,0,.12)">
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -144,8 +163,8 @@
             <label for="termsConsent">I agree to the Terms & Conditions and Platform Code of Conduct <span class="required">*</span></label>
           </div>
           <div class="form-check">
-            <input type="checkbox" id="dataConsent">
-            <label for="dataConsent">I consent to data use as described in the Privacy Policy</label>
+            <input type="checkbox" id="dataConsent" required>
+            <label for="dataConsent">I consent to data use as described in the Privacy Policy <span class="required">*</span></label>
           </div>
         </div>
 
@@ -176,7 +195,7 @@ const local = {
   step1: null, step2: null, step3: null,
   govFile: null, bgFile: null,
 };
-let skillsList = [], langsList = [];
+let skillsList = [], langsList = [], catList = [];
 
 // ── Render helpers ────────────────────────────────────────────
 function renderProgress() {
@@ -231,6 +250,12 @@ function removeTag(btn, listId) {
   tag.remove();
 }
 
+// ── Password toggles ─────────────────────────────────────────
+document.getElementById('toggleConfirmPwd').addEventListener('click', () => {
+  const el = document.getElementById('confirmPwd');
+  el.type = el.type === 'password' ? 'text' : 'password';
+});
+
 // ── File inputs ───────────────────────────────────────────────
 ['govId', 'bgCheck'].forEach(prefix => {
   document.getElementById(`${prefix}File`)?.addEventListener('change', e => {
@@ -248,21 +273,55 @@ document.querySelectorAll('#govIdFile, #bgCheckFile').forEach(el => {
   });
 });
 
-// ── Categories (loaded when entering step 3) ──────────────────
-async function loadCategories() {
-  try {
-    const { data } = await API.get('/public/impact');
-    document.getElementById('catCheckboxes').innerHTML = data.categoryTotals.map(ct => `
-      <label class="form-check" style="margin:0">
-        <input type="checkbox" name="cat" value="${ct.category._id}">
-        ${ct.category.icon || ''} ${ct.category.name}
-      </label>
-    `).join('') || '<p class="text-muted" style="font-size:0.85rem">No categories loaded.</p>';
-  } catch {
-    document.getElementById('catCheckboxes').innerHTML =
-      '<p class="text-muted" style="font-size:0.85rem">Could not load categories.</p>';
+// ── Category searchable dropdown (static list) ───────────────
+const CATEGORIES = [
+  'Food Security', 'Women Support', 'Youth Development', 'Seniors Support',
+  'Environment', 'Education', 'Newcomer Integration', 'Volunteer Opportunities'
+];
+
+(function setupCatDropdown() {
+  const searchEl = document.getElementById('catSearch');
+  const dropdown = document.getElementById('catDropdown');
+  const wrapper  = document.getElementById('catTagsWrapper');
+
+  function addCat(cat) {
+    if (catList.includes(cat)) return;
+    catList.push(cat);
+    const tag = document.createElement('div');
+    tag.className = 'tag';
+    tag.dataset.val = cat;
+    tag.innerHTML = `${cat}<button type="button" onclick="removeCatTag(this)">×</button>`;
+    wrapper.insertBefore(tag, searchEl.parentElement);
+    searchEl.value = '';
+    dropdown.style.display = 'none';
   }
-}
+
+  function renderCatDropdown(query) {
+    const q = query.toLowerCase();
+    const matches = CATEGORIES.filter(c => c.toLowerCase().includes(q) && !catList.includes(c));
+    if (!matches.length) { dropdown.style.display = 'none'; return; }
+    dropdown.innerHTML = matches.map(c =>
+      `<div data-cat="${c}" style="padding:0.45rem 0.75rem;cursor:pointer;font-size:0.875rem;border-bottom:1px solid #f0f0f0">${c}</div>`
+    ).join('');
+    dropdown.querySelectorAll('div').forEach(item => {
+      item.addEventListener('mousedown', e => { e.preventDefault(); addCat(item.dataset.cat); });
+      item.addEventListener('mouseenter', () => item.style.background = '#f0f7ff');
+      item.addEventListener('mouseleave', () => item.style.background = '');
+    });
+    dropdown.style.display = 'block';
+  }
+
+  searchEl.addEventListener('input', () => renderCatDropdown(searchEl.value));
+  searchEl.addEventListener('focus', () => renderCatDropdown(searchEl.value));
+  searchEl.addEventListener('blur',  () => setTimeout(() => { dropdown.style.display = 'none'; }, 150));
+})();
+
+window.removeCatTag = function(btn) {
+  const tag = btn.parentElement;
+  const idx = catList.indexOf(tag.dataset.val);
+  if (idx > -1) catList.splice(idx, 1);
+  tag.remove();
+};
 
 // ── Validation ────────────────────────────────────────────────
 function validate() {
@@ -279,12 +338,26 @@ function validate() {
   }
   if (currentStep === 1) {
     let ok = true;
-    ['firstName','lastName','phone','address'].forEach(id => {
+    ['firstName','lastName','address'].forEach(id => {
       if (!Validator.required(document.getElementById(id).value))
         { Validator.showError(document.getElementById(id), 'This field is required.'); ok = false; }
     });
-    if (!document.getElementById('dob').value)
-      { Validator.showError(document.getElementById('dob'), 'Date of birth required.'); ok = false; }
+    const phoneVal = document.getElementById('phone').value.trim();
+    if (!phoneVal) {
+      Validator.showError(document.getElementById('phone'), 'Phone number is required.'); ok = false;
+    } else if ((phoneVal.replace(/\D/g, '').length < 7 || phoneVal.replace(/\D/g, '').length > 15)) {
+      Validator.showError(document.getElementById('phone'), 'Enter a valid phone number (7–15 digits).'); ok = false;
+    }
+    const dobVal = document.getElementById('dob').value;
+    if (!dobVal) {
+      Validator.showError(document.getElementById('dob'), 'Date of birth required.'); ok = false;
+    } else {
+      const dob   = new Date(dobVal);
+      const today = new Date();
+      let age = today.getFullYear() - dob.getFullYear();
+      if (today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) age--;
+      if (age < 18) { Validator.showError(document.getElementById('dob'), 'You must be at least 18 years old to register.'); ok = false; }
+    }
     return ok;
   }
   if (currentStep === 2) {
@@ -294,6 +367,10 @@ function validate() {
   if (currentStep === 5) {
     if (!document.getElementById('termsConsent').checked) {
       showAlert('<div class="alert alert-danger">You must accept the Terms & Conditions to continue.</div>');
+      return false;
+    }
+    if (!document.getElementById('dataConsent').checked) {
+      showAlert('<div class="alert alert-danger">You must consent to data use (Privacy Policy) to continue.</div>');
       return false;
     }
   }
@@ -308,7 +385,18 @@ document.getElementById('nextBtn').addEventListener('click', async () => {
 
   // Steps 0–4: save data locally, no network calls
   if (currentStep === 0) {
-    local.email    = document.getElementById('email').value.trim();
+    const emailVal = document.getElementById('email').value.trim();
+    btn.disabled = true; btn.textContent = 'Checking…';
+    try {
+      const r = await API.get(`/auth/check-email?email=${encodeURIComponent(emailVal)}`);
+      if (r.data && r.data.exists) {
+        Validator.showError(document.getElementById('email'), 'An account with this email already exists. Log in instead.');
+        btn.disabled = false; btn.textContent = 'Continue →';
+        return;
+      }
+    } catch (_) {}
+    btn.disabled = false; btn.textContent = 'Continue →';
+    local.email    = emailVal;
     local.password = document.getElementById('password').value;
     advance();
 
@@ -330,12 +418,11 @@ document.getElementById('nextBtn').addEventListener('click', async () => {
       weeklyAvailabilityDays:  [...document.querySelectorAll('input[name="days"]:checked')].map(c => c.value),
     };
     advance();
-    loadCategories();
 
   } else if (currentStep === 3) {
     local.step3 = {
       previousVolunteeringHistory: document.getElementById('history').value.trim(),
-      preferredCategories: [...document.querySelectorAll('input[name="cat"]:checked')].map(c => c.value),
+      preferredCategories: catList.slice(),
     };
     advance();
 
@@ -409,7 +496,77 @@ document.getElementById('prevBtn').addEventListener('click', () => {
 });
 
 setupTagInput('skillTag', 'skillsInput', skillsList);
-setupTagInput('langTag',  'langsInput',  langsList);
+
+// ── Language searchable dropdown ──────────────────────────────
+const LANGUAGES = [
+  'Afrikaans','Albanian','Amharic','Arabic','Armenian','Azerbaijani',
+  'Basque','Belarusian','Bengali','Bosnian','Bulgarian','Catalan',
+  'Cebuano','Chichewa','Chinese (Simplified)','Chinese (Traditional)',
+  'Corsican','Croatian','Czech','Danish','Dutch','English','Esperanto',
+  'Estonian','Filipino','Finnish','French','Frisian','Galician','Georgian',
+  'German','Greek','Gujarati','Haitian Creole','Hausa','Hawaiian','Hebrew',
+  'Hindi','Hmong','Hungarian','Icelandic','Igbo','Indonesian','Irish',
+  'Italian','Japanese','Javanese','Kannada','Kazakh','Khmer','Kinyarwanda',
+  'Korean','Kurdish','Kyrgyz','Lao','Latin','Latvian','Lithuanian',
+  'Luxembourgish','Macedonian','Malagasy','Malay','Malayalam','Maltese',
+  'Maori','Marathi','Mongolian','Burmese','Nepali','Norwegian','Odia',
+  'Pashto','Persian','Polish','Portuguese','Punjabi','Romanian','Russian',
+  'Samoan','Scots Gaelic','Serbian','Sesotho','Shona','Sindhi','Sinhala',
+  'Slovak','Slovenian','Somali','Spanish','Sundanese','Swahili','Swedish',
+  'Tajik','Tamil','Tatar','Telugu','Thai','Turkish','Turkmen','Ukrainian',
+  'Urdu','Uyghur','Uzbek','Vietnamese','Welsh','Xhosa','Yiddish','Yoruba','Zulu'
+];
+
+(function setupLangDropdown() {
+  const searchEl   = document.getElementById('langSearch');
+  const dropdown   = document.getElementById('langDropdown');
+  const wrapper    = document.getElementById('langsInput');
+
+  function addLang(lang) {
+    if (langsList.includes(lang)) return;
+    langsList.push(lang);
+    const tag = document.createElement('div');
+    tag.className = 'tag';
+    tag.dataset.val = lang;
+    tag.innerHTML = `${lang}<button type="button" onclick="removeLangTag(this)">×</button>`;
+    wrapper.insertBefore(tag, searchEl.parentElement);
+    searchEl.value = '';
+    dropdown.style.display = 'none';
+  }
+
+  function renderDropdown(query) {
+    const q = query.toLowerCase();
+    const matches = LANGUAGES.filter(l => l.toLowerCase().includes(q) && !langsList.includes(l));
+    if (!matches.length) { dropdown.style.display = 'none'; return; }
+    dropdown.innerHTML = matches.map(l =>
+      `<div data-lang="${l}" style="padding:0.45rem 0.75rem;cursor:pointer;font-size:0.875rem;border-bottom:1px solid #f0f0f0">${l}</div>`
+    ).join('');
+    dropdown.querySelectorAll('div').forEach(item => {
+      item.addEventListener('mousedown', e => { e.preventDefault(); addLang(item.dataset.lang); });
+      item.addEventListener('mouseenter', () => item.style.background = '#f0f7ff');
+      item.addEventListener('mouseleave', () => item.style.background = '');
+    });
+    dropdown.style.display = 'block';
+  }
+
+  searchEl.addEventListener('input', () => renderDropdown(searchEl.value));
+  searchEl.addEventListener('focus', () => renderDropdown(searchEl.value));
+  searchEl.addEventListener('blur',  () => setTimeout(() => { dropdown.style.display = 'none'; }, 150));
+})();
+
+window.removeLangTag = function(btn) {
+  const tag = btn.parentElement;
+  const idx = langsList.indexOf(tag.dataset.val);
+  if (idx > -1) langsList.splice(idx, 1);
+  tag.remove();
+};
+
+// Set DOB max to 18 years ago
+(function() {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 18);
+  document.getElementById('dob').max = d.toISOString().split('T')[0];
+})();
 
 renderProgress();
 renderPanels();

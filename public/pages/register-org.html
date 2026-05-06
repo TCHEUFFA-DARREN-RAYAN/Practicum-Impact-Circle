@@ -66,7 +66,10 @@
           </div>
           <div class="form-group">
             <label for="confirmPwd">Confirm Password <span class="required">*</span></label>
-            <input type="password" id="confirmPwd" placeholder="Repeat your password" autocomplete="new-password">
+            <div class="input-group">
+              <input type="password" id="confirmPwd" placeholder="Repeat your password" autocomplete="new-password">
+              <button type="button" class="btn btn-secondary" id="toggleConfirmPwd" title="Show/hide password" tabindex="-1">&#x1F441;</button>
+            </div>
             <span class="field-error"></span>
           </div>
         </div>
@@ -108,6 +111,19 @@
           <span class="field-error"></span>
         </div>
 
+        <div class="form-group">
+          <label>Impact Categories <span class="text-muted" style="font-weight:400;font-size:0.8rem">(Select all that apply)</span></label>
+          <div class="tags-input" id="orgCatWrapper">
+            <div style="position:relative;display:inline-flex;flex:1;min-width:200px;align-items:center">
+              <input type="text" id="orgCatSearch" placeholder="Search a category..." autocomplete="off"
+                style="border:none;outline:none;flex:1;min-width:150px;font-size:0.875rem;padding:0.2rem 0.25rem">
+              <div id="orgCatDropdown"
+                style="display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:220px;background:#fff;border:1px solid #d1d5db;border-radius:6px;max-height:210px;overflow-y:auto;z-index:200;box-shadow:0 6px 18px rgba(0,0,0,.12)">
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="divider"></div>
 
         <!-- ── Terms ── -->
@@ -144,10 +160,65 @@
     if (user) API.redirectByRole(user);
   }
 
-  // Password visibility toggle
+  // ── Category dropdown ─────────────────────────────────────────
+  const ORG_CATEGORIES = [
+    'Food Security', 'Women Support', 'Youth Development', 'Seniors Support',
+    'Environment', 'Education', 'Newcomer Integration', 'Volunteer Opportunities'
+  ];
+  let orgCatList = [];
+
+  (function setupOrgCatDropdown() {
+    const searchEl = document.getElementById('orgCatSearch');
+    const dropdown = document.getElementById('orgCatDropdown');
+    const wrapper  = document.getElementById('orgCatWrapper');
+
+    function addOrgCat(cat) {
+      if (orgCatList.includes(cat)) return;
+      orgCatList.push(cat);
+      const tag = document.createElement('div');
+      tag.className = 'tag';
+      tag.dataset.val = cat;
+      tag.innerHTML = `${cat}<button type="button" onclick="removeOrgCat(this)">×</button>`;
+      wrapper.insertBefore(tag, searchEl.parentElement);
+      searchEl.value = '';
+      dropdown.style.display = 'none';
+    }
+
+    function renderOrgCatDropdown(query) {
+      const q = query.toLowerCase();
+      const matches = ORG_CATEGORIES.filter(c => c.toLowerCase().includes(q) && !orgCatList.includes(c));
+      if (!matches.length) { dropdown.style.display = 'none'; return; }
+      dropdown.innerHTML = matches.map(c =>
+        `<div data-cat="${c}" style="padding:0.45rem 0.75rem;cursor:pointer;font-size:0.875rem;border-bottom:1px solid #f0f0f0">${c}</div>`
+      ).join('');
+      dropdown.querySelectorAll('div').forEach(item => {
+        item.addEventListener('mousedown', e => { e.preventDefault(); addOrgCat(item.dataset.cat); });
+        item.addEventListener('mouseenter', () => item.style.background = '#f0f7ff');
+        item.addEventListener('mouseleave', () => item.style.background = '');
+      });
+      dropdown.style.display = 'block';
+    }
+
+    searchEl.addEventListener('input', () => renderOrgCatDropdown(searchEl.value));
+    searchEl.addEventListener('focus', () => renderOrgCatDropdown(searchEl.value));
+    searchEl.addEventListener('blur',  () => setTimeout(() => { dropdown.style.display = 'none'; }, 150));
+  })();
+
+  window.removeOrgCat = function(btn) {
+    const tag = btn.parentElement;
+    const idx = orgCatList.indexOf(tag.dataset.val);
+    if (idx > -1) orgCatList.splice(idx, 1);
+    tag.remove();
+  };
+
+  // Password visibility toggles
   document.getElementById('togglePwd').addEventListener('click', () => {
     const pwd = document.getElementById('password');
     pwd.type = pwd.type === 'password' ? 'text' : 'password';
+  });
+  document.getElementById('toggleConfirmPwd').addEventListener('click', () => {
+    const el = document.getElementById('confirmPwd');
+    el.type = el.type === 'password' ? 'text' : 'password';
   });
 
   // Clear errors on input
@@ -226,22 +297,29 @@
 
     try {
       const payload = {
-        email:           document.getElementById('email').value.trim(),
-        password:        document.getElementById('password').value,
-        role:            'org',
-        orgName:         document.getElementById('orgName').value.trim(),
+        email:            document.getElementById('email').value.trim(),
+        password:         document.getElementById('password').value,
+        role:             'org',
+        orgName:          document.getElementById('orgName').value.trim(),
         missionStatement: document.getElementById('missionStatement').value.trim(),
-        contactName:     document.getElementById('contactName').value.trim(),
-        contactEmail:    document.getElementById('email').value.trim(),
-        contactPhone:    document.getElementById('phone').value.trim(),
-        address:         document.getElementById('address').value.trim(),
-        website:         document.getElementById('website').value.trim() || undefined,
+        contactName:      document.getElementById('contactName').value.trim(),
+        contactEmail:     document.getElementById('email').value.trim(),
+        contactPhone:     document.getElementById('phone').value.trim(),
+        address:          document.getElementById('address').value.trim(),
+        website:          document.getElementById('website').value.trim() || undefined,
+        categories:       orgCatList.slice(),
       };
 
       const { data } = await API.post('/auth/register', payload);
       API.setSession(data.token, data.user);
-      Toast.success('Organization registered! Welcome to ImpactCircle.');
-      setTimeout(() => { window.location.href = '/org-dashboard'; }, 1000);
+      document.getElementById('registerForm').innerHTML = `
+        <div style="text-align:center;padding:2rem 0">
+          <div style="font-size:3rem;margin-bottom:1rem">&#x23F3;</div>
+          <h2 style="margin-bottom:0.5rem">Registration Submitted!</h2>
+          <p style="color:var(--text-muted);margin-bottom:1.25rem">Your organization account is <strong>pending admin approval</strong>. You will receive an email once your account is verified and you can start posting gigs and connecting with volunteers.</p>
+          <a href="/" class="btn btn-primary">Back to Home</a>
+        </div>
+      `;
     } catch (err) {
       document.getElementById('alertArea').innerHTML =
         `<div class="alert alert-danger">&#x274C; ${err.message || 'Registration failed. Please try again.'}</div>`;

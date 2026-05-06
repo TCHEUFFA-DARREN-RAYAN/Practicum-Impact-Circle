@@ -6,6 +6,9 @@ const dbPassword = process.env.DB_PASS || process.env.DB_PASSWORD || '';
 const sslEnabled = String(process.env.DB_SSL_ENABLED || 'false').toLowerCase() === 'true';
 const sslCaPath = process.env.DB_SSL_CA_PATH;
 const syncAlterEnabled = String(process.env.DB_SYNC_ALTER || 'false').toLowerCase() === 'true';
+const forceSyncAlter = String(process.env.FORCE_DB_SYNC_ALTER || 'false').toLowerCase() === 'true';
+const isLocalDbHost = ['localhost', '127.0.0.1'].includes((process.env.DB_HOST || '').toLowerCase());
+const isDevEnv = (process.env.NODE_ENV || 'development') === 'development';
 const dialectOptions = sslEnabled
   ? {
       ssl: {
@@ -35,9 +38,11 @@ const connectDB = async () => {
   try {
     await sequelize.authenticate();
     console.log('  MySQL connected');
-    if (syncAlterEnabled) {
-      await sequelize.sync({ alter: true });
-      console.log('  Tables synced (alter=true)');
+    if (syncAlterEnabled && (forceSyncAlter || (isDevEnv && isLocalDbHost))) {
+      await sequelize.sync();
+      console.log('  Tables synced (create if not exists)');
+    } else if (syncAlterEnabled && !forceSyncAlter) {
+      console.log('  Schema sync blocked for safety (set FORCE_DB_SYNC_ALTER=true to override)');
     } else {
       console.log('  Schema sync skipped (set DB_SYNC_ALTER=true to enable)');
     }

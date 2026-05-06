@@ -56,6 +56,15 @@ router.post('/login', [
   }
 });
 
+router.get('/check-email', async (req, res, next) => {
+  try {
+    const email = (req.query.email || '').toLowerCase().trim();
+    if (!email) return res.json({ success: true, data: { exists: false } });
+    const user = await User.findOne({ where: { email } });
+    res.json({ success: true, data: { exists: !!user } });
+  } catch (err) { next(err); }
+});
+
 router.get('/me', require('../middleware/auth').requireAuth, async (req, res, next) => {
   try {
     const user = await User.findByPk(req.user.id, { attributes: { exclude: ['passwordHash'] } });

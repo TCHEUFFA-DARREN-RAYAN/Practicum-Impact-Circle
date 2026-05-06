@@ -123,7 +123,19 @@ async function load() {
 }
 
 function openApply() {
-  if (!API.isLoggedIn()) { window.location.href = '/login'; return; }
+  if (!API.isLoggedIn()) {
+    window.location.href = '/register?return=' + encodeURIComponent(window.location.pathname);
+    return;
+  }
+  const user = API.getUser();
+  if (!user || user.verificationStatus !== 'verified') {
+    document.getElementById('applyAlert').innerHTML =
+      '<div class="alert alert-warning"><strong>Account pending approval.</strong> Your account is awaiting admin verification. You will be notified by email once approved and can then apply for gigs.</div>';
+    document.getElementById('submitApply').style.display = 'none';
+    document.getElementById('applyModal').classList.add('open');
+    return;
+  }
+  document.getElementById('submitApply').style.display = '';
   document.getElementById('applyModal').classList.add('open');
 }
 function closeApply() { document.getElementById('applyModal').classList.remove('open'); document.getElementById('applyAlert').innerHTML = ''; }
