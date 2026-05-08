@@ -619,3 +619,52 @@ tr:hover td { background: var(--surface-2); }
   color: #bcc9ea;
   text-align: center;
 }
+
+/* ===== Mobile Responsive Enhancements ===== */
+@media (max-width: 768px) {
+  .grid[style*="grid-template-columns:2fr 1fr"],
+  .grid[style*="grid-template-columns: 2fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    min-width: 600px;
+  }
+
+  .table-actions {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .stat-row {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header-row {
+    gap: 0.75rem;
+  }
+
+  .page-header-row .btn {
+    font-size: 0.85rem;
+    padding: 0.6rem 1rem;
+  }
+
+  .modal {
+    margin: 0;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .cat-pill {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+  }
+}
