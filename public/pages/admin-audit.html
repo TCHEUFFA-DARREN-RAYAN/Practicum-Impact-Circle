@@ -10,7 +10,7 @@
 <body>
 <nav id="navbar"></nav>
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
-<aside id="sidebar"></aside>
+<aside id="sidebar" class="sidebar"></aside>
 <div class="page-content">
   <div class="container">
     <div class="page-header">
@@ -91,5 +91,8 @@ async function load(p = 1) {
 function changePage(dir) { if (page + dir >= 1 && page + dir <= totalPages) load(page + dir); }
 load();
 </script>
-</body>
+<script src="/js/footer.js"></script></body>
 </html>
+
+
+
