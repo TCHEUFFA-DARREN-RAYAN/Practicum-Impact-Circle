@@ -192,7 +192,7 @@
         <div class="gig-card-top">
           <div style="flex:1;min-width:0">
             <div class="gig-title truncate">${gig.title}</div>
-            <div class="gig-org">&#x1F3DB; ${gig.organization?.orgName || gig.organization?.email || 'Organization'}</div>
+            <div class="gig-org">&#x1F3DB; ${gig.org?.orgName || gig.organization?.orgName || 'Organization'}</div>
           </div>
           <span class="${pillCls}" style="flex-shrink:0">${catIcon} ${catName}</span>
         </div>
