@@ -218,7 +218,7 @@
             </div>
           </div>
           <div class="form-row">
-            <div class="form-group"><label for="availHours">Weekly Availability (hrs) <span class="required">*</span></label><input type="number" id="availHours" min="0" max="80" placeholder="10"><span class="field-error"></span></div>
+            <div class="form-group"><label for="availHours">Weekly Availability (hrs) <span class="required">*</span></label><input type="number" id="availHours" min="1" max="80" placeholder="10"><span class="field-error"></span></div>
             <div class="form-group"><label>Available Days</label>
               <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.5rem" id="daysCheckboxes">
                 <label class="form-check" style="margin:0"><input type="checkbox" name="days" value="Mon"> Mon</label>
@@ -511,7 +511,7 @@ function validate() {
     const hoursEl = document.getElementById('availHours');
     const hoursVal = parseFloat(hoursEl.value);
     if (!hoursEl.value) { Validator.showError(hoursEl, 'Required.'); return false; }
-    if (hoursVal < 0) { Validator.showError(hoursEl, 'Availability cannot be negative.'); return false; }
+    if (hoursVal < 1) { Validator.showError(hoursEl, 'Minimum is 1 hour per week.'); return false; }
     if (hoursVal > 80) { Validator.showError(hoursEl, 'Maximum is 80 hours per week.'); return false; }
   }
   if (currentStep === 5) {
