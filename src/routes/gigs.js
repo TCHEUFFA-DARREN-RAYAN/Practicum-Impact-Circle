@@ -114,6 +114,18 @@ router.delete('/:id', requireAuth, requireRole('org'), async (req, res, next) =>
   } catch (err) { next(err); }
 });
 
+router.delete('/:id/permanent', requireAuth, requireRole('org'), async (req, res, next) => {
+  try {
+    const org = await Organization.findOne({ where: { userId: req.user.id } });
+    const gig = await Gig.findOne({ where: { id: req.params.id, orgId: org.id, status: 'cancelled' } });
+    if (!gig) return res.status(404).json({ success: false, message: 'Gig not found or not in cancelled state.' });
+    await Application.destroy({ where: { gigId: gig.id } });
+    await Task.destroy({ where: { gigId: gig.id } });
+    await gig.destroy();
+    res.json({ success: true, message: 'Gig permanently deleted.' });
+  } catch (err) { next(err); }
+});
+
 router.post('/:id/apply', requireAuth, requireRole('volunteer'), [
   body('personalStatement').trim().isLength({ min: 20 }).withMessage('Personal statement must be at least 20 characters.'),
 ], validate, async (req, res, next) => {

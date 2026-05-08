@@ -139,6 +139,7 @@ async function load() {
         <td><div class="table-actions">
           <button class="btn btn-sm btn-secondary" onclick="viewApplicants('${g.id}','${g.title.replace(/'/g,"\\'")}')">Applicants</button>
           ${g.status === 'open' ? `<button class="btn btn-sm btn-danger" onclick="cancelGig('${g.id}')">Cancel</button>` : ''}
+          ${g.status === 'cancelled' ? `<button class="btn btn-sm btn-danger" onclick="deleteGig('${g.id}')">Delete</button>` : ''}
         </div></td>
       </tr>
     `).join('') : '<tr><td colspan="6" class="text-center text-muted" style="padding:2rem">No gigs yet. <a href="/org-gig-create">Post your first gig →</a></td></tr>';
@@ -237,6 +238,15 @@ async function cancelGig(gigId) {
   try {
     await API.delete(`/gigs/${gigId}`);
     Toast.success('Gig cancelled.');
+    load();
+  } catch (err) { Toast.error(err.message); }
+}
+
+async function deleteGig(gigId) {
+  if (!confirm('Permanently delete this cancelled gig? This cannot be undone.')) return;
+  try {
+    await API.delete(`/gigs/${gigId}/permanent`);
+    Toast.success('Gig deleted.');
     load();
   } catch (err) { Toast.error(err.message); }
 }
