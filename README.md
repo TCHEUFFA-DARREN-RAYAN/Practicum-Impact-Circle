@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ImpactCircle
 
 > **Verified Impact. Real Contribution.**
