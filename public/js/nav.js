@@ -45,10 +45,10 @@
       <div class="nav-avatar">${(user.email?.[0] || '?').toUpperCase()}</div>
       <div>
         <div style="color:white;font-size:0.8rem;font-weight:600">${user.email?.split('@')[0]}</div>
-        <div style="color:#94a3b8;font-size:0.7rem;text-transform:capitalize">${user.role}</div>
+        <div style="color:white;font-size:0.7rem;text-transform:capitalize">${user.role}</div>
       </div>
     </div>
-    <button class="btn btn-ghost btn-sm" onclick="logout()" style="color:#94a3b8">Logout</button>
+    <button class="btn btn-ghost btn-sm" onclick="logout()" style="color:white">Logout</button>
   ` : `
     <a href="/login" class="btn btn-secondary btn-sm">Log In</a>
     <a href="/register-volunteer" class="btn btn-primary btn-sm">Get Started</a>
