@@ -6,6 +6,17 @@
   <title>Organization Dashboard | ImpactCircle</title>
   <meta name="description" content="Manage your volunteer gigs, review applicants, and verify task completions on ImpactCircle.">
   <link rel="stylesheet" href="/css/base.css">
+  <style>
+    @media (max-width: 768px) {
+      .grid-4 { grid-template-columns: 1fr 1fr !important; }
+      .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .table-wrapper table { min-width: 600px; }
+      .container { padding: 0 1rem; }
+    }
+    @media (max-width: 480px) {
+      .grid-4 { grid-template-columns: 1fr !important; }
+    }
+  </style>
 </head>
 <body>
 <nav id="navbar"></nav>
@@ -102,10 +113,17 @@ async function load() {
     document.getElementById('sPending').textContent = stats.pendingApprovals;
     document.getElementById('sHours').textContent = stats.totalFacilitatedHours.toFixed(1);
 
-    const user = API.getUser();
     const userFull = await API.get('/auth/me');
     if (userFull.data.user.verificationStatus !== 'verified') {
       document.getElementById('verifyWarning').innerHTML = `<div class="alert alert-warning mb-4">⏳ Your organization is pending admin verification. You cannot post gigs until approved.</div>`;
+      const postBtn = document.querySelector('a[href="/org-gig-create"]');
+      if (postBtn) {
+        postBtn.classList.add('btn-disabled');
+        postBtn.style.pointerEvents = 'none';
+        postBtn.style.opacity = '0.5';
+        postBtn.style.cursor = 'not-allowed';
+        postBtn.removeAttribute('href');
+      }
     }
 
     if (pt.length) { document.getElementById('pendingBadge').textContent = pt.length; document.getElementById('pendingBadge').style.display = 'inline-flex'; }
@@ -113,14 +131,14 @@ async function load() {
     // Gigs table
     document.getElementById('gigsTable').innerHTML = gigs.length ? gigs.map(g => `
       <tr>
-        <td><div style="font-weight:600">${g.title}</div><div style="font-size:0.775rem;color:var(--text-muted)">${g.location?.type === 'remote' ? 'Remote' : g.location?.address || 'In-person'}</div></td>
-        <td><span class="cat-pill" style="background:${g.categoryId?.colorHex}22;color:${g.categoryId?.colorHex}">${g.categoryId?.icon} ${g.categoryId?.name}</span></td>
+        <td><div style="font-weight:600">${g.title}</div><div style="font-size:0.775rem;color:var(--text-muted)">${g.locationType === 'remote' ? 'Remote' : g.locationAddress || 'In-person'}</div></td>
+        <td><span class="cat-pill" style="background:${g.category?.colorHex || '#2563eb'}22;color:${g.category?.colorHex || '#2563eb'}">${g.category?.icon || ''} ${g.category?.name || 'General'}</span></td>
         <td style="font-size:0.8rem">${fmt.date(g.startDate)}</td>
         <td><span class="badge ${g.status === 'open' ? 'badge-open' : 'badge-closed'}">${g.status}</span></td>
         <td><span class="badge badge-primary">${g.applicantCount || 0}</span></td>
         <td><div class="table-actions">
-          <button class="btn btn-sm btn-secondary" onclick="viewApplicants('${g._id}','${g.title.replace(/'/g,"\\'")}')">Applicants</button>
-          ${g.status === 'open' ? `<button class="btn btn-sm btn-danger" onclick="cancelGig('${g._id}')">Cancel</button>` : ''}
+          <button class="btn btn-sm btn-secondary" onclick="viewApplicants('${g.id}','${g.title.replace(/'/g,"\\'")}')">Applicants</button>
+          ${g.status === 'open' ? `<button class="btn btn-sm btn-danger" onclick="cancelGig('${g.id}')">Cancel</button>` : ''}
         </div></td>
       </tr>
     `).join('') : '<tr><td colspan="6" class="text-center text-muted" style="padding:2rem">No gigs yet. <a href="/org-gig-create">Post your first gig →</a></td></tr>';
@@ -130,13 +148,13 @@ async function load() {
       <div class="card mb-3">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem">
           <div>
-            <div style="font-weight:700">${t.gigId?.title || 'Task'}</div>
-            <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.25rem">Volunteer: ${t.volunteerId?.email || 'N/A'} · Submitted: ${fmt.fromNow(t.submittedAt)}</div>
+            <div style="font-weight:700">${t.gig?.title || 'Task'}</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.25rem">Volunteer: ${t.volunteer?.email || 'N/A'} · Submitted: ${fmt.fromNow(t.submittedAt)}</div>
             <div style="font-size:0.8rem;color:var(--warning);margin-top:0.25rem">⏰ Auto-approved in ${Math.max(0, 30 - Math.floor((Date.now() - new Date(t.submittedAt).getTime()) / 86400000))} days if not reviewed</div>
           </div>
           <div style="display:flex;gap:0.5rem">
-            <button class="btn btn-success btn-sm" onclick="openVerify('${t._id}','${(t.gigId?.title || '').replace(/'/g,"\\'")}','${t.volunteerId?.email || ''}','approve')">Approve </button>
-            <button class="btn btn-danger btn-sm" onclick="openVerify('${t._id}','${(t.gigId?.title || '').replace(/'/g,"\\'")}','${t.volunteerId?.email || ''}','reject')">Reject</button>
+            <button class="btn btn-success btn-sm" onclick="openVerify('${t.id}','${(t.gig?.title || '').replace(/'/g,"\\'")}','${t.volunteer?.email || ''}','approve')">Approve </button>
+            <button class="btn btn-danger btn-sm" onclick="openVerify('${t.id}','${(t.gig?.title || '').replace(/'/g,"\\'")}','${t.volunteer?.email || ''}','reject')">Reject</button>
           </div>
         </div>
       </div>
@@ -164,16 +182,16 @@ async function viewApplicants(gigId, title) {
       <div style="padding:0.875rem;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:0.75rem">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem">
           <div style="flex:1">
-            <div style="font-weight:600;font-size:0.9rem">${a.volunteerId?.email || 'N/A'}</div>
-            <span class="badge ${a.volunteerId?.verificationStatus === 'verified' ? 'badge-verified' : 'badge-pending'}" style="margin-top:0.25rem">${a.volunteerId?.verificationStatus || 'unknown'}</span>
+            <div style="font-weight:600;font-size:0.9rem">${a.volunteer?.email || 'N/A'}</div>
+            <span class="badge ${a.volunteer?.verificationStatus === 'verified' ? 'badge-verified' : 'badge-pending'}" style="margin-top:0.25rem">${a.volunteer?.verificationStatus || 'unknown'}</span>
             <p style="font-size:0.825rem;color:var(--text-muted);margin-top:0.625rem;line-height:1.5">${a.personalStatement}</p>
             <div style="font-size:0.775rem;color:var(--text-muted)">${fmt.date(a.createdAt)}</div>
           </div>
           <div>
             ${a.status === 'pending' ? `
               <div style="display:flex;flex-direction:column;gap:0.375rem">
-                <button class="btn btn-success btn-sm" onclick="decide('${a._id}','approved')">Approve</button>
-                <button class="btn btn-danger btn-sm" onclick="decide('${a._id}','rejected')">Reject</button>
+                <button class="btn btn-success btn-sm" onclick="decide('${a.id}','approved')">Approve</button>
+                <button class="btn btn-danger btn-sm" onclick="decide('${a.id}','rejected')">Reject</button>
               </div>
             ` : `<span class="badge ${a.status === 'approved' ? 'badge-verified' : 'badge-rejected'}">${a.status}</span>`}
           </div>
