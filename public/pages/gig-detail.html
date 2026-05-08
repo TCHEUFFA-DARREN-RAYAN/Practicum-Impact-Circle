@@ -64,9 +64,9 @@ async function load() {
     document.title = `${gig.title} | ImpactCircle`;
 
     const user = API.getUser();
-    const isVerified = user && user.verificationStatus === 'verified';
     const isVolunteer = user && user.role === 'volunteer';
-    const canApply = !isVolunteer || isVerified;
+    const isVerifiedVolunteer = isVolunteer && user.verificationStatus === 'verified';
+    const isPendingVolunteer = isVolunteer && user.verificationStatus !== 'verified';
 
     document.getElementById('gigContent').innerHTML = `
       <div style="margin-bottom:1.5rem">
@@ -116,12 +116,14 @@ async function load() {
             </div>
             <div class="divider"></div>
             <div id="applySection">
-              ${gig.status === 'open'
-                ? (canApply
+              ${!user || (!isVolunteer)
+                ? ''
+                : gig.status !== 'open'
+                  ? `<div class="alert alert-warning">This gig is no longer accepting applications.</div>`
+                  : isVerifiedVolunteer
                     ? `<button class="btn btn-primary btn-block btn-lg" onclick="openApply()">Apply Now</button>`
-                    : `<button class="btn btn-block btn-lg" disabled style="background:#94a3b8;color:#fff;cursor:not-allowed;border:none">Apply Now</button><div class="form-hint" style="text-align:center;margin-top:0.5rem;color:var(--warning)">Your account is pending verification. You'll be able to apply once approved.</div>`)
-                : `<div class="alert alert-warning">This gig is no longer accepting applications.</div>`}
-              ${gig.verifiedOnly ? `<div class="form-hint" style="text-align:center;margin-top:0.5rem"> Requires Verified Volunteer badge</div>` : ''}
+                    : `<button class="btn btn-block btn-lg" disabled style="background:#94a3b8;color:#fff;cursor:not-allowed;border:none">Apply Now</button><div class="form-hint" style="text-align:center;margin-top:0.5rem;color:var(--warning)">Your account is pending verification. You'll be able to apply once approved.</div>`}
+              ${isVolunteer && gig.verifiedOnly ? `<div class="form-hint" style="text-align:center;margin-top:0.5rem"> Requires Verified Volunteer badge</div>` : ''}
             </div>
           </div>
           <div class="card">
@@ -145,7 +147,8 @@ function openApply() {
     return;
   }
   const user = API.getUser();
-  if (!user || user.verificationStatus !== 'verified') {
+  if (!user || user.role !== 'volunteer') return;
+  if (user.verificationStatus !== 'verified') {
     document.getElementById('applyAlert').innerHTML =
       '<div class="alert alert-warning"><strong>Account pending approval.</strong> Your account is awaiting admin verification. You will be notified by email once approved and can then apply for gigs.</div>';
     document.getElementById('submitApply').style.display = 'none';
