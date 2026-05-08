@@ -27,7 +27,7 @@
   --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
   --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
   --shadow-lg: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
-  --nav-height: 64px;
+  --nav-height: 96px;
   --sidebar-width: 240px;
 }
 
@@ -81,11 +81,16 @@ small { font-size: 0.8125rem; }
   height: 100%; display: flex; align-items: center; justify-content: space-between;
 }
 .nav-brand {
-  display: flex; align-items: center; gap: 0.5rem;
-  color: white; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.5px;
+  display: flex; align-items: center;
   text-decoration: none;
+  flex-shrink: 0;
 }
-.nav-brand span { color: #93c5fd; }
+.nav-logo {
+  height: 94px;
+  width: auto;
+  display: block;
+  object-fit: contain;
+}
 .nav-links { display: flex; align-items: center; gap: 0.25rem; }
 .nav-links a {
   color: #cbd5e1; padding: 0.4rem 0.75rem; border-radius: var(--radius-sm);
@@ -402,10 +407,12 @@ tr:hover td { background: var(--surface-2); }
 
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
+  :root { --nav-height: 88px; }
   h1 { font-size: 1.5rem; }
   h2 { font-size: 1.25rem; }
   .nav-links, .nav-right { display: none; }
   .nav-hamburger { display: block; }
+  .nav-logo { height: 78px; }
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; }
   .hero h1 { font-size: 2rem; }

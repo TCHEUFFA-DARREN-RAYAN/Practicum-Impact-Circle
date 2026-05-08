@@ -63,7 +63,7 @@
 
   document.getElementById('navbar').innerHTML = `
     <div class="nav-inner">
-      <a href="/" class="nav-brand">Impact<span>Circle</span></a>
+      <a href="/" class="nav-brand"><img src="/images/logo.png" alt="Moncton CARE" class="nav-logo"></a>
       <nav class="nav-links">${linksHTML}</nav>
       <div class="nav-right">${rightHTML}</div>
       <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
