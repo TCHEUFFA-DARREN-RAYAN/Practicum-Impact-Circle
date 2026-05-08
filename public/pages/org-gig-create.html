@@ -116,6 +116,18 @@
 <script>
 API.requireAuth('org');
 
+// Block unverified orgs immediately
+(async () => {
+  try {
+    const { data } = await API.get('/auth/me');
+    if (data.user.verificationStatus !== 'verified') {
+      document.getElementById('alertArea').innerHTML =
+        '<div class="alert alert-warning">⏳ Your organization must be verified to post gigs. Please wait for admin approval.</div>';
+      document.getElementById('gigForm').style.display = 'none';
+    }
+  } catch {}
+})();
+
 const skillsList = [];
 
 async function loadCategories() {
