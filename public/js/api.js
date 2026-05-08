@@ -89,14 +89,26 @@ const Validator = {
   email: (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
   minLen: (val, n) => val && val.trim().length >= n,
   password: (val) => val && val.length >= 8 && /[A-Z]/.test(val) && /[0-9]/.test(val),
+  _findErrorEl: (inputEl) => {
+    let parent = inputEl.parentElement;
+    let errEl = parent.querySelector('.field-error');
+    if (!errEl && parent.parentElement) {
+      errEl = parent.parentElement.querySelector('.field-error');
+    }
+    if (!errEl) {
+      const fg = inputEl.closest('.form-group');
+      if (fg) errEl = fg.querySelector('.field-error');
+    }
+    return errEl;
+  },
   showError: (inputEl, msg) => {
     inputEl.classList.add('error');
-    const errEl = inputEl.parentElement.querySelector('.field-error');
+    const errEl = Validator._findErrorEl(inputEl);
     if (errEl) { errEl.textContent = msg; errEl.classList.add('show'); }
   },
   clearError: (inputEl) => {
     inputEl.classList.remove('error');
-    const errEl = inputEl.parentElement.querySelector('.field-error');
+    const errEl = Validator._findErrorEl(inputEl);
     if (errEl) { errEl.textContent = ''; errEl.classList.remove('show'); }
   },
   clearAll: (form) => form.querySelectorAll('input,select,textarea').forEach(el => Validator.clearError(el)),
