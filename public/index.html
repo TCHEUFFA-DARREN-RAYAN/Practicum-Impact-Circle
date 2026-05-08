@@ -285,9 +285,9 @@
 
     /* ── Footer ── */
     .lp-footer {
-      background: #0f172a;
+      background: #1b2b5a;
       padding: 3.5rem 0 2rem;
-      color: #94a3b8;
+      color: #c0cae4;
     }
     .footer-grid {
       display: grid;
@@ -296,18 +296,27 @@
       margin-bottom: 3rem;
     }
     .footer-logo { height: 140px; width: auto; display: block; margin-bottom: 0.75rem; object-fit: contain; }
+    .footer-logo-wrap {
+      display: inline-block;
+      padding: 0.45rem 0.6rem;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.22);
+      box-shadow: 0 0 18px rgba(255,255,255,0.2);
+      margin-bottom: 0.75rem;
+    }
     .footer-brand-desc { font-size: 0.8125rem; line-height: 1.65; max-width: 240px; }
     .footer-col h4 { color: white; font-size: 0.875rem; font-weight: 700; margin-bottom: 1rem; }
     .footer-col a {
       display: block;
-      color: #94a3b8; font-size: 0.8125rem;
+      color: #c0cae4; font-size: 0.8125rem;
       text-decoration: none;
       padding: 0.25rem 0;
       transition: color 0.15s;
     }
     .footer-col a:hover { color: white; }
     .footer-bottom {
-      border-top: 1px solid #1e293b;
+      border-top: 1px solid rgba(255,255,255,0.16);
       padding-top: 1.5rem;
       text-align: center;
       font-size: 0.8125rem;
@@ -663,7 +672,9 @@
     <div class="footer-grid">
       <!-- Brand -->
       <div>
-        <img src="/images/logo.png" alt="Moncton CARE" class="footer-logo">
+        <div class="footer-logo-wrap">
+          <img src="/images/logo.png" alt="Moncton CARE" class="footer-logo">
+        </div>
         <p class="footer-brand-desc">
           A verified volunteer, CSR, and community impact exchange platform for Greater Moncton, NB.
         </p>
