@@ -292,7 +292,7 @@
 
     /* ── Footer ── */
     .lp-footer {
-      background: #1b2b5a;
+      background: linear-gradient(180deg, #2a3a73 0%, #243468 100%);
       padding: 3.5rem 0 2rem;
       color: #c0cae4;
     }
@@ -305,11 +305,10 @@
     .footer-logo { height: 140px; width: auto; display: block; margin-bottom: 0.75rem; object-fit: contain; }
     .footer-logo-wrap {
       display: inline-block;
-      padding: 0.45rem 0.6rem;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.22);
-      box-shadow: 0 0 18px rgba(255,255,255,0.2);
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      border: none;
       margin-bottom: 0.75rem;
     }
     .footer-brand-desc { font-size: 0.8125rem; line-height: 1.65; max-width: 240px; }
@@ -803,5 +802,7 @@
   window.addEventListener('scroll', () => { scrollBtn.style.opacity = window.scrollY > 400 ? '1' : '0'; });
   scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 </script>
-</body>
+<script src="/js/footer.js"></script></body>
 </html>
+
+
