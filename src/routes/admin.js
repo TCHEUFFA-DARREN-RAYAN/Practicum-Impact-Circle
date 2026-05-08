@@ -51,11 +51,11 @@ router.patch('/verify/:userId', ...adminAuth, async (req, res, next) => {
     if (status === 'rejected' && (!reason || reason.trim().length < 5))
       return res.status(400).json({ success: false, message: 'A reason is required for rejection.' });
 
-    const [, [user]] = await User.update(
+    await User.update(
       { verificationStatus: status, rejectionReason: status === 'rejected' ? reason : null },
-      { where: { id: req.params.userId }, returning: true }
+      { where: { id: req.params.userId } }
     );
-    const updated = user || await User.findByPk(req.params.userId);
+    const updated = await User.findByPk(req.params.userId);
     if (!updated) return res.status(404).json({ success: false, message: 'User not found.' });
 
     const name = updated.email.split('@')[0];

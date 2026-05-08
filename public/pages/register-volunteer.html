@@ -332,7 +332,7 @@ function renderPanels() {
     if (stateEl) {
       if (i < currentStep) stateEl.textContent = 'Completed';
       else if (i === currentStep) stateEl.textContent = 'Open';
-      else stateEl.textContent = 'Upcoming';
+      else stateEl.textContent = '';
     }
     const indexEl = p.querySelector('.step-box-index');
     if (indexEl) indexEl.textContent = i < currentStep ? '✓' : String(i + 1);
@@ -723,7 +723,7 @@ function initVerticalStepBoxes() {
           <div class="step-box-subtitle">${subtitleText}</div>
         </div>
       </div>
-      <span class="step-box-state">Upcoming</span>
+      <span class="step-box-state"></span>
     `;
     header.addEventListener('click', () => {
       if (i <= currentStep) {
@@ -762,5 +762,7 @@ document.querySelectorAll('.step-prev-btn').forEach(btn => {
 renderProgress();
 renderPanels();
 </script>
-</body>
+<script src="/js/footer.js"></script></body>
 </html>
+
+
