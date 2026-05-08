@@ -5,26 +5,153 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Volunteer Registration | ImpactCircle</title>
   <link rel="stylesheet" href="/css/base.css">
+  <style>
+    body { background: linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%); }
+    .vol-layout { min-height: 100vh; padding: 2rem 1rem; }
+    .vol-shell { max-width: 760px; margin: 0 auto; }
+    .back-link {
+      display: inline-flex; align-items: center; gap: 0.375rem;
+      color: var(--text-muted); font-size: 0.84rem; font-weight: 600; text-decoration: none;
+      margin-bottom: 1rem;
+    }
+    .back-link:hover { color: var(--text); text-decoration: none; }
+    .vol-brand { text-align: center; margin-bottom: 1.1rem; }
+    .vol-brand img { height: 98px; width: auto; margin: 0 auto 0.6rem; object-fit: contain; }
+    .vol-brand p { color: var(--text-muted); font-size: 0.9rem; }
+    .vol-panel {
+      background: #fff; border: 1px solid #dbe7f5; border-radius: 16px; padding: 1.5rem;
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+    }
+    .step-progress {
+      background: #fff;
+      border: 1px solid #dbe7f5;
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      margin-bottom: 1rem;
+    }
+    .steps-summary {
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: #334155;
+    }
+    .step-panels {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .step-panels > div {
+      display: block !important;
+    }
+    .step-box {
+      border: 1px solid #dbe7f5;
+      border-radius: 12px;
+      background: #fff;
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .step-box.completed {
+      border-color: #bfdbfe;
+      background: #f8fbff;
+    }
+    .step-box.active {
+      border-color: #93c5fd;
+      box-shadow: 0 10px 18px rgba(30, 64, 175, 0.08);
+    }
+    .step-box-header {
+      width: 100%;
+      border: none;
+      background: transparent;
+      padding: 0.9rem 1rem;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.8rem;
+      text-align: left;
+      cursor: pointer;
+    }
+    .step-box-head-left {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+    .step-box-index {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 1px solid #cbd5e1;
+      color: #475569;
+      font-size: 0.78rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+      background: #fff;
+    }
+    .step-box.active .step-box-index,
+    .step-box.completed .step-box-index {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #fff;
+    }
+    .step-box-title {
+      font-size: 0.94rem;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.2;
+      margin-bottom: 0.15rem;
+    }
+    .step-box-subtitle {
+      font-size: 0.79rem;
+      color: #64748b;
+      line-height: 1.4;
+    }
+    .step-box-state {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding-top: 0.2rem;
+      flex-shrink: 0;
+    }
+    .step-box.active .step-box-state { color: var(--primary); }
+    .step-box.completed .step-box-state { color: #166534; }
+    .step-box-body {
+      display: none;
+      border-top: 1px solid #e2e8f0;
+      padding: 1rem;
+      background: #fff;
+    }
+    .step-box.active .step-box-body { display: block; }
+    .step-action-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+      padding-top: 0.5rem;
+    }
+  </style>
 </head>
 <body>
-<div style="min-height:100vh;background:var(--bg);padding:2rem 1rem">
-  <div style="max-width:640px;margin:0 auto">
-    <div style="margin-bottom:1rem">
-      <a href="/" style="display:inline-flex;align-items:center;gap:0.375rem;color:var(--text-muted);font-size:0.8125rem;font-weight:500;text-decoration:none">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-        Back to Home
-      </a>
-    </div>
-    <div style="text-align:center;margin-bottom:2rem">
-      <a href="/" style="font-size:1.5rem;font-weight:800;color:var(--primary);text-decoration:none">ImpactCircle</a>
-      <p style="color:var(--text-muted);margin-top:0.25rem">Create your volunteer account</p>
+<div class="vol-layout">
+  <div class="vol-shell">
+    <a href="/" class="back-link">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to Home
+    </a>
+    <div class="vol-brand">
+      <img src="/images/logo.png" alt="ImpactCircle">
+      <p>Create your volunteer account in 6 guided steps.</p>
     </div>
 
     <div class="step-progress" id="stepProgress"></div>
 
     <div id="alertArea"></div>
 
-    <div class="card">
+    <div class="vol-panel">
       <div class="step-panels" id="stepPanels">
 
         <!-- Step 0: Account -->
@@ -170,12 +297,6 @@
 
       </div><!-- /step-panels -->
 
-      <div class="divider"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <button class="btn btn-secondary" id="prevBtn" style="display:none">← Back</button>
-        <div style="flex:1"></div>
-        <button class="btn btn-primary" id="nextBtn">Continue →</button>
-      </div>
     </div>
 
     <div style="text-align:center;margin-top:1.25rem;font-size:0.85rem;color:var(--text-muted)">
@@ -199,21 +320,27 @@ let skillsList = [], langsList = [], catList = [];
 
 // ── Render helpers ────────────────────────────────────────────
 function renderProgress() {
-  document.getElementById('stepProgress').innerHTML = STEPS.map((label, i) => `
-    <div class="step-item ${i < currentStep ? 'completed' : i === currentStep ? 'active' : ''}">
-      <div class="step-circle">${i < currentStep ? '✓' : i + 1}</div>
-      <div class="step-label">${label}</div>
-    </div>
-  `).join('');
+  document.getElementById('stepProgress').innerHTML =
+    `<div class="steps-summary">Step ${currentStep + 1} of ${STEPS.length} - ${STEPS[currentStep]}</div>`;
 }
 
 function renderPanels() {
-  document.querySelectorAll('#stepPanels > div').forEach((p, i) => {
+  document.querySelectorAll('#stepPanels > .step-box').forEach((p, i) => {
     p.classList.toggle('active', i === currentStep);
+    p.classList.toggle('completed', i < currentStep);
+    const stateEl = p.querySelector('.step-box-state');
+    if (stateEl) {
+      if (i < currentStep) stateEl.textContent = 'Completed';
+      else if (i === currentStep) stateEl.textContent = 'Open';
+      else stateEl.textContent = 'Upcoming';
+    }
+    const indexEl = p.querySelector('.step-box-index');
+    if (indexEl) indexEl.textContent = i < currentStep ? '✓' : String(i + 1);
+    const prevBtn = p.querySelector('.step-prev-btn');
+    if (prevBtn) prevBtn.style.display = i > 0 ? 'inline-flex' : 'none';
+    const nextBtn = p.querySelector('.step-next-btn');
+    if (nextBtn) nextBtn.textContent = i === STEPS.length - 1 ? '✓ Complete Registration' : 'Continue →';
   });
-  document.getElementById('prevBtn').style.display = currentStep > 0 ? 'block' : 'none';
-  document.getElementById('nextBtn').textContent =
-    currentStep === STEPS.length - 1 ? '✓ Complete Registration' : 'Continue →';
 }
 
 function showAlert(html) {
@@ -378,10 +505,8 @@ function validate() {
 }
 
 // ── Main click handler ────────────────────────────────────────
-document.getElementById('nextBtn').addEventListener('click', async () => {
+async function handleContinue(btn) {
   if (!validate()) return;
-
-  const btn = document.getElementById('nextBtn');
 
   // Steps 0–4: save data locally, no network calls
   if (currentStep === 0) {
@@ -481,19 +606,16 @@ document.getElementById('nextBtn').addEventListener('click', async () => {
       btn.textContent = '✓ Complete Registration';
     }
   }
-});
+}
 
 function advance() {
   clearAlert();
   currentStep++;
   renderProgress();
   renderPanels();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  const activeBox = document.querySelector('#stepPanels > .step-box.active');
+  activeBox?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
-
-document.getElementById('prevBtn').addEventListener('click', () => {
-  if (currentStep > 0) { clearAlert(); currentStep--; renderProgress(); renderPanels(); }
-});
 
 setupTagInput('skillTag', 'skillsInput', skillsList);
 
@@ -568,6 +690,75 @@ window.removeLangTag = function(btn) {
   document.getElementById('dob').max = d.toISOString().split('T')[0];
 })();
 
+function initVerticalStepBoxes() {
+  const panels = [...document.querySelectorAll('#stepPanels > div')];
+  panels.forEach((panel, i) => {
+    panel.classList.add('step-box');
+    const firstTitle = panel.querySelector('h3');
+    const firstSubtitle = panel.querySelector('p.text-muted');
+    const titleText = firstTitle ? firstTitle.textContent.trim() : STEPS[i];
+    const subtitleText = firstSubtitle ? firstSubtitle.textContent.trim() : '';
+    if (firstTitle) firstTitle.remove();
+    if (firstSubtitle) firstSubtitle.remove();
+
+    const body = document.createElement('div');
+    body.className = 'step-box-body';
+    while (panel.firstChild) body.appendChild(panel.firstChild);
+    const actions = document.createElement('div');
+    actions.className = 'step-action-row';
+    actions.innerHTML = `
+      <button type="button" class="btn btn-secondary step-prev-btn" data-step="${i}" style="${i === 0 ? 'display:none' : ''}">← Back</button>
+      <button type="button" class="btn btn-primary step-next-btn" data-step="${i}">${i === STEPS.length - 1 ? '✓ Complete Registration' : 'Continue →'}</button>
+    `;
+    body.appendChild(actions);
+
+    const header = document.createElement('button');
+    header.type = 'button';
+    header.className = 'step-box-header';
+    header.innerHTML = `
+      <div class="step-box-head-left">
+        <span class="step-box-index">${i + 1}</span>
+        <div>
+          <div class="step-box-title">${titleText}</div>
+          <div class="step-box-subtitle">${subtitleText}</div>
+        </div>
+      </div>
+      <span class="step-box-state">Upcoming</span>
+    `;
+    header.addEventListener('click', () => {
+      if (i <= currentStep) {
+        currentStep = i;
+        clearAlert();
+        renderProgress();
+        renderPanels();
+      }
+    });
+
+    panel.appendChild(header);
+    panel.appendChild(body);
+  });
+}
+
+initVerticalStepBoxes();
+document.querySelectorAll('.step-next-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const stepIndex = Number(btn.dataset.step);
+    if (stepIndex !== currentStep) return;
+    await handleContinue(btn);
+  });
+});
+document.querySelectorAll('.step-prev-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const stepIndex = Number(btn.dataset.step);
+    if (stepIndex !== currentStep || currentStep === 0) return;
+    clearAlert();
+    currentStep--;
+    renderProgress();
+    renderPanels();
+    const activeBox = document.querySelector('#stepPanels > .step-box.active');
+    activeBox?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
 renderProgress();
 renderPanels();
 </script>
