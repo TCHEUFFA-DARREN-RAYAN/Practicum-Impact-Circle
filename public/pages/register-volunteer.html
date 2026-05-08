@@ -165,7 +165,10 @@
           </div>
           <div class="form-group">
             <label for="password">Password <span class="required">*</span></label>
-            <input type="password" id="password" placeholder="Min 8 chars, 1 uppercase, 1 number">
+            <div class="input-group">
+              <input type="password" id="password" placeholder="Min 8 chars, 1 uppercase, 1 number">
+              <button type="button" class="btn btn-secondary" id="togglePwd" title="Show/hide password" tabindex="-1">&#x1F441;</button>
+            </div>
             <span class="field-error"></span>
           </div>
           <div class="form-group">
@@ -215,7 +218,7 @@
             </div>
           </div>
           <div class="form-row">
-            <div class="form-group"><label for="availHours">Weekly Availability (hrs) <span class="required">*</span></label><input type="number" id="availHours" min="1" max="80" placeholder="10"><span class="field-error"></span></div>
+            <div class="form-group"><label for="availHours">Weekly Availability (hrs) <span class="required">*</span></label><input type="number" id="availHours" min="0" max="80" placeholder="10"><span class="field-error"></span></div>
             <div class="form-group"><label>Available Days</label>
               <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.5rem" id="daysCheckboxes">
                 <label class="form-check" style="margin:0"><input type="checkbox" name="days" value="Mon"> Mon</label>
@@ -378,6 +381,10 @@ function removeTag(btn, listId) {
 }
 
 // ── Password toggles ─────────────────────────────────────────
+document.getElementById('togglePwd').addEventListener('click', () => {
+  const el = document.getElementById('password');
+  el.type = el.type === 'password' ? 'text' : 'password';
+});
 document.getElementById('toggleConfirmPwd').addEventListener('click', () => {
   const el = document.getElementById('confirmPwd');
   el.type = el.type === 'password' ? 'text' : 'password';
@@ -428,7 +435,7 @@ const CATEGORIES = [
     const matches = CATEGORIES.filter(c => c.toLowerCase().includes(q) && !catList.includes(c));
     if (!matches.length) { dropdown.style.display = 'none'; return; }
     dropdown.innerHTML = matches.map(c =>
-      `<div data-cat="${c}" style="padding:0.45rem 0.75rem;cursor:pointer;font-size:0.875rem;border-bottom:1px solid #f0f0f0">${c}</div>`
+      `<div data-cat="${c}" style="padding:0.65rem 1rem;cursor:pointer;font-size:0.9rem;border-bottom:1px solid #f0f0f0;line-height:1.4">${c}</div>`
     ).join('');
     dropdown.querySelectorAll('div').forEach(item => {
       item.addEventListener('mousedown', e => { e.preventDefault(); addCat(item.dataset.cat); });
@@ -451,6 +458,8 @@ window.removeCatTag = function(btn) {
 };
 
 // ── Validation ────────────────────────────────────────────────
+const NAME_REGEX = /^[a-zA-ZÀ-ÿ\s'\-]+$/;
+
 function validate() {
   clearAlert();
   if (currentStep === 0) {
@@ -458,16 +467,27 @@ function validate() {
     const pwd   = document.getElementById('password').value;
     const cpwd  = document.getElementById('confirmPwd').value;
     let ok = true;
-    if (!Validator.email(email))    { Validator.showError(document.getElementById('email'),      'Valid email required.'); ok = false; }
-    if (!Validator.password(pwd))   { Validator.showError(document.getElementById('password'),   'Min 8 chars, 1 uppercase, 1 number.'); ok = false; }
-    if (pwd !== cpwd)               { Validator.showError(document.getElementById('confirmPwd'), 'Passwords do not match.'); ok = false; }
+    if (!Validator.email(email)) { Validator.showError(document.getElementById('email'), 'Valid email required.'); ok = false; }
+    if (!pwd || pwd.length < 8) {
+      Validator.showError(document.getElementById('password'), 'Password must be at least 8 characters.'); ok = false;
+    } else if (!/[A-Z]/.test(pwd)) {
+      Validator.showError(document.getElementById('password'), 'Password must contain at least one uppercase letter.'); ok = false;
+    } else if (!/[0-9]/.test(pwd)) {
+      Validator.showError(document.getElementById('password'), 'Password must contain at least one number.'); ok = false;
+    }
+    if (pwd && cpwd && pwd !== cpwd) { Validator.showError(document.getElementById('confirmPwd'), 'Passwords do not match.'); ok = false; }
+    else if (pwd && !cpwd) { Validator.showError(document.getElementById('confirmPwd'), 'Please confirm your password.'); ok = false; }
     return ok;
   }
   if (currentStep === 1) {
     let ok = true;
     ['firstName','lastName','address'].forEach(id => {
-      if (!Validator.required(document.getElementById(id).value))
-        { Validator.showError(document.getElementById(id), 'This field is required.'); ok = false; }
+      const el = document.getElementById(id);
+      if (!Validator.required(el.value)) {
+        Validator.showError(el, 'This field is required.'); ok = false;
+      } else if ((id === 'firstName' || id === 'lastName') && !NAME_REGEX.test(el.value.trim())) {
+        Validator.showError(el, 'Name must contain only letters, spaces, hyphens, or apostrophes.'); ok = false;
+      }
     });
     const phoneVal = document.getElementById('phone').value.trim();
     if (!phoneVal) {
@@ -488,8 +508,11 @@ function validate() {
     return ok;
   }
   if (currentStep === 2) {
-    if (!document.getElementById('availHours').value)
-      { Validator.showError(document.getElementById('availHours'), 'Required.'); return false; }
+    const hoursEl = document.getElementById('availHours');
+    const hoursVal = parseFloat(hoursEl.value);
+    if (!hoursEl.value) { Validator.showError(hoursEl, 'Required.'); return false; }
+    if (hoursVal < 0) { Validator.showError(hoursEl, 'Availability cannot be negative.'); return false; }
+    if (hoursVal > 80) { Validator.showError(hoursEl, 'Maximum is 80 hours per week.'); return false; }
   }
   if (currentStep === 5) {
     if (!document.getElementById('termsConsent').checked) {
@@ -503,6 +526,11 @@ function validate() {
   }
   return true;
 }
+
+// Clear errors on input
+document.querySelectorAll('#stepPanels input, #stepPanels textarea, #stepPanels select').forEach(el => {
+  el.addEventListener('input', () => Validator.clearError(el));
+});
 
 // ── Main click handler ────────────────────────────────────────
 async function handleContinue(btn) {
