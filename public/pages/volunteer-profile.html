@@ -118,7 +118,7 @@
             </div>
             <div class="form-group">
               <label for="weeklyAvailabilityHours">Weekly Availability (hours)</label>
-              <input type="number" id="weeklyAvailabilityHours" min="1" max="80" placeholder="10">
+              <input type="number" id="weeklyAvailabilityHours" min="0" max="80" placeholder="10">
               <span class="field-error"></span>
             </div>
           </div>
@@ -280,33 +280,34 @@
 
     try {
       const { data } = await API.get('/volunteers/me');
-      const v = data.volunteer || data;
+      const profile = data.profile || {};
+      const user = data.user || {};
 
       // Profile header
-      const fullName = [v.firstName, v.lastName].filter(Boolean).join(' ') || 'Volunteer';
-      const email    = v.email || API.getUser()?.email || '';
-      const initials = (v.firstName?.[0] || email[0] || '?').toUpperCase();
+      const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(' ') || 'Volunteer';
+      const email    = user.email || API.getUser()?.email || '';
+      const initials = (profile.firstName?.[0] || email[0] || '?').toUpperCase();
 
       document.getElementById('profileAvatar').textContent = initials;
       document.getElementById('profileName').textContent   = fullName;
       document.getElementById('profileEmail').textContent  = email;
       document.getElementById('verificationBadge').innerHTML =
-        verificationBadgeHTML(v.verificationStatus, v.rejectionReason);
+        verificationBadgeHTML(user.verificationStatus, user.rejectionReason);
 
       // Populate form
-      document.getElementById('firstName').value               = v.firstName || '';
-      document.getElementById('lastName').value                = v.lastName  || '';
-      document.getElementById('phone').value                   = v.phone     || '';
-      document.getElementById('address').value                 = v.address   || '';
-      document.getElementById('weeklyAvailabilityHours').value = v.weeklyAvailabilityHours || '';
+      document.getElementById('firstName').value               = profile.firstName || '';
+      document.getElementById('lastName').value                = profile.lastName  || '';
+      document.getElementById('phone').value                   = profile.phone     || '';
+      document.getElementById('address').value                 = profile.address   || '';
+      document.getElementById('weeklyAvailabilityHours').value = profile.weeklyAvailabilityHours || '';
 
       // Stats
-      document.getElementById('statHours').textContent  = v.totalVerifiedHours ?? v.stats?.totalVerifiedHours ?? 0;
-      document.getElementById('statPoints').textContent = (v.totalPoints ?? v.stats?.totalPoints ?? 0).toLocaleString();
-      document.getElementById('statGigs').textContent   = v.completedGigs ?? v.stats?.completedGigs ?? 0;
+      document.getElementById('statHours').textContent  = profile.totalVerifiedHours ?? 0;
+      document.getElementById('statPoints').textContent = (profile.totalPoints ?? 0).toLocaleString();
+      document.getElementById('statGigs').textContent   = profile.completedGigs ?? 0;
 
       // Top categories
-      const cats = v.topCategories || v.stats?.topCategories || [];
+      const cats = profile.topCategories || [];
       if (cats.length > 0) {
         show('topCatsSection');
         document.getElementById('topCatsList').innerHTML = cats.map(c => {
@@ -317,7 +318,7 @@
       }
 
       // Existing documents
-      document.getElementById('existingDocs').innerHTML = existingDocHTML(v.documents || v.docs);
+      document.getElementById('existingDocs').innerHTML = existingDocHTML({ govId: profile.govId, backgroundCheck: profile.backgroundCheck });
 
       hide('loadingState');
       show('mainContent');
@@ -346,8 +347,8 @@
     if (!Validator.required(lastName.value)) {
       Validator.showError(lastName, 'Last name is required.'); ok = false;
     }
-    if (hours.value && (parseInt(hours.value) < 1 || parseInt(hours.value) > 80)) {
-      Validator.showError(hours, 'Enter a value between 1 and 80.'); ok = false;
+    if (hours.value && (parseFloat(hours.value) < 0 || parseFloat(hours.value) > 80)) {
+      Validator.showError(hours, 'Enter a value between 0 and 80.'); ok = false;
     }
     if (!ok) return;
 
