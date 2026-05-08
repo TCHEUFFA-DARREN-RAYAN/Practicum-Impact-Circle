@@ -251,6 +251,22 @@
     el.addEventListener('input', () => Validator.clearError(el));
   });
 
+  // Real-time confirm password mismatch feedback
+  const pwdEl     = document.getElementById('password');
+  const confirmEl = document.getElementById('confirmPwd');
+
+  function checkPasswordMatch() {
+    if (!confirmEl.value) return;
+    if (pwdEl.value !== confirmEl.value) {
+      Validator.showError(confirmEl, 'Passwords do not match.');
+    } else {
+      Validator.clearError(confirmEl);
+    }
+  }
+  confirmEl.addEventListener('input', checkPasswordMatch);
+  confirmEl.addEventListener('blur',  checkPasswordMatch);
+  pwdEl.addEventListener('input', () => { if (confirmEl.value) checkPasswordMatch(); });
+
   // Validation
   function validate() {
     let ok = true;
