@@ -58,11 +58,11 @@
     <div class="nav-user">
       <div class="nav-avatar">${(user.email?.[0] || '?').toUpperCase()}</div>
       <div>
-        <div style="color:white;font-size:0.8rem;font-weight:600">${user.email?.split('@')[0]}</div>
-        <div style="color:white;font-size:0.7rem;text-transform:capitalize">${user.role}</div>
+        <div style="color:#0f172a;font-size:0.8rem;font-weight:600">${user.email?.split('@')[0]}</div>
+        <div style="color:#0f172a;font-size:0.7rem;text-transform:capitalize">${user.role}</div>
       </div>
     </div>
-    <button class="btn btn-ghost btn-sm" onclick="logout()" style="color:white">Logout</button>
+    <button class="btn btn-ghost btn-sm" onclick="logout()" style="color:#0f172a">Logout</button>
   ` : `
     <a href="/login" class="btn btn-secondary btn-sm">Log In</a>
     <a href="/register-volunteer" class="btn btn-primary btn-sm">Get Started</a>
@@ -142,6 +142,30 @@
 
     /* Small delay so the CSS transition doesn't fire on page load */
     requestAnimationFrame(() => sidebarEl.classList.add('ready'));
+
+    const toggleBtn = document.createElement('button');
+    toggleBtn.type = 'button';
+    toggleBtn.id = 'sidebarToggleDesktop';
+    toggleBtn.className = 'sidebar-toggle-desktop';
+    toggleBtn.setAttribute('aria-label', 'Toggle sidebar');
+    document.body.appendChild(toggleBtn);
+
+    const applySidebarCollapsedState = (collapsed) => {
+      document.body.classList.toggle('sidebar-collapsed', collapsed);
+      toggleBtn.textContent = collapsed ? '›' : '‹';
+      toggleBtn.title = collapsed ? 'Show sidebar' : 'Hide sidebar';
+    };
+
+    const stored = localStorage.getItem('sidebarCollapsed') === '1';
+    applySidebarCollapsedState(stored);
+
+    toggleBtn.addEventListener('click', () => {
+      const collapsed = !document.body.classList.contains('sidebar-collapsed');
+      applySidebarCollapsedState(collapsed);
+      localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0');
+      sidebarEl.classList.remove('open');
+      document.getElementById('sidebarBackdrop')?.classList.remove('open');
+    });
   }
 
   /* ── Hamburger: toggles sidebar on pages that have one, else mobile menu ── */
