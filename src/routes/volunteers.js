@@ -109,11 +109,36 @@ router.put('/me', requireAuth, requireRole('volunteer'), async (req, res, next) 
       'previousVolunteeringHistory', 'preferredCategories', 'references'];
     const updates = {};
     allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
-    const [, [profile]] = await VolunteerProfile.update(updates, { where: { userId: req.user.id }, returning: true });
-    const updated = profile || await VolunteerProfile.findOne({ where: { userId: req.user.id } });
+    await VolunteerProfile.update(updates, { where: { userId: req.user.id } });
+    const updated = await VolunteerProfile.findOne({ where: { userId: req.user.id } });
     res.json({ success: true, message: 'Profile updated.', data: { profile: updated } });
   } catch (err) { next(err); }
 });
+
+router.post('/me/documents', requireAuth, requireRole('volunteer'),
+  upload.fields([
+    { name: 'govId', maxCount: 1 },
+    { name: 'backgroundCheck', maxCount: 1 },
+  ]),
+  async (req, res, next) => {
+    try {
+      const profile = await VolunteerProfile.findOne({ where: { userId: req.user.id } });
+      if (!profile) return res.status(404).json({ success: false, message: 'Profile not found.' });
+
+      const updates = {};
+      if (req.files?.govId) updates.govId = req.files.govId[0].filename;
+      if (req.files?.backgroundCheck) updates.backgroundCheck = req.files.backgroundCheck[0].filename;
+
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ success: false, message: 'No files provided.' });
+      }
+
+      await profile.update(updates);
+      await User.update({ verificationStatus: 'pending' }, { where: { id: req.user.id } });
+      res.json({ success: true, message: 'Documents uploaded. Your verification is now under review.' });
+    } catch (err) { next(err); }
+  }
+);
 
 router.get('/me/dashboard', requireAuth, requireRole('volunteer'), async (req, res, next) => {
   try {
