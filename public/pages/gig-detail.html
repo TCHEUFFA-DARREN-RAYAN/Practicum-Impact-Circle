@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gig Detail | ImpactCircle</title>
   <link rel="stylesheet" href="/css/base.css">
+  <style>
+    @media (max-width: 768px) {
+      .grid { grid-template-columns: 1fr !important; }
+      .container { padding: 0 1rem; }
+    }
+  </style>
 </head>
 <body>
 <nav id="navbar"></nav>
@@ -57,6 +63,11 @@ async function load() {
 
     document.title = `${gig.title} | ImpactCircle`;
 
+    const user = API.getUser();
+    const isVerified = user && user.verificationStatus === 'verified';
+    const isVolunteer = user && user.role === 'volunteer';
+    const canApply = !isVolunteer || isVerified;
+
     document.getElementById('gigContent').innerHTML = `
       <div style="margin-bottom:1.5rem">
         <a href="/gigs" class="btn btn-ghost btn-sm" style="padding-left:0">← Back to Gigs</a>
@@ -65,12 +76,12 @@ async function load() {
         <div>
           <div class="card mb-4">
             <div style="margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center">
-              <span class="cat-pill" style="background:${gig.categoryId?.colorHex}22;color:${gig.categoryId?.colorHex}">${gig.categoryId?.icon} ${gig.categoryId?.name}</span>
+              <span class="cat-pill" style="background:${gig.category?.colorHex || '#2563eb'}22;color:${gig.category?.colorHex || '#2563eb'}">${gig.category?.icon || ''} ${gig.category?.name || 'General'}</span>
               <span class="badge ${gig.status === 'open' ? 'badge-open' : 'badge-closed'}">${gig.status}</span>
               ${gig.verifiedOnly ? '<span class="verified-lock"> Verified volunteers only</span>' : ''}
             </div>
             <h1 style="font-size:1.5rem;margin-bottom:0.5rem">${gig.title}</h1>
-            <div style="color:var(--text-muted);font-size:0.875rem;margin-bottom:1.25rem">${gig.orgId?.orgName || ''}</div>
+            <div style="color:var(--text-muted);font-size:0.875rem;margin-bottom:1.25rem">${gig.org?.orgName || ''}</div>
             <div class="divider"></div>
             <h3 style="margin-bottom:0.75rem">About This Opportunity</h3>
             <p style="font-size:0.9rem;line-height:1.7;color:var(--text-muted)">${gig.description.replace(/\n/g, '<br>')}</p>
@@ -96,7 +107,7 @@ async function load() {
               </div>
               <div style="display:flex;gap:0.75rem;align-items:flex-start">
                 <span style="font-size:1.25rem"></span>
-                <div><div style="font-size:0.775rem;font-weight:700;text-transform:uppercase;color:var(--text-muted)">Location</div><div style="font-size:0.875rem;margin-top:0.125rem">${gig.location?.type === 'remote' ? ' Remote' : gig.location?.address || 'In-Person'}</div></div>
+                <div><div style="font-size:0.775rem;font-weight:700;text-transform:uppercase;color:var(--text-muted)">Location</div><div style="font-size:0.875rem;margin-top:0.125rem">${gig.locationType === 'remote' ? ' Remote' : gig.locationAddress || 'In-Person'}</div></div>
               </div>
               <div style="display:flex;gap:0.75rem;align-items:flex-start">
                 <span style="font-size:1.25rem"></span>
@@ -105,16 +116,20 @@ async function load() {
             </div>
             <div class="divider"></div>
             <div id="applySection">
-              ${gig.status === 'open' ? `<button class="btn btn-primary btn-block btn-lg" onclick="openApply()">Apply Now</button>` : `<div class="alert alert-warning">This gig is no longer accepting applications.</div>`}
+              ${gig.status === 'open'
+                ? (canApply
+                    ? `<button class="btn btn-primary btn-block btn-lg" onclick="openApply()">Apply Now</button>`
+                    : `<button class="btn btn-block btn-lg" disabled style="background:#94a3b8;color:#fff;cursor:not-allowed;border:none">Apply Now</button><div class="form-hint" style="text-align:center;margin-top:0.5rem;color:var(--warning)">Your account is pending verification. You'll be able to apply once approved.</div>`)
+                : `<div class="alert alert-warning">This gig is no longer accepting applications.</div>`}
               ${gig.verifiedOnly ? `<div class="form-hint" style="text-align:center;margin-top:0.5rem"> Requires Verified Volunteer badge</div>` : ''}
             </div>
           </div>
           <div class="card">
-            <h4 style="margin-bottom:0.75rem">About ${gig.orgId?.orgName || 'the Organization'}</h4>
-            ${gig.orgId?.missionStatement ? `<p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem">${gig.orgId.missionStatement}</p>` : ''}
-            ${gig.orgId?.address ? `<div class="gig-meta-item" style="font-size:0.8rem"> ${gig.orgId.address}</div>` : ''}
-            ${gig.orgId?.contactEmail ? `<div class="gig-meta-item" style="font-size:0.8rem">️ ${gig.orgId.contactEmail}</div>` : ''}
-            ${gig.orgId?.website ? `<div class="gig-meta-item" style="font-size:0.8rem"> <a href="${gig.orgId.website}" target="_blank">${gig.orgId.website}</a></div>` : ''}
+            <h4 style="margin-bottom:0.75rem">About ${gig.org?.orgName || 'the Organization'}</h4>
+            ${gig.org?.missionStatement ? `<p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem">${gig.org.missionStatement}</p>` : ''}
+            ${gig.org?.address ? `<div class="gig-meta-item" style="font-size:0.8rem"> ${gig.org.address}</div>` : ''}
+            ${gig.org?.contactEmail ? `<div class="gig-meta-item" style="font-size:0.8rem">️ ${gig.org.contactEmail}</div>` : ''}
+            ${gig.org?.website ? `<div class="gig-meta-item" style="font-size:0.8rem"> <a href="${gig.org.website}" target="_blank">${gig.org.website}</a></div>` : ''}
           </div>
         </div>
       </div>
