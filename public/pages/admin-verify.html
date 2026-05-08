@@ -95,8 +95,8 @@ async function load() {
           </div>
           ${status === 'pending' ? `
             <div style="display:flex;flex-direction:column;gap:0.375rem">
-              <button class="btn btn-success btn-sm" onclick="openVerify('${u._id}','${u.email.replace(/'/g,"\\'")}','${u.role}')">Approve </button>
-              <button class="btn btn-danger btn-sm" onclick="openReject('${u._id}','${u.email.replace(/'/g,"\\'")}','${u.role}')">Reject</button>
+              <button class="btn btn-success btn-sm" onclick="openVerify('${u.id}','${u.email.replace(/'/g,"\\'")}','${u.role}')">Approve </button>
+              <button class="btn btn-danger btn-sm" onclick="openReject('${u.id}','${u.email.replace(/'/g,"\\'")}','${u.role}')">Reject</button>
             </div>
           ` : ''}
         </div>
