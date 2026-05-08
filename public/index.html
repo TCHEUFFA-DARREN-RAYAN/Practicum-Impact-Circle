@@ -22,6 +22,13 @@
     #navbar .nav-logo { filter: none; }
     #navbar .nav-links a { color: var(--text-muted); }
     #navbar .nav-links a:hover { background: var(--bg); color: var(--text); }
+    #navbar .nav-hamburger { color: var(--text); }
+    #navbar .nav-mobile-menu {
+      background: #fff;
+      border-top: 1px solid var(--border);
+    }
+    #navbar .nav-mobile-menu a { color: var(--text-muted); }
+    #navbar .nav-mobile-menu a:hover { background: var(--bg); color: var(--text); }
 
     /* ── Sections ── */
     .lp-section { padding: 5rem 0; }
@@ -341,8 +348,10 @@
     }
     @media (max-width: 480px) {
       .steps-grid { grid-template-columns: 1fr; }
-      .hero-ctas { flex-direction: column; }
-      .btn-lp-primary, .btn-lp-outline { justify-content: center; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .hero-ctas { flex-direction: column; align-items: stretch; }
+      .btn-lp-primary, .btn-lp-outline { justify-content: center; text-align: center; }
+      .cats-grid { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
