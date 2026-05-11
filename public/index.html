@@ -5,375 +5,302 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ImpactCircle — Verified Impact. Real Contribution.</title>
   <meta name="description" content="ImpactCircle connects verified volunteers with non-profits and CSR partners across Greater Moncton. Every volunteer hour is validated, categorized, and rewarded.">
-  <meta property="og:title" content="ImpactCircle — Verified Impact. Real Contribution.">
-  <meta property="og:description" content="A verified volunteer platform for Greater Moncton. Earn real rewards for every approved volunteer hour.">
-  <meta property="og:type" content="website">
   <link rel="stylesheet" href="/css/base.css">
   <style>
-    /* ── Landing page overrides ── */
+    /* ── Color palette ── */
     :root {
-      --lp: #5b5ef4;
-      --lp-dark: #4649d4;
-      --lp-light: #eeeeff;
+      --sky:       #0EA5E9;
+      --sky-dark:  #0284C7;
+      --sky-light: #F0F9FF;
+      --sky-mid:   #BAE6FD;
+      --dark:      #111111;
     }
 
     body { background: #fff; }
-    #navbar { background: #fff; border-bottom: 1px solid var(--border); }
-    #navbar .nav-logo { filter: none; }
-    #navbar .nav-links a { color: var(--text-muted); }
-    #navbar .nav-links a:hover { background: var(--bg); color: var(--text); }
-    #navbar .nav-hamburger { color: var(--text); }
-    #navbar .nav-mobile-menu {
-      background: #fff;
-      border-top: 1px solid var(--border);
-    }
-    #navbar .nav-mobile-menu a { color: var(--text-muted); }
-    #navbar .nav-mobile-menu a:hover { background: var(--bg); color: var(--text); }
 
-    /* ── Sections ── */
-    .lp-section { padding: 5rem 0; }
-    .lp-section-gray { background: #f8fafc; }
-    .lp-eyebrow {
-      display: inline-block;
-      font-size: 0.75rem; font-weight: 700;
-      letter-spacing: 0.1em; text-transform: uppercase;
-      color: var(--lp); margin-bottom: 0.75rem;
+    /* ── Scroll reveal ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1);
     }
-    .lp-h2 { font-size: 2.25rem; font-weight: 800; color: var(--text); line-height: 1.2; margin-bottom: 1rem; }
-    .lp-lead { font-size: 1.0625rem; color: var(--text-muted); max-width: 560px; line-height: 1.75; }
+    .reveal.visible { opacity: 1; transform: none; }
 
-    /* ── Hero ── */
-    .hero-wrap {
-      padding-top: calc(var(--nav-height) + 4rem);
-      padding-bottom: 4.5rem;
+    /* ── Shared section ── */
+    .lp-section      { padding: 5rem 0; }
+    .sec-gray        { background: #FAFAFA; }
+    .sec-dark        { background: var(--dark); }
+    .sec-sky         { background: var(--sky-light); }
+
+    /* ── Shared type ── */
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--sky); margin-bottom: 0.875rem;
+    }
+    .eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--sky); flex-shrink: 0; }
+    .sec-title      { font-size: clamp(1.875rem, 3vw, 2.5rem); font-weight: 800; color: #111; line-height: 1.15; margin-bottom: 1rem; }
+    .sec-title-w    { color: #fff; }
+    .sec-body       { font-size: 1rem; color: #666; line-height: 1.75; }
+    .sky-text       { color: var(--sky); }
+
+    /* ── Shared buttons ── */
+    .btn-sky {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: var(--sky); color: white;
+      padding: 0.75rem 1.625rem; border-radius: 10px;
+      font-size: 0.9375rem; font-weight: 600;
+      border: 2px solid var(--sky);
+      text-decoration: none; transition: all 0.15s; white-space: nowrap;
+    }
+    .btn-sky:hover { background: var(--sky-dark); border-color: var(--sky-dark); color: white; text-decoration: none; }
+    .btn-outline-dark {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: transparent; color: #111;
+      padding: 0.75rem 1.625rem; border-radius: 10px;
+      font-size: 0.9375rem; font-weight: 600;
+      border: 2px solid #ddd;
+      text-decoration: none; transition: all 0.15s; white-space: nowrap;
+    }
+    .btn-outline-dark:hover { border-color: #111; background: #f8f8f8; text-decoration: none; }
+    .btn-outline-white {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: transparent; color: white;
+      padding: 0.75rem 1.625rem; border-radius: 10px;
+      font-size: 0.9375rem; font-weight: 600;
+      border: 2px solid rgba(255,255,255,0.35);
+      text-decoration: none; transition: all 0.15s; white-space: nowrap;
+    }
+    .btn-outline-white:hover { border-color: white; background: rgba(255,255,255,0.1); text-decoration: none; }
+
+    /* ════════════════════════════════════════════════
+       HERO
+    ════════════════════════════════════════════════ */
+    .hero-section {
+      background: linear-gradient(180deg, var(--sky-light) 0%, #fff 55%);
+    }
+    .hero-inner {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 4rem;
       align-items: center;
+      padding-top: calc(var(--nav-height) + 4.5rem);
+      padding-bottom: 5.5rem;
       max-width: 1200px;
       margin: 0 auto;
       padding-left: 1.5rem;
       padding-right: 1.5rem;
     }
     .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: var(--lp-light);
-      color: var(--lp);
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: var(--sky-light); color: var(--sky);
+      border: 1px solid var(--sky-mid);
       border-radius: 999px;
-      padding: 0.35rem 0.875rem;
+      padding: 0.375rem 1rem;
       font-size: 0.8125rem; font-weight: 600;
       margin-bottom: 1.5rem;
     }
-    .hero-badge span { width: 6px; height: 6px; border-radius: 50%; background: var(--lp); }
+    .hero-badge-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--sky); }
     .hero-h1 {
-      font-size: clamp(2.25rem, 4vw, 3.25rem);
+      font-size: clamp(2.25rem, 4vw, 3.375rem);
       font-weight: 900;
-      line-height: 1.1;
-      color: var(--text);
+      line-height: 1.08;
+      color: #111;
       margin-bottom: 1.25rem;
       letter-spacing: -0.03em;
     }
-    .hero-h1 em { font-style: normal; color: var(--lp); }
     .hero-sub {
-      font-size: 1.0625rem;
-      color: var(--text-muted);
-      line-height: 1.75;
-      margin-bottom: 2rem;
-      max-width: 480px;
+      font-size: 1.0625rem; color: #666; line-height: 1.75;
+      margin-bottom: 2rem; max-width: 480px;
     }
-    .hero-ctas { display: flex; gap: 0.875rem; flex-wrap: wrap; margin-bottom: 3rem; }
-    .btn-lp-primary {
-      display: inline-flex; align-items: center; gap: 0.5rem;
-      background: var(--lp); color: white;
-      padding: 0.75rem 1.625rem; border-radius: 8px;
-      font-size: 0.9375rem; font-weight: 600;
-      border: 2px solid var(--lp);
-      text-decoration: none; transition: all 0.15s;
-    }
-    .btn-lp-primary:hover { background: var(--lp-dark); border-color: var(--lp-dark); color: white; text-decoration: none; }
-    .btn-lp-outline {
-      display: inline-flex; align-items: center; gap: 0.5rem;
-      background: transparent; color: var(--text);
-      padding: 0.75rem 1.625rem; border-radius: 8px;
-      font-size: 0.9375rem; font-weight: 600;
-      border: 2px solid var(--border-dark);
-      text-decoration: none; transition: all 0.15s;
-    }
-    .btn-lp-outline:hover { background: var(--bg); border-color: #aaa; color: var(--text); text-decoration: none; }
+    .hero-btns { display: flex; gap: 0.875rem; flex-wrap: wrap; margin-bottom: 3.5rem; }
     .hero-stats { display: flex; gap: 2.5rem; }
-    .hero-stat-num { font-size: 1.625rem; font-weight: 800; color: var(--text); line-height: 1; }
-    .hero-stat-lbl { font-size: 0.8125rem; color: var(--text-muted); margin-top: 0.25rem; }
+    .hero-stat-num { font-size: 1.75rem; font-weight: 900; color: #111; line-height: 1; }
+    .hero-stat-lbl { font-size: 0.8125rem; color: #888; margin-top: 0.25rem; }
     .hero-img-wrap {
-      position: relative;
-      border-radius: 20px;
-      overflow: hidden;
-      aspect-ratio: 4/3;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+      border-radius: 20px; overflow: hidden; aspect-ratio: 4/3;
+      box-shadow: 0 24px 64px rgba(14,165,233,0.14), 0 4px 16px rgba(0,0,0,0.07);
     }
     .hero-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-    /* ── How It Works ── */
-    .steps-grid {
+    /* ════════════════════════════════════════════════
+       FEATURES
+    ════════════════════════════════════════════════ */
+    .features-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 2rem;
+      gap: 1.5rem;
       margin-top: 3rem;
     }
-    .step-card { text-align: center; }
-    .step-num {
-      width: 52px; height: 52px;
-      border-radius: 14px;
-      background: var(--lp-light);
-      color: var(--lp);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.375rem; font-weight: 900;
-      margin: 0 auto 1.25rem;
-    }
-    .step-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
-    .step-card p { font-size: 0.875rem; color: var(--text-muted); line-height: 1.65; }
-    .steps-connector {
-      display: flex; align-items: flex-start; justify-content: center;
-      gap: 0; margin-top: 3rem;
-    }
-
-    /* ── Impact categories ── */
-    .cats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 1rem;
-      margin-top: 2.5rem;
-    }
-    .cat-card {
+    .feature-card {
       background: #fff;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 1.5rem 1.25rem;
+      border: 1px solid #EBEBEB;
+      border-radius: 18px;
+      padding: 1.875rem;
+      transition: box-shadow 0.25s, transform 0.25s;
+    }
+    .feature-card:hover { box-shadow: 0 10px 32px rgba(14,165,233,0.12); transform: translateY(-4px); }
+    .feature-emoji { font-size: 2rem; margin-bottom: 1.125rem; display: block; }
+    .feature-card h3 { font-size: 1rem; font-weight: 700; color: #111; margin-bottom: 0.5rem; }
+    .feature-card p  { font-size: 0.875rem; color: #777; line-height: 1.65; margin: 0; }
+
+    /* ════════════════════════════════════════════════
+       ABOUT DARK
+    ════════════════════════════════════════════════ */
+    .about-dark-inner {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center;
+    }
+    .about-dark-img { border-radius: 20px; overflow: hidden; aspect-ratio: 4/3; }
+    .about-dark-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .about-dark-body { color: rgba(255,255,255,0.62); line-height: 1.75; font-size: 0.9375rem; margin-bottom: 2rem; }
+    .checks-list { display: flex; flex-direction: column; gap: 1.125rem; }
+    .check-item  { display: flex; align-items: flex-start; gap: 0.875rem; }
+    .check-icon  {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--sky); color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700; flex-shrink: 0; margin-top: 0.1rem;
+    }
+    .check-item strong { display: block; font-weight: 700; font-size: 0.9375rem; color: white; margin-bottom: 0.2rem; }
+    .check-item span   { font-size: 0.8125rem; color: rgba(255,255,255,0.5); }
+
+    /* ════════════════════════════════════════════════
+       STATS
+    ════════════════════════════════════════════════ */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 1.5rem; margin-top: 3rem;
+    }
+    .stat-card {
+      background: #fff;
+      border: 1px solid #EBEBEB;
+      border-radius: 18px;
+      padding: 2.25rem 1.5rem;
       text-align: center;
-      transition: box-shadow 0.2s, transform 0.15s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: box-shadow 0.2s, transform 0.2s;
     }
-    .cat-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.08); transform: translateY(-2px); }
-    .cat-name { font-weight: 700; font-size: 0.9375rem; margin-bottom: 0.375rem; }
-    .cat-hours { font-size: 1.5rem; font-weight: 800; color: var(--lp); line-height: 1; }
-    .cat-meta { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
+    .stat-card:hover { box-shadow: 0 8px 28px rgba(14,165,233,0.1); transform: translateY(-3px); }
+    .stat-num { font-size: 2.5rem; font-weight: 900; color: var(--sky); line-height: 1; margin-bottom: 0.625rem; }
+    .stat-lbl { font-size: 0.875rem; font-weight: 600; color: #555; }
 
-    /* ── About ── */
-    .about-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 5rem;
-      align-items: center;
-    }
-    .about-img {
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.1);
-      aspect-ratio: 4/3;
-    }
-    .about-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .about-checks { margin-top: 1.75rem; display: flex; flex-direction: column; gap: 1rem; }
-    .about-check {
-      display: flex; align-items: flex-start; gap: 0.875rem;
-    }
-    .check-icon {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: var(--lp-light);
-      color: var(--lp);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.875rem; flex-shrink: 0; margin-top: 0.1rem;
-    }
-    .about-check strong { display: block; font-weight: 700; font-size: 0.9375rem; margin-bottom: 0.2rem; }
-    .about-check span { font-size: 0.8125rem; color: var(--text-muted); }
-
-    /* ── Leaderboard ── */
-    .lb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2.5rem; }
-    .lb-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; }
-    .lb-card-title { font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem; }
-    .lb-card-sub { font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 1.25rem; }
-    .lb-row {
-      display: flex; align-items: center; gap: 0.75rem;
-      padding: 0.625rem 0; border-bottom: 1px solid var(--border);
-    }
-    .lb-row:last-child { border-bottom: none; }
-    .lb-rank { font-weight: 800; font-size: 0.875rem; width: 22px; text-align: center; color: var(--text-muted); }
-    .lb-rank.top { color: #f59e0b; }
-    .lb-avatar {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: var(--lp-light); color: var(--lp);
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 0.8rem; flex-shrink: 0;
-    }
-    .lb-name { flex: 1; font-weight: 600; font-size: 0.875rem; }
-    .lb-val { font-weight: 700; font-size: 0.875rem; color: var(--lp); }
-
-    /* ── Testimonials ── */
-    .testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 3rem; }
+    /* ════════════════════════════════════════════════
+       TESTIMONIALS
+    ════════════════════════════════════════════════ */
+    .testi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; margin-top: 3rem; }
     .testi-card {
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.75rem;
+      background: #fff; border: 1px solid #EBEBEB; border-radius: 18px; padding: 1.875rem;
+      transition: box-shadow 0.2s, transform 0.2s;
     }
-    .testi-stars { color: var(--lp); font-size: 0.875rem; letter-spacing: 2px; margin-bottom: 1rem; }
-    .testi-quote {
-      font-style: italic;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-      line-height: 1.7;
-      margin-bottom: 1.5rem;
-    }
+    .testi-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.07); transform: translateY(-3px); }
+    .testi-stars  { color: #F59E0B; letter-spacing: 2px; margin-bottom: 1rem; font-size: 0.9rem; }
+    .testi-quote  { font-style: italic; color: #666; font-size: 0.9rem; line-height: 1.7; margin-bottom: 1.5rem; }
     .testi-author { display: flex; align-items: center; gap: 0.75rem; }
-    .testi-avatar {
-      width: 40px; height: 40px; border-radius: 50%;
-      object-fit: cover;
-    }
-    .testi-name { font-weight: 700; font-size: 0.9rem; }
-    .testi-role { font-size: 0.775rem; color: var(--text-muted); }
+    .testi-avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; }
+    .testi-name   { font-weight: 700; font-size: 0.875rem; color: #111; }
+    .testi-role   { font-size: 0.775rem; color: #888; }
 
-    /* ── FAQ ── */
-    .faq-list { max-width: 760px; margin: 2.5rem auto 0; display: flex; flex-direction: column; gap: 0.75rem; }
-    .faq-item {
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
+    /* ════════════════════════════════════════════════
+       CTA SPLIT
+    ════════════════════════════════════════════════ */
+    .cta-split { display: grid; grid-template-columns: 1fr 1fr; }
+    .cta-left {
+      background: var(--dark); padding: 5.5rem 4rem; color: white;
     }
-    .faq-q {
-      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-      padding: 1.125rem 1.375rem;
-      cursor: pointer;
-      font-weight: 600; font-size: 0.9375rem;
-      user-select: none;
+    .cta-left h2  { font-size: 2.125rem; font-weight: 800; color: white; line-height: 1.2; margin-bottom: 1rem; }
+    .cta-left p   { color: rgba(255,255,255,0.6); font-size: 1rem; line-height: 1.7; margin-bottom: 2.25rem; }
+    .cta-left-btns { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .cta-left-note { font-size: 0.8125rem; color: rgba(255,255,255,0.35); margin-top: 1.25rem; }
+    .cta-right {
+      background: var(--sky-light); padding: 5.5rem 4rem;
     }
-    .faq-q:hover { background: var(--bg); }
-    .faq-chevron {
-      width: 20px; height: 20px; flex-shrink: 0;
-      color: var(--text-muted);
-      transition: transform 0.25s;
+    .cta-right h2 { font-size: 2.125rem; font-weight: 800; color: #111; line-height: 1.2; margin-bottom: 1rem; }
+    .cta-right p  { color: #666; font-size: 1rem; line-height: 1.7; margin-bottom: 2rem; }
+    .cta-form     { display: flex; flex-direction: column; gap: 0.75rem; }
+    .cta-input {
+      width: 100%; padding: 0.8125rem 1.125rem;
+      border-radius: 10px; border: 1.5px solid #ddd;
+      font-size: 0.9375rem; outline: none;
+      background: #fff; color: #111;
+      transition: border-color 0.15s;
     }
-    .faq-item.open .faq-chevron { transform: rotate(180deg); }
-    .faq-a {
-      display: none;
-      padding: 0 1.375rem 1.25rem;
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      line-height: 1.75;
-    }
-    .faq-item.open .faq-a { display: block; }
+    .cta-input:focus { border-color: var(--sky); }
+    .cta-note { font-size: 0.8125rem; color: #999; margin-top: 0.625rem; }
 
-    /* ── CTA Banner ── */
-    .cta-banner {
-      background: linear-gradient(135deg, #5b5ef4 0%, #4649d4 60%, #3730a3 100%);
-      padding: 5rem 0;
-      text-align: center;
-      color: white;
-    }
-    .cta-banner h2 { font-size: 2.25rem; font-weight: 800; color: white; margin-bottom: 1rem; }
-    .cta-banner p { color: rgba(255,255,255,0.8); font-size: 1.0625rem; margin-bottom: 2rem; max-width: 560px; margin-left: auto; margin-right: auto; }
-    .cta-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
-    .btn-cta-white {
-      background: white; color: var(--lp);
-      padding: 0.75rem 1.75rem; border-radius: 8px;
-      font-weight: 700; font-size: 0.9375rem;
-      border: 2px solid white;
-      text-decoration: none; transition: all 0.15s;
-    }
-    .btn-cta-white:hover { background: rgba(255,255,255,0.9); color: var(--lp); text-decoration: none; }
-    .btn-cta-outline {
-      background: transparent; color: white;
-      padding: 0.75rem 1.75rem; border-radius: 8px;
-      font-weight: 700; font-size: 0.9375rem;
-      border: 2px solid rgba(255,255,255,0.5);
-      text-decoration: none; transition: all 0.15s;
-    }
-    .btn-cta-outline:hover { border-color: white; background: rgba(255,255,255,0.1); color: white; text-decoration: none; }
-    .cta-note { font-size: 0.8125rem; color: rgba(255,255,255,0.6); margin-top: 1.25rem; }
-
-    /* ── Footer ── */
-    .lp-footer {
-      background: linear-gradient(180deg, #2a3a73 0%, #243468 100%);
-      padding: 3.5rem 0 2rem;
-      color: #c0cae4;
-    }
+    /* ════════════════════════════════════════════════
+       FOOTER
+    ════════════════════════════════════════════════ */
+    .lp-footer { background: var(--dark); padding: 4.5rem 0 2rem; color: rgba(255,255,255,0.5); }
     .footer-grid {
-      display: grid;
-      grid-template-columns: 1.5fr 1fr 1fr 1fr;
-      gap: 3rem;
-      margin-bottom: 3rem;
+      display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr;
+      gap: 3rem; margin-bottom: 3rem;
     }
-    .footer-logo { height: 140px; width: auto; display: block; margin-bottom: 0.75rem; object-fit: contain; }
-    .footer-logo-wrap {
-      display: inline-block;
-      padding: 0;
-      border-radius: 0;
-      background: transparent;
-      border: none;
-      margin-bottom: 0.75rem;
-    }
+    .footer-logo { height: 100px; width: auto; display: block; margin-bottom: 0.875rem; object-fit: contain; }
     .footer-brand-desc { font-size: 0.8125rem; line-height: 1.65; max-width: 240px; }
-    .footer-col h4 { color: white; font-size: 0.875rem; font-weight: 700; margin-bottom: 1rem; }
-    .footer-col a {
-      display: block;
-      color: #c0cae4; font-size: 0.8125rem;
-      text-decoration: none;
-      padding: 0.25rem 0;
-      transition: color 0.15s;
+    .footer-social { display: flex; gap: 0.625rem; margin-top: 1.25rem; }
+    .footer-social a {
+      width: 34px; height: 34px; background: rgba(255,255,255,0.07); border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.55); text-decoration: none; font-size: 0.8rem; font-weight: 700;
+      transition: background 0.15s, color 0.15s;
+    }
+    .footer-social a:hover { background: var(--sky); color: white; text-decoration: none; }
+    .footer-col h4 { color: white; font-size: 0.875rem; font-weight: 700; margin-bottom: 1.25rem; }
+    .footer-col a  {
+      display: block; color: rgba(255,255,255,0.5); font-size: 0.825rem;
+      padding: 0.3rem 0; text-decoration: none; transition: color 0.15s;
     }
     .footer-col a:hover { color: white; }
     .footer-bottom {
-      border-top: 1px solid rgba(255,255,255,0.16);
-      padding-top: 1.5rem;
-      text-align: center;
-      font-size: 0.8125rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding-top: 1.5rem; text-align: center; font-size: 0.8125rem;
     }
 
-    /* ── Responsive ── */
-    @media (max-width: 1024px) {
-      .steps-grid { grid-template-columns: repeat(2, 1fr); }
-      .footer-grid { grid-template-columns: 1fr 1fr; }
+    /* ════════════════════════════════════════════════
+       RESPONSIVE
+    ════════════════════════════════════════════════ */
+    @media (max-width: 1100px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .stats-grid    { grid-template-columns: repeat(2, 1fr); }
+      .footer-grid   { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 900px) {
+      .about-dark-inner { grid-template-columns: 1fr; gap: 2.5rem; }
     }
     @media (max-width: 768px) {
-      .hero-wrap { grid-template-columns: 1fr; gap: 2.5rem; padding-top: calc(var(--nav-height) + 2.5rem); }
-      .hero-img-wrap { aspect-ratio: 16/9; }
-      .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
-      .testi-grid { grid-template-columns: 1fr; }
-      .lb-grid { grid-template-columns: 1fr; }
-      .steps-grid { grid-template-columns: 1fr 1fr; }
-      .lp-h2 { font-size: 1.75rem; }
-      .cta-banner h2 { font-size: 1.75rem; }
-      .hero-stats { gap: 1.5rem; flex-wrap: wrap; }
-      .footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
+      .hero-inner     { grid-template-columns: 1fr; gap: 2.5rem; padding-top: calc(var(--nav-height) + 3rem); }
+      .testi-grid     { grid-template-columns: 1fr; }
+      .cta-split      { grid-template-columns: 1fr; }
+      .cta-left, .cta-right { padding: 3.5rem 2rem; }
+      .cta-left-btns  { flex-direction: column; }
     }
-    @media (max-width: 480px) {
-      .steps-grid { grid-template-columns: 1fr; }
-      .footer-grid { grid-template-columns: 1fr; }
-      .hero-ctas { flex-direction: column; align-items: stretch; }
-      .btn-lp-primary, .btn-lp-outline { justify-content: center; text-align: center; }
-      .cats-grid { grid-template-columns: 1fr 1fr; }
+    @media (max-width: 540px) {
+      .features-grid  { grid-template-columns: 1fr; }
+      .stats-grid     { grid-template-columns: 1fr 1fr; }
+      .footer-grid    { grid-template-columns: 1fr; }
+      .hero-btns      { flex-direction: column; align-items: stretch; }
+      .hero-stats     { gap: 1.5rem; flex-wrap: wrap; }
     }
   </style>
 </head>
 <body>
 <nav id="navbar"></nav>
 
-<!-- ══ HERO ══════════════════════════════════════════════════ -->
-<section>
-  <div class="hero-wrap">
-    <!-- Left -->
-    <div>
-      <div class="hero-badge"><span></span> Verified Volunteer Platform</div>
+<!-- ══ HERO ══════════════════════════════════════════════════════ -->
+<section class="hero-section">
+  <div class="hero-inner">
+    <div class="reveal">
+      <div class="hero-badge"><span class="hero-badge-dot"></span> Verified Volunteer Platform</div>
       <h1 class="hero-h1">
         Volunteer with Purpose.<br>
-        <em>Build Real Impact.</em>
+        <span class="sky-text">Build Real Impact.</span>
       </h1>
       <p class="hero-sub">
         ImpactCircle connects verified volunteers with non-profits and CSR partners
         across Greater Moncton. Every hour you give is validated, categorized, and rewarded.
       </p>
-      <div class="hero-ctas">
-        <a href="/register-volunteer" class="btn-lp-primary">Join as Volunteer</a>
-        <a href="/gigs" class="btn-lp-outline">Browse Gigs</a>
+      <div class="hero-btns">
+        <a href="/register" class="btn-sky">Join as Volunteer</a>
+        <a href="/upcoming-shifts" class="btn-outline-dark">Browse Shifts</a>
       </div>
       <div class="hero-stats">
         <div>
@@ -381,7 +308,7 @@
           <div class="hero-stat-lbl">Verified Hours</div>
         </div>
         <div>
-          <div class="hero-stat-num" id="statVolunteers">—</div>
+          <div class="hero-stat-num" id="statVols">—</div>
           <div class="hero-stat-lbl">Active Volunteers</div>
         </div>
         <div>
@@ -390,8 +317,7 @@
         </div>
       </div>
     </div>
-    <!-- Right: image -->
-    <div class="hero-img-wrap">
+    <div class="hero-img-wrap reveal" style="transition-delay:0.12s">
       <img
         src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=900&auto=format&fit=crop&q=80"
         alt="Volunteers making an impact"
@@ -401,98 +327,78 @@
   </div>
 </section>
 
-<!-- ══ HOW IT WORKS ══════════════════════════════════════════ -->
-<section class="lp-section lp-section-gray" id="how-it-works">
-  <div class="container" style="text-align:center">
-    <span class="lp-eyebrow">How it works</span>
-    <h2 class="lp-h2" style="margin:0 auto 0.5rem">Four Simple Steps to Get Started</h2>
-    <p class="lp-lead" style="margin:0 auto">
-      From sign-up to earning rewards — the whole process is transparent, structured, and built for real community impact.
-    </p>
-    <div class="steps-grid">
-      <div class="step-card">
-        <div class="step-num">1</div>
-        <h3>Register & Get Verified</h3>
-        <p>Create your volunteer profile and submit identity documents. Our admin team reviews and issues your Verified Volunteer badge.</p>
-      </div>
-      <div class="step-card">
-        <div class="step-num">2</div>
-        <h3>Browse Opportunities</h3>
-        <p>Filter gigs by impact category, location, date, or organization. Verified volunteers unlock exclusive high-impact opportunities.</p>
-      </div>
-      <div class="step-card">
-        <div class="step-num">3</div>
-        <h3>Complete Tasks</h3>
-        <p>Show up, contribute, and mark your task complete. The host organization reviews and approves your hours within 30 days.</p>
-      </div>
-      <div class="step-card">
-        <div class="step-num">4</div>
-        <h3>Earn Points & Rewards</h3>
-        <p>Accumulate verified points for every approved hour. Redeem CSR-sponsored discounts, event passes, and certificates of service.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══ LIVE IMPACT ══════════════════════════════════════════ -->
-<section class="lp-section" id="impact">
-  <div class="container" style="text-align:center">
-    <span class="lp-eyebrow">Community Impact</span>
-    <h2 class="lp-h2" style="margin:0 auto 0.5rem">Impact by Category</h2>
-    <p class="lp-lead" style="margin:0 auto">
-      Every verified hour is tagged to one of 8 community sectors. Real numbers, updated in real time.
-    </p>
-    <div class="cats-grid" id="categoryGrid">
-      <div class="loading-overlay"><div class="spinner spinner-lg"></div></div>
-    </div>
-  </div>
-</section>
-
-<!-- ══ ABOUT ══════════════════════════════════════════════════ -->
-<section class="lp-section lp-section-gray" id="about">
+<!-- ══ FEATURES ═════════════════════════════════════════════════ -->
+<section class="lp-section sec-gray">
   <div class="container">
-    <div class="about-grid">
-      <!-- Image -->
-      <div class="about-img">
+    <div style="text-align:center;max-width:640px;margin:0 auto" class="reveal">
+      <div class="eyebrow"><span class="eyebrow-dot"></span> Why ImpactCircle</div>
+      <h2 class="sec-title">Everything You Need to Give Back</h2>
+      <p class="sec-body">From finding the right opportunity to tracking your impact — we've made volunteering simple, structured, and rewarding.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card reveal">
+        <span class="feature-emoji">🛡️</span>
+        <h3>Verified Matching</h3>
+        <p>Every volunteer and organization is verified. Know your time goes to trusted, legitimate causes.</p>
+      </div>
+      <div class="feature-card reveal" style="transition-delay:0.08s">
+        <span class="feature-emoji">📅</span>
+        <h3>Flexible Shifts</h3>
+        <p>Morning, afternoon, or evening — in-person or remote. Find shifts that fit your schedule.</p>
+      </div>
+      <div class="feature-card reveal" style="transition-delay:0.16s">
+        <span class="feature-emoji">📊</span>
+        <h3>Track Your Impact</h3>
+        <p>Every approved hour is logged, categorized, and visible on your personal impact dashboard.</p>
+      </div>
+      <div class="feature-card reveal" style="transition-delay:0.24s">
+        <span class="feature-emoji">🎁</span>
+        <h3>Earn Rewards</h3>
+        <p>Accumulate points for every verified hour and redeem CSR-sponsored perks, discounts, and certificates.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ ABOUT DARK ════════════════════════════════════════════════ -->
+<section class="lp-section sec-dark">
+  <div class="container">
+    <div class="about-dark-inner">
+      <div class="about-dark-img reveal">
         <img
           src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=900&auto=format&fit=crop&q=80"
           alt="Community volunteers working together"
           loading="lazy"
         >
       </div>
-      <!-- Text -->
-      <div>
-        <span class="lp-eyebrow">About ImpactCircle</span>
-        <h2 class="lp-h2">Trusted, Verified Volunteering for Greater Moncton</h2>
-        <p style="color:var(--text-muted);line-height:1.75;margin-bottom:0.75rem">
-          ImpactCircle was built to solve a fundamental problem in volunteering: the inability to
-          verify and measure community contributions. We created a platform where every hour is
-          approved by the hosting organization — not self-reported.
+      <div class="reveal" style="transition-delay:0.1s">
+        <div class="eyebrow"><span class="eyebrow-dot"></span> About ImpactCircle</div>
+        <h2 class="sec-title sec-title-w" style="margin-bottom:1.25rem">Built for Greater Moncton. Designed to Scale.</h2>
+        <p class="about-dark-body">
+          ImpactCircle was built to solve a fundamental problem in volunteering: the inability to verify
+          and measure community contributions. Every hour is approved by the hosting organization — never
+          self-reported.
         </p>
-        <p style="color:var(--text-muted);line-height:1.75">
-          Our ecosystem connects volunteers, non-profits, and private sector CSR partners in one
-          transparent, accountability-first platform — built for Moncton, designed to scale.
-        </p>
-        <div class="about-checks">
-          <div class="about-check">
+        <div class="checks-list">
+          <div class="check-item">
             <div class="check-icon">✓</div>
             <div>
               <strong>Zero Tolerance for Unverified Hours</strong>
               <span>Every hour requires explicit organizational approval before it counts.</span>
             </div>
           </div>
-          <div class="about-check">
+          <div class="check-item">
             <div class="check-icon">✓</div>
             <div>
               <strong>8 Community Impact Categories</strong>
-              <span>From Food Security to Youth Development — contributions are tracked and rewarded by sector.</span>
+              <span>From Food Security to Youth Development — tracked and rewarded by sector.</span>
             </div>
           </div>
-          <div class="about-check">
+          <div class="check-item">
             <div class="check-icon">✓</div>
             <div>
               <strong>CSR-Powered Reward Ecosystem</strong>
-              <span>Private sector partners sponsor real perks, discounts, and recognition for verified volunteers.</span>
+              <span>Private sector partners sponsor perks, discounts, and recognition for verified volunteers.</span>
             </div>
           </div>
         </div>
@@ -501,37 +407,44 @@
   </div>
 </section>
 
-<!-- ══ LEADERBOARD ════════════════════════════════════════════ -->
-<section class="lp-section" id="leaderboard">
-  <div class="container" style="text-align:center">
-    <span class="lp-eyebrow">Community Leaders</span>
-    <h2 class="lp-h2" style="margin:0 auto 0.5rem">Top Contributors</h2>
-    <p class="lp-lead" style="margin:0 auto">
-      Recognizing the volunteers and organizations driving the most verified impact.
-    </p>
-    <div class="lb-grid">
-      <div class="lb-card">
-        <div class="lb-card-title">Volunteer Leaderboard</div>
-        <div class="lb-card-sub">Top contributors by verified hours</div>
-        <div id="leaderboardList"><div class="loading-overlay" style="padding:2rem"><div class="spinner"></div></div></div>
+<!-- ══ STATS ══════════════════════════════════════════════════════ -->
+<section class="lp-section sec-sky">
+  <div class="container">
+    <div style="text-align:center;max-width:600px;margin:0 auto" class="reveal">
+      <div class="eyebrow"><span class="eyebrow-dot"></span> By the Numbers</div>
+      <h2 class="sec-title">Real Impact. Real Numbers.</h2>
+      <p class="sec-body">Data from our growing community of verified volunteers and organizations across Greater Moncton.</p>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card reveal">
+        <div class="stat-num" id="statHours2">—</div>
+        <div class="stat-lbl">Verified Hours Logged</div>
       </div>
-      <div class="lb-card">
-        <div class="lb-card-title">Leading Organizations</div>
-        <div class="lb-card-sub">Most facilitated volunteer hours</div>
-        <div id="orgsList"><div class="loading-overlay" style="padding:2rem"><div class="spinner"></div></div></div>
+      <div class="stat-card reveal" style="transition-delay:0.08s">
+        <div class="stat-num" id="statVols2">—</div>
+        <div class="stat-lbl">Active Volunteers</div>
+      </div>
+      <div class="stat-card reveal" style="transition-delay:0.16s">
+        <div class="stat-num" id="statOrgs2">—</div>
+        <div class="stat-lbl">Partner Organizations</div>
+      </div>
+      <div class="stat-card reveal" style="transition-delay:0.24s">
+        <div class="stat-num">8</div>
+        <div class="stat-lbl">Impact Categories</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ══ TESTIMONIALS ═══════════════════════════════════════════ -->
-<section class="lp-section lp-section-gray" id="testimonials">
-  <div class="container" style="text-align:center">
-    <span class="lp-eyebrow">Success Stories</span>
-    <h2 class="lp-h2" style="margin:0 auto">What Our Volunteers Say</h2>
+<!-- ══ TESTIMONIALS ══════════════════════════════════════════════ -->
+<section class="lp-section sec-gray">
+  <div class="container">
+    <div style="text-align:center;max-width:580px;margin:0 auto" class="reveal">
+      <div class="eyebrow"><span class="eyebrow-dot"></span> Success Stories</div>
+      <h2 class="sec-title">What Our Volunteers Say</h2>
+    </div>
     <div class="testi-grid">
-
-      <div class="testi-card">
+      <div class="testi-card reveal">
         <div class="testi-stars">★★★★★</div>
         <p class="testi-quote">
           "ImpactCircle changed how I approach volunteering. I used to wonder if my hours actually
@@ -539,182 +452,95 @@
           at the org I volunteered with."
         </p>
         <div class="testi-author">
-          <img
-            class="testi-avatar"
+          <img class="testi-avatar"
             src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=80&h=80&fit=crop&q=80"
-            alt="Amara Diallo"
-            loading="lazy"
-          >
+            alt="Amara Diallo" loading="lazy">
           <div>
             <div class="testi-name">Amara Diallo</div>
             <div class="testi-role">Community Volunteer, Moncton</div>
           </div>
         </div>
       </div>
-
-      <div class="testi-card">
+      <div class="testi-card reveal" style="transition-delay:0.08s">
         <div class="testi-stars">★★★★★</div>
         <p class="testi-quote">
           "The verified badge opened doors I didn't expect. Organizations trusted me immediately
-          because my background check and history were already confirmed. The points I earned got
-          me a real discount at a local business."
+          because my history was already confirmed. The points earned me a real discount at a local business."
         </p>
         <div class="testi-author">
-          <img
-            class="testi-avatar"
+          <img class="testi-avatar"
             src="https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=80&h=80&fit=crop&q=80"
-            alt="Marcus Fontaine"
-            loading="lazy"
-          >
+            alt="Marcus Fontaine" loading="lazy">
           <div>
             <div class="testi-name">Marcus Fontaine</div>
             <div class="testi-role">Youth Mentor Volunteer</div>
           </div>
         </div>
       </div>
-
-      <div class="testi-card">
+      <div class="testi-card reveal" style="transition-delay:0.16s">
         <div class="testi-stars">★★★★★</div>
         <p class="testi-quote">
           "As a newcomer to Moncton, ImpactCircle helped me contribute to my community and build
-          a local network at the same time. The platform is easy to use and the impact is genuinely
-          measurable."
+          a local network at the same time. The impact is genuinely measurable."
         </p>
         <div class="testi-author">
-          <img
-            class="testi-avatar"
+          <img class="testi-avatar"
             src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=80&h=80&fit=crop&q=80"
-            alt="Priya Nair"
-            loading="lazy"
-          >
+            alt="Priya Nair" loading="lazy">
           <div>
             <div class="testi-name">Priya Nair</div>
             <div class="testi-role">Newcomer Integration Volunteer</div>
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </section>
 
-<!-- ══ FAQ ════════════════════════════════════════════════════ -->
-<section class="lp-section" id="faq">
-  <div class="container" style="text-align:center">
-    <span class="lp-eyebrow">Questions?</span>
-    <h2 class="lp-h2" style="margin:0 auto">Frequently Asked Questions</h2>
-
-    <div class="faq-list">
-
-      <div class="faq-item">
-        <div class="faq-q">
-          Do I need to be verified to volunteer?
-          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-        <div class="faq-a">No — you can apply to most gigs as soon as you register. However, some organizations post verified-only gigs that require your Verified Volunteer badge. Getting verified is free and unlocks exclusive high-impact opportunities.</div>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-q">
-          How are my volunteer hours tracked and approved?
-          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-        <div class="faq-a">After you complete a task, you mark it done in the platform. The hosting organization receives a notification and has 30 days to approve or reject. If they don't respond within 30 days, the task is automatically approved and hours are credited to you.</div>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-q">
-          What kinds of gigs are available?
-          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-        <div class="faq-a">Gigs span 8 community impact categories: Food Security, Women Support, Youth Development, Seniors Support, Environment, Education, Newcomer Integration, and general Volunteer Opportunities. You can filter by category, location, date, or organization.</div>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-q">
-          How does the points and rewards system work?
-          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-        <div class="faq-a">You earn points for every verified hour based on the category's points-per-hour rate. You can then redeem points for rewards sponsored by CSR partners — including discounts, event passes, recognition badges, and certificates of service. Points are never self-reported; they are always tied to approved hours.</div>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-q">
-          Can organizations post volunteer opportunities?
-          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-        <div class="faq-a">Yes. Non-profit organizations register separately, go through a verification process, and can then post gigs, screen applicants, and verify task completion. Organizations get a dedicated dashboard showing all their gig activity and volunteer metrics.</div>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-q">
-          Is ImpactCircle free to use?
-          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-        <div class="faq-a">Yes — ImpactCircle is completely free for volunteers and non-profit organizations. The platform is sustained through CSR partnerships with private sector companies who sponsor the rewards catalogue in exchange for branded visibility and employee engagement tracking.</div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<!-- ══ CTA BANNER ════════════════════════════════════════════ -->
-<section class="cta-banner">
-  <div class="container">
-    <h2>Ready to Make Your First Impact?</h2>
-    <p>
-      Join hundreds of volunteers who are building verified service records,
-      earning real rewards, and strengthening the Greater Moncton community.
-    </p>
-    <div class="cta-btns">
-      <a href="/register-volunteer" class="btn-cta-white">Join as Volunteer</a>
-      <a href="/register-org" class="btn-cta-outline">Register Your Organization</a>
-    </div>
-    <p class="cta-note">Free to join &nbsp;·&nbsp; No commitment required &nbsp;·&nbsp; Verified impact from day one</p>
-  </div>
-</section>
-
-<!-- ══ FOOTER ════════════════════════════════════════════════ -->
+<!-- ══ FOOTER ═══════════════════════════════════════════════════ -->
 <footer class="lp-footer">
-  <div class="container">
+  <div class="container">/
     <div class="footer-grid">
-      <!-- Brand -->
       <div>
-        <div class="footer-logo-wrap">
-          <img src="/images/logo.png" alt="Moncton CARE" class="footer-logo">
-        </div>
+        <img src="/images/logo.png" alt="ImpactCircle" class="footer-logo">
         <p class="footer-brand-desc">
           A verified volunteer, CSR, and community impact exchange platform for Greater Moncton, NB.
         </p>
+        <div class="footer-social">
+          <a href="https://www.linkedin.com" target="_blank" rel="noopener" title="LinkedIn">in</a>
+          <a href="https://x.com" target="_blank" rel="noopener" title="Twitter / X">𝕏</a>
+          <a href="https://www.instagram.com" target="_blank" rel="noopener" title="Instagram">ig</a>
+          <a href="mailto:info@impactcircle.ca" title="Email">@</a>
+        </div>
       </div>
-      <!-- Platform links -->
       <div class="footer-col">
         <h4>Platform</h4>
-        <a href="/register-volunteer">Join as Volunteer</a>
+        <a href="/register">Join as Volunteer</a>
         <a href="/register-org">Register Organization</a>
-        <a href="/gigs">Browse Gigs</a>
+        <a href="/upcoming-shifts">Browse Shifts</a>
+        <a href="/categories">Categories</a>
         <a href="/login">Sign In</a>
       </div>
-      <!-- Impact -->
       <div class="footer-col">
         <h4>Impact Areas</h4>
-        <a href="/gigs?category=Food+Security">Food Security</a>
-        <a href="/gigs?category=Youth+Development">Youth Development</a>
-        <a href="/gigs?category=Seniors+Support">Seniors Support</a>
-        <a href="/gigs?category=Environment">Environment</a>
-        <a href="/gigs?category=Education">Education</a>
+        <a href="/upcoming-shifts?category=Food+Security">Food Security</a>
+        <a href="/upcoming-shifts?category=Youth+Development">Youth Development</a>
+        <a href="/upcoming-shifts?category=Seniors+Support">Seniors Support</a>
+        <a href="/upcoming-shifts?category=Environment">Environment</a>
+        <a href="/upcoming-shifts?category=Education">Education</a>
       </div>
-      <!-- Connect -->
       <div class="footer-col">
-        <h4>Connect</h4>
-        <a href="https://www.linkedin.com" target="_blank" rel="noopener">LinkedIn</a>
-        <a href="https://x.com" target="_blank" rel="noopener">Twitter / X</a>
-        <a href="https://www.instagram.com" target="_blank" rel="noopener">Instagram</a>
-        <a href="mailto:info@impactcircle.ca">Contact Us</a>
+        <h4>About</h4>
+        <a href="/about">About Us</a>
+        <a href="/how-it-works">How It Works</a>
+        <a href="/faq">FAQ</a>
+        <a href="/contact">Contact Us</a>
+        <a href="/privacy-policy">Privacy Policy</a>
+        <a href="/terms">Terms of Use</a>
       </div>
     </div>
     <div class="footer-bottom">
-      © 2025 ImpactCircle. All rights reserved. &nbsp;·&nbsp; Greater Moncton, NB, Canada
+      © 2026 ImpactCircle. All rights reserved. &nbsp;·&nbsp; Greater Moncton, NB, Canada
     </div>
   </div>
 </footer>
@@ -722,87 +548,53 @@
 <script src="/js/api.js"></script>
 <script src="/js/nav.js"></script>
 <script>
+  /* Redirect logged-in users to their dashboard */
   if (API.isLoggedIn()) API.redirectByRole(API.getUser());
 
-  // ── Live data from API ──────────────────────────────────────
+  /* ── Live stats from API ── */
   (async () => {
     try {
       const { data } = await API.get('/public/impact');
-
-      // Stats
-      document.getElementById('statHours').textContent      = (data.summary.totalVerifiedHours || 0).toLocaleString();
-      document.getElementById('statVolunteers').textContent  = (data.summary.totalVolunteers   || 0).toLocaleString();
-      document.getElementById('statOrgs').textContent       = (data.summary.totalOrgs          || 0).toLocaleString();
-
-      // Categories
-      const cats = data.categoryTotals || [];
-      document.getElementById('categoryGrid').innerHTML = cats.length
-        ? cats.map(ct => `
-            <div class="cat-card">
-              <div class="cat-name">${ct.category.name}</div>
-              <div class="cat-hours">${(ct.totalHours || 0).toFixed(1)}</div>
-              <div class="cat-meta">hours &nbsp;·&nbsp; ${ct.volunteerCount || 0} volunteers</div>
-            </div>
-          `).join('')
-        : '<p class="text-muted" style="grid-column:1/-1;padding:2rem">No category data yet — check back soon.</p>';
-
-      // Volunteer leaderboard
-      const leaders = (data.leaderboard && data.leaderboard.allTime) || [];
-      document.getElementById('leaderboardList').innerHTML = leaders.length
-        ? leaders.slice(0, 8).map((v, i) => `
-            <div class="lb-row">
-              <div class="lb-rank ${i < 3 ? 'top' : ''}">${i + 1}</div>
-              <div class="lb-avatar">${(v.userId?.email?.[0] || '?').toUpperCase()}</div>
-              <div class="lb-name">${v.userId?.email?.split('@')[0] || 'Volunteer'}</div>
-              <div class="lb-val">${v.totalVerifiedHours}h</div>
-            </div>
-          `).join('')
-        : '<p class="text-muted" style="padding:1.5rem;font-size:0.875rem">No data yet — be the first!</p>';
-
-      // Org leaderboard
-      const orgs = data.topOrgs || [];
-      document.getElementById('orgsList').innerHTML = orgs.length
-        ? orgs.slice(0, 8).map((o, i) => `
-            <div class="lb-row">
-              <div class="lb-rank ${i < 3 ? 'top' : ''}">${i + 1}</div>
-              <div class="lb-avatar" style="border-radius:8px">🏛️</div>
-              <div class="lb-name">${o.orgName}</div>
-              <div class="lb-val">${o.totalFacilitatedHours}h</div>
-            </div>
-          `).join('')
-        : '<p class="text-muted" style="padding:1.5rem;font-size:0.875rem">No data yet.</p>';
-
-    } catch (err) {
-      console.error('Failed to load impact data:', err);
-      document.getElementById('categoryGrid').innerHTML =
-        '<p class="text-muted" style="grid-column:1/-1;padding:2rem">Could not load live data.</p>';
-    }
+      const h = (data.summary?.totalVerifiedHours || 0).toLocaleString();
+      const v = (data.summary?.totalVolunteers    || 0).toLocaleString();
+      const o = (data.summary?.totalOrgs          || 0).toLocaleString();
+      [['statHours','statHours2'],['statVols','statVols2'],['statOrgs','statOrgs2']]
+        .forEach(([id1,id2], i) => {
+          const val = [h,v,o][i];
+          [id1,id2].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = val; });
+        });
+    } catch {}
   })();
 
-  // ── FAQ accordion (click + keyboard) ───────────────────────
-  document.querySelectorAll('.faq-q').forEach(q => {
-    q.setAttribute('tabindex', '0');
-    q.setAttribute('role', 'button');
-    const toggle = () => {
-      const item = q.parentElement;
-      const isOpen = item.classList.contains('open');
-      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
-      if (!isOpen) item.classList.add('open');
-    };
-    q.addEventListener('click', toggle);
-    q.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+  /* ── Scroll reveal via IntersectionObserver ── */
+  const revealObserver = new IntersectionObserver(
+    entries => entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); revealObserver.unobserve(e.target); }
+    }),
+    { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+  );
+  /* Observe elements already marked with .reveal in HTML */
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+  /* ── Newsletter form ── */
+  document.getElementById('newsletterForm')?.addEventListener('submit', e => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    btn.textContent = '✓ You\'re on the list!';
+    btn.style.background = '#16a34a';
+    btn.style.borderColor = '#16a34a';
+    btn.disabled = true;
+    e.target.querySelectorAll('input').forEach(i => i.disabled = true);
   });
 
-  // ── Scroll-to-top button ─────────────────────────────────────
+  /* ── Scroll-to-top button ── */
   const scrollBtn = document.createElement('button');
   scrollBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>';
   scrollBtn.setAttribute('aria-label', 'Scroll to top');
-  scrollBtn.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;width:40px;height:40px;border-radius:50%;background:#5b5ef4;color:white;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(91,94,244,0.4);opacity:0;transition:opacity 0.3s;z-index:999';
+  scrollBtn.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;width:40px;height:40px;border-radius:50%;background:#0EA5E9;color:white;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(14,165,233,0.45);opacity:0;transition:opacity 0.3s;z-index:999;';
   document.body.appendChild(scrollBtn);
   window.addEventListener('scroll', () => { scrollBtn.style.opacity = window.scrollY > 400 ? '1' : '0'; });
   scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 </script>
-<script src="/js/footer.js"></script></body>
+</body>
 </html>
-
-
