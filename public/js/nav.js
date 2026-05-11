@@ -1,57 +1,283 @@
 (() => {
-  const user = API.getUser();
+  const user      = API.getUser();
   const isLoggedIn = API.isLoggedIn();
+  const currentPath = window.location.pathname;
+
+  /* =============================================================
+     PUBLIC GLASSMORPHISM NAV  (not logged in)
+  ============================================================= */
+  if (!isLoggedIn) {
+    document.body.classList.add('public-page');
+
+    const navEl = document.getElementById('navbar');
+    navEl.classList.add('glass-mode');
+
+    /* Nav groups — all public pages reachable from here */
+    const NAV_GROUPS = [
+      { label: 'Home', href: '/' },
+      {
+        label: 'About',
+        items: [
+          { href: '/about',        label: 'About Us',        desc: 'Our mission and story'                },
+          { href: '/how-it-works', label: 'How It Works',    desc: 'Guide for volunteers & organizations' },
+        ],
+      },
+      {
+        label: 'Volunteers',
+        items: [
+          { href: '/upcoming-shifts', label: 'Browse Shifts',  desc: 'Find volunteer opportunities'   },
+          { href: '/categories',      label: 'Categories',     desc: 'Explore by cause area'          },
+          { href: '/volunteers',      label: 'Why Volunteer?', desc: 'Benefits of giving back'        },
+        ],
+      },
+      {
+        label: 'Organizations',
+        items: [
+          { href: '/organizations', label: 'For Organizations', desc: 'Post shifts & manage volunteers' },
+          { href: '/faq',           label: 'FAQ',               desc: 'Common questions answered'       },
+        ],
+      },
+      { label: 'Contact', href: '/contact' },
+    ];
+
+    /* ── Desktop groups ── */
+    const desktopHTML = NAV_GROUPS.map((g, i) => {
+      const delay = `${150 + i * 60}ms`;
+      if (g.href) {
+        return `<a href="${g.href}" class="gn-link${currentPath === g.href ? ' active' : ''}" style="--ld:${delay}">${g.label}</a>`;
+      }
+      const hasActive = g.items.some(it => currentPath === it.href);
+      return `
+        <div class="gn-item${hasActive ? ' has-active' : ''}">
+          <button class="gn-trigger${hasActive ? ' active' : ''}" style="--ld:${delay}">
+            ${g.label}
+            <svg class="gn-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="gn-dropdown">
+            ${g.items.map(it => `
+              <a href="${it.href}" class="gn-dd-item${currentPath === it.href ? ' active' : ''}">
+                <span class="gn-dd-title">${it.label}</span>
+                <span class="gn-dd-desc">${it.desc}</span>
+              </a>`).join('')}
+          </div>
+        </div>`;
+    }).join('');
+
+    /* ── Mobile menu ── */
+    const mobileHTML = NAV_GROUPS.map(g => {
+      if (g.href) {
+        return `<a href="${g.href}" class="gm-link${currentPath === g.href ? ' active' : ''}">${g.label}</a>`;
+      }
+      const hasActive = g.items.some(it => currentPath === it.href);
+      return `
+        <div class="gm-group${hasActive ? ' open' : ''}">
+          <button class="gm-trigger">
+            ${g.label}
+            <svg class="gn-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="gm-sub">
+            ${g.items.map(it => `<a href="${it.href}" class="gm-sub-link${currentPath === it.href ? ' active' : ''}">${it.label}</a>`).join('')}
+          </div>
+        </div>`;
+    }).join('');
+
+    /* ── Render ── */
+    navEl.innerHTML = `
+      <div class="glass-nav" id="glassNav">
+        <div class="gn-orb gn-orb-l"></div>
+        <div class="gn-orb gn-orb-r"></div>
+        <div class="gn-inner">
+
+          <a href="/" class="gn-brand">
+            <div class="gn-logo-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="white">
+                <rect x="1"   y="1"   width="5.5" height="5.5" rx="1.2"/>
+                <rect x="9.5" y="1"   width="5.5" height="5.5" rx="1.2"/>
+                <rect x="1"   y="9.5" width="5.5" height="5.5" rx="1.2"/>
+                <rect x="9.5" y="9.5" width="5.5" height="5.5" rx="1.2"/>
+              </svg>
+            </div>
+            <span class="gn-brand-text">ImpactCircle</span>
+          </a>
+
+          <nav class="gn-links">${desktopHTML}</nav>
+
+          <div class="gn-auth">
+            <a href="/login"    class="gn-btn-outline">Sign In</a>
+            <a href="/register" class="gn-btn-cta">Register</a>
+          </div>
+
+          <button class="gn-hamburger" id="gnHamburger" aria-label="Open menu" aria-expanded="false">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="6"  x2="21" y2="6"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+
+        </div>
+      </div>
+
+      <div class="gm-menu" id="gnMobileMenu" aria-hidden="true">
+        ${mobileHTML}
+        <div class="gm-auth">
+          <a href="/login"    class="gn-btn-outline">Sign In</a>
+          <a href="/register" class="gn-btn-cta">Register</a>
+        </div>
+      </div>`;
+
+    /* Mount animation */
+    requestAnimationFrame(() => document.getElementById('glassNav')?.classList.add('mounted'));
+
+    /* Desktop: dropdown toggle */
+    navEl.querySelectorAll('.gn-trigger').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const item    = btn.closest('.gn-item');
+        const wasOpen = item.classList.contains('open');
+        navEl.querySelectorAll('.gn-item.open').forEach(el => el.classList.remove('open'));
+        if (!wasOpen) item.classList.add('open');
+      });
+    });
+
+    /* Mobile: hamburger */
+    const hamburger  = document.getElementById('gnHamburger');
+    const mobileMenu = document.getElementById('gnMobileMenu');
+    hamburger?.addEventListener('click', e => {
+      e.stopPropagation();
+      const isOpen = mobileMenu.classList.toggle('open');
+      hamburger.setAttribute('aria-expanded', isOpen);
+      mobileMenu.setAttribute('aria-hidden', !isOpen);
+    });
+
+    /* Mobile: accordion */
+    navEl.querySelectorAll('.gm-trigger').forEach(btn => {
+      btn.addEventListener('click', () => btn.closest('.gm-group')?.classList.toggle('open'));
+    });
+
+    /* Click outside → close everything */
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#navbar')) {
+        navEl.querySelectorAll('.gn-item.open').forEach(el => el.classList.remove('open'));
+        mobileMenu?.classList.remove('open');
+        hamburger?.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    /* ESC closes */
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        navEl.querySelectorAll('.gn-item.open').forEach(el => el.classList.remove('open'));
+        mobileMenu?.classList.remove('open');
+      }
+    });
+
+    return; /* stop — skip logged-in code */
+  }
+
+  /* =============================================================
+     LOGGED-IN NAV  (solid bar + sidebar)
+  ============================================================= */
 
   /* ── Icon set (Feather-style SVG) ── */
   const IC = {
-    dashboard: `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>`,
-    verify:    `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>`,
-    tag:       `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`,
-    gift:      `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>`,
-    alert:     `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
-    file:      `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
-    chart:     `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
-    search:    `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
-    user:      `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
-    home:      `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
-    plus:      `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
-    trending:  `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
+    dashboard:   `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>`,
+    verify:      `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>`,
+    tag:         `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`,
+    file:        `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`,
+    chart:       `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
+    search:      `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+    user:        `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+    home:        `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+    plus:        `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
+    heart:       `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
+    calendar:    `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+    star:        `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+    bookmark:    `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`,
+    message:     `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+    settings:    `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+    trending:    `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
+    users:       `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+    building:    `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>`,
+    clipboard:   `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>`,
+    checkCircle: `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+    bell:        `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
+    briefcase:   `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`,
   };
 
+  /* ── Sidebar links per role ── */
   const SIDEBAR_LINKS = {
     admin: [
-      { href: '/admin',            label: 'Dashboard',      icon: 'dashboard' },
-      { href: '/admin/verify',     label: 'Verifications',  icon: 'verify'    },
-      { href: '/admin/categories', label: 'Categories',     icon: 'tag'       },
-      { href: '/admin/rewards',    label: 'Rewards',        icon: 'gift'      },
-      { href: '/admin/disputes',   label: 'Disputes',       icon: 'alert'     },
-      { href: '/admin/audit',      label: 'Audit Log',      icon: 'file'      },
-      { href: '/admin/analytics',  label: 'Analytics',      icon: 'chart'     },
+      { href: '/admin',                 label: 'Admin Dashboard',          icon: 'dashboard'   },
+      { href: '/admin/users',           label: 'Manage Users',             icon: 'users'       },
+      { href: '/admin/organizations',   label: 'Manage Organizations',     icon: 'building'    },
+      { href: '/admin/opportunities',   label: 'Manage Opportunities',     icon: 'briefcase'   },
+      { href: '/admin/categories',      label: 'Manage Categories',        icon: 'tag'         },
+      { href: '/admin/events',          label: 'Manage Events',            icon: 'calendar'    },
+      { href: '/admin/analytics',       label: 'Reports & Analytics',      icon: 'chart'       },
+      { href: '/admin/verify',          label: 'Approvals & Verification', icon: 'verify'      },
+      { href: '/admin/announcements',   label: 'Announcements',            icon: 'bell'        },
+      { href: '/admin/settings',        label: 'Settings',                 icon: 'settings'    },
     ],
     volunteer: [
-      { href: '/volunteer-dashboard', label: 'Dashboard',   icon: 'home'   },
-      { href: '/gigs',                label: 'Browse Gigs', icon: 'search' },
-      { href: '/rewards',             label: 'Rewards',     icon: 'gift'   },
-      { href: '/volunteer-profile',   label: 'My Profile',  icon: 'user'   },
+      { href: '/volunteer-dashboard',   label: 'My Dashboard',             icon: 'home'        },
+      { href: '/volunteer-profile',     label: 'My Profile',               icon: 'user'        },
+      { href: '/volunteer/applications',label: 'My Applications',          icon: 'clipboard'   },
+      { href: '/volunteer/matches',     label: 'My Matches',               icon: 'heart'       },
+      { href: '/volunteer/schedule',    label: 'My Schedule',              icon: 'calendar'    },
+      { href: '/volunteer/impact',      label: 'My Impact',                icon: 'trending'    },
+      { href: '/volunteer/saved',       label: 'Saved Opportunities',      icon: 'bookmark'    },
+      { href: '/messages',              label: 'Messages',                 icon: 'message'     },
+      { href: '/settings',              label: 'Settings',                 icon: 'settings'    },
     ],
     org: [
-      { href: '/org-dashboard',   label: 'Dashboard',  icon: 'home'   },
-      { href: '/org-gig-create',  label: 'Post a Gig', icon: 'plus'   },
-      { href: '/gigs',            label: 'Browse Gigs',icon: 'search' },
-    ],
-    csr: [
-      { href: '/csr-dashboard', label: 'Dashboard', icon: 'trending' },
+      { href: '/org-dashboard',         label: 'Organization Dashboard',   icon: 'dashboard'   },
+      { href: '/org/profile',           label: 'Organization Profile',     icon: 'building'    },
+      { href: '/org-gig-create',        label: 'Post an Opportunity',      icon: 'plus'        },
+      { href: '/org/opportunities',     label: 'Manage Opportunities',     icon: 'briefcase'   },
+      { href: '/org/applications',      label: 'Volunteer Applications',   icon: 'clipboard'   },
+      { href: '/org/approved',          label: 'Approved Volunteers',      icon: 'checkCircle' },
+      { href: '/org/schedule',          label: 'Schedule & Shifts',        icon: 'calendar'    },
+      { href: '/messages',              label: 'Messages',                 icon: 'message'     },
+      { href: '/org/impact',            label: 'Impact Report',            icon: 'star'        },
+      { href: '/org/settings',          label: 'Settings',                 icon: 'settings'    },
     ],
   };
 
-  const currentPath = window.location.pathname;
+  /* ── Top-bar nav links per role ── */
+  const navLinks = {
+    volunteer: [
+      { href: '/volunteer-dashboard', label: 'Dashboard'         },
+      { href: '/upcoming-shifts',     label: 'Browse Shifts'     },
+      { href: '/volunteer-profile',   label: 'My Profile'        },
+    ],
+    org: [
+      { href: '/org-dashboard',   label: 'Dashboard'             },
+      { href: '/org-gig-create',  label: '+ Post Opportunity'    },
+    ],
+    admin: [
+      { href: '/admin',             label: 'Dashboard'           },
+      { href: '/admin/categories',  label: 'Categories'          },
+      { href: '/admin/analytics',   label: 'Analytics'           },
+    ],
+  };
 
-  /* ── Navbar ── */
-  const rightHTML = isLoggedIn && user ? `
+  /* ── Build links & right-side HTML ── */
+  const links    = navLinks[user.role] || [];
+  const linksHTML = links
+    .map(l => `<a href="${l.href}" class="${currentPath === l.href ? 'active' : ''}">${l.label}</a>`)
+    .join('');
+
+  const rightHTML = `
     <div class="notif-wrapper">
-      <div class="nav-bell" id="bellBtn" title="Notifications"><span class="bell-badge hidden" id="bellBadge">0</span></div>
+      <div class="nav-bell" id="bellBtn" title="Notifications">
+        <span class="bell-badge hidden" id="bellBadge">0</span>
+      </div>
       <div class="notif-panel" id="notifPanel">
-        <div class="notif-header"><h4>Notifications</h4><button class="btn btn-ghost btn-sm" id="markAllRead">Mark all read</button></div>
+        <div class="notif-header">
+          <h4>Notifications</h4>
+          <button class="btn btn-ghost btn-sm" id="markAllRead">Mark all read</button>
+        </div>
         <div id="notifList"><div class="notif-empty">Loading...</div></div>
       </div>
     </div>
@@ -62,43 +288,15 @@
         <div style="color:#0f172a;font-size:0.7rem;text-transform:capitalize">${user.role}</div>
       </div>
     </div>
-    <button class="btn btn-ghost btn-sm" onclick="logout()" style="color:#0f172a">Logout</button>
-  ` : `
-    <a href="/login" class="btn btn-secondary btn-sm">Log In</a>
-    <a href="/register-volunteer" class="btn btn-primary btn-sm">Get Started</a>
-  `;
-
-  const navLinks = {
-    volunteer: [
-      { href: '/volunteer-dashboard', label: 'Dashboard' },
-      { href: '/gigs', label: 'Browse Gigs' },
-      { href: '/rewards', label: 'Rewards' },
-      { href: '/volunteer-profile', label: 'Profile' },
-    ],
-    org: [
-      { href: '/org-dashboard', label: 'Dashboard' },
-      { href: '/org-gig-create', label: '+ Post Gig' },
-      { href: '/gigs', label: 'Browse Gigs' },
-    ],
-    admin: [
-      { href: '/admin', label: 'Dashboard' },
-      { href: '/admin/verify', label: 'Verifications' },
-      { href: '/admin/categories', label: 'Categories' },
-      { href: '/admin/rewards', label: 'Rewards' },
-      { href: '/admin/disputes', label: 'Disputes' },
-      { href: '/admin/audit', label: 'Audit Log' },
-      { href: '/admin/analytics', label: 'Analytics' },
-    ],
-    csr: [{ href: '/csr-dashboard', label: 'Dashboard' }],
-  };
-  const links = isLoggedIn && user ? (navLinks[user.role] || []) : [];
-  const linksHTML = links.map(l => `<a href="${l.href}" class="${currentPath === l.href || currentPath.startsWith(l.href + '/') ? 'active' : ''}">${l.label}</a>`).join('');
+    <button class="btn btn-ghost btn-sm" onclick="logout()" style="color:#0f172a">Logout</button>`;
 
   const mobileLinks = [
     ...links,
-    ...(isLoggedIn ? [{ href: '#', label: 'Logout', onclick: 'logout()' }] : [{ href: '/login', label: 'Log In' }, { href: '/register-volunteer', label: 'Get Started' }]),
+    { href: '#', label: 'Logout', onclick: 'logout()' },
   ];
-  const mobileHTML = mobileLinks.map(l => `<a href="${l.href}" ${l.onclick ? `onclick="${l.onclick}"` : ''}>${l.label}</a>`).join('');
+  const mobileHTML = mobileLinks
+    .map(l => `<a href="${l.href}" ${l.onclick ? `onclick="${l.onclick}"` : ''} class="${currentPath === l.href ? 'active' : ''}">${l.label}</a>`)
+    .join('');
 
   document.getElementById('navbar').innerHTML = `
     <div class="nav-inner">
@@ -106,15 +304,18 @@
       <nav class="nav-links">${linksHTML}</nav>
       <div class="nav-right">${rightHTML}</div>
       <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6"  x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
       </button>
     </div>
-    <div class="nav-mobile-menu" id="mobileMenu">${mobileHTML}</div>
-  `;
+    <div class="nav-mobile-menu" id="mobileMenu">${mobileHTML}</div>`;
 
   /* ── Sidebar ── */
   const sidebarEl = document.getElementById('sidebar');
-  if (sidebarEl && isLoggedIn && user) {
+  if (sidebarEl && user) {
     document.body.classList.add('has-sidebar');
     const roleLinks = SIDEBAR_LINKS[user.role] || [];
     const sidebarLinksHTML = roleLinks.map(l => {
@@ -122,10 +323,11 @@
       return `<a href="${l.href}" class="sidebar-link${isActive ? ' active' : ''}">${IC[l.icon] || ''}${l.label}</a>`;
     }).join('');
 
+    const roleLabels = { admin: 'Administration', volunteer: 'Volunteer', org: 'Organization' };
     sidebarEl.innerHTML = `
       <nav class="sidebar-nav">
         <div class="sidebar-section">
-          <div class="sidebar-section-label">${user.role === 'admin' ? 'Administration' : user.role === 'volunteer' ? 'Volunteer' : user.role === 'org' ? 'Organization' : 'CSR Partner'}</div>
+          <div class="sidebar-section-label">${roleLabels[user.role] || user.role}</div>
           ${sidebarLinksHTML}
         </div>
       </nav>
@@ -137,10 +339,8 @@
             <div class="sidebar-user-role">${user.role}</div>
           </div>
         </div>
-      </div>
-    `;
+      </div>`;
 
-    /* Small delay so the CSS transition doesn't fire on page load */
     requestAnimationFrame(() => sidebarEl.classList.add('ready'));
 
     const toggleBtn = document.createElement('button');
@@ -150,14 +350,13 @@
     toggleBtn.setAttribute('aria-label', 'Toggle sidebar');
     document.body.appendChild(toggleBtn);
 
-    const applySidebarCollapsedState = (collapsed) => {
+    const applySidebarCollapsedState = collapsed => {
       document.body.classList.toggle('sidebar-collapsed', collapsed);
       toggleBtn.textContent = collapsed ? '›' : '‹';
       toggleBtn.title = collapsed ? 'Show sidebar' : 'Hide sidebar';
     };
 
-    const stored = localStorage.getItem('sidebarCollapsed') === '1';
-    applySidebarCollapsedState(stored);
+    applySidebarCollapsedState(localStorage.getItem('sidebarCollapsed') === '1');
 
     toggleBtn.addEventListener('click', () => {
       const collapsed = !document.body.classList.contains('sidebar-collapsed');
@@ -168,13 +367,12 @@
     });
   }
 
-  /* ── Hamburger: toggles sidebar on pages that have one, else mobile menu ── */
+  /* ── Hamburger ── */
   const hamburger = document.getElementById('hamburger');
   hamburger?.addEventListener('click', () => {
     if (sidebarEl) {
       const isOpen = sidebarEl.classList.toggle('open');
-      const backdrop = document.getElementById('sidebarBackdrop');
-      if (backdrop) backdrop.classList.toggle('open', isOpen);
+      document.getElementById('sidebarBackdrop')?.classList.toggle('open', isOpen);
       hamburger.setAttribute('aria-expanded', isOpen);
     } else {
       const menu = document.getElementById('mobileMenu');
@@ -190,20 +388,18 @@
   });
 
   /* ── Notifications ── */
-  if (isLoggedIn) {
-    loadNotifications();
-    setInterval(loadNotifications, 30000);
-    document.getElementById('bellBtn')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const panel = document.getElementById('notifPanel');
-      panel.classList.toggle('open');
-      if (panel.classList.contains('open')) markAllRead();
-    });
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.notif-wrapper')) document.getElementById('notifPanel')?.classList.remove('open');
-    });
-    document.getElementById('markAllRead')?.addEventListener('click', () => markAllRead());
-  }
+  loadNotifications();
+  setInterval(loadNotifications, 30000);
+  document.getElementById('bellBtn')?.addEventListener('click', e => {
+    e.stopPropagation();
+    const panel = document.getElementById('notifPanel');
+    panel.classList.toggle('open');
+    if (panel.classList.contains('open')) markAllRead();
+  });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.notif-wrapper')) document.getElementById('notifPanel')?.classList.remove('open');
+  });
+  document.getElementById('markAllRead')?.addEventListener('click', () => markAllRead());
 
   async function loadNotifications() {
     try {
@@ -217,8 +413,7 @@
         <div class="notif-item ${n.isRead ? '' : 'unread'}" onclick="window.location='${n.link || '#'}'">
           <p>${n.message}</p>
           <small>${fmt.fromNow(n.createdAt)}</small>
-        </div>
-      `).join('');
+        </div>`).join('');
     } catch {}
   }
 

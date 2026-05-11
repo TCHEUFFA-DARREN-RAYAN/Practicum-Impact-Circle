@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Categories | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    .page-hero {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      color: white;
+      padding: 4rem 0 3rem;
+      text-align: center;
+    }
+    .page-hero h1 { color: white; font-size: 2.5rem; margin-bottom: 1rem; }
+    .page-hero p { font-size: 1.125rem; opacity: 0.9; max-width: 600px; margin: 0 auto; }
+    .categories-section { padding: 3rem 0; }
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1.25rem;
+      margin-top: 2rem;
+    }
+    .category-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-decoration: none;
+      color: var(--text);
+      display: block;
+    }
+    .category-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+      border-color: var(--primary);
+      text-decoration: none;
+    }
+    .category-emoji { font-size: 2rem; margin-bottom: 0.75rem; display: block; }
+    .category-card h3 { font-size: 0.95rem; margin-bottom: 0.25rem; }
+    .category-card span { font-size: 0.8rem; color: var(--text-muted); }
+    #categories-loading { text-align: center; padding: 3rem; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+<nav id="navbar"></nav>
+
+<div class="page-hero page-content" style="padding-top: calc(var(--nav-height) + 2rem);">
+  <div class="container">
+    <h1>Volunteer Categories</h1>
+    <p>Explore opportunities across all areas of community service and find your passion.</p>
+  </div>
+</div>
+
+<main class="categories-section">
+  <div class="container">
+    <div id="categories-loading">Loading categories…</div>
+    <div class="categories-grid" id="categories-grid" style="display:none;"></div>
+  </div>
+</main>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/footer.js"></script>
+<script>
+  const CATEGORY_EMOJIS = {
+    'Education':           '📚',
+    'Environment':         '🌿',
+    'Health & Wellness':   '❤️',
+    'Community Support':   '🤝',
+    'Arts & Culture':      '🎨',
+    'Animal Welfare':      '🐾',
+    'Elderly Care':        '👴',
+    'Youth Programs':      '🧒',
+    'Food & Nutrition':    '🍽️',
+    'Sports & Recreation': '⚽',
+    'Technology':          '💻',
+    'Disaster Relief':     '🆘',
+    'Housing & Shelter':   '🏠',
+    'Legal Aid':           '⚖️',
+    'Mental Health':       '🧠',
+  };
+
+  async function loadCategories() {
+    const grid = document.getElementById('categories-grid');
+    const loading = document.getElementById('categories-loading');
+    try {
+      const { data } = await API.get('/public/categories');
+      const cats = Array.isArray(data) ? data : (data.categories || []);
+      if (!cats.length) {
+        loading.textContent = 'No categories available yet.';
+        return;
+      }
+      loading.style.display = 'none';
+      grid.style.display = 'grid';
+      grid.innerHTML = cats.map(c => `
+        <a href="/upcoming-shifts?category=${encodeURIComponent(c.name || c)}" class="category-card">
+          <span class="category-emoji">${CATEGORY_EMOJIS[c.name || c] || '🌟'}</span>
+          <h3>${c.name || c}</h3>
+          ${c.gigCount !== undefined ? `<span>${c.gigCount} opportunity${c.gigCount !== 1 ? 's' : ''}</span>` : ''}
+        </a>
+      `).join('');
+    } catch {
+      loading.textContent = 'Could not load categories. Please try again later.';
+    }
+  }
+
+  loadCategories();
+</script>
+</body>
+</html>

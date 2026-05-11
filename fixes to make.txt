@@ -1,0 +1,22 @@
+- can an organization selects many category 
+- morning afternoon evening  if they are available ()
+- add photo to profile .. when updating their account .. (find a way to store the images )
+- volunteer can sort by hours they wish to work in the gigs  and it should also show in the browse gig description  , just like inperson shows ...
+- the date too should appear in the description to know when the gigs is happening 
+- remove the access filter and change it to the time instead 
+remove the gmail from the login page 
+- add an internal chat option so the admin can contact the organisations or the volunteers 
+- fix the approve volunteer or organization 
+- add the real time update in the system 
+- after you apply to a gig the button needs to be  greyed  and insteadshow ( waiting for approval)
+- add analytics to both orgs and volunteers , and admin .. and also when they click on gigs completed itshould bring hem to a page where tehy can ee the 
+- when the orgs click on the applicants button they should be able to see more details about the person who applied
+- get a dedicated page to see the details of an application .. and  more detaisl about the users who applied 
+- no delete only archive the gigs deleted 
+- gigs can have repetition like every Tuesday ... recuring gigs .. the org can set it .. so taht it happens and repeat until the end date and the total hours are according to what is set 
+- gigs can be daily monthly .. just like booking an appointment / in the evening .. 
+- section to keep the record of a volunteer who did a gig so tah the organization can say you completed the gigs ..  and give a rate to it ..  
+- the organisations can see teh volunteers tha are currently active and see the recuring volunteers and track those who came or not .. 
+- the volunjteer can have a button to clain hours so tha the orgs can approve the hours being claimed by that volunteer 
+- qr code for the volunteer profile .. so that you can see the volunteer ID profile 
+- 

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accessibility Statement | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    .legal-hero {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 2.5rem 0;
+    }
+    .legal-hero h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    .legal-hero p { color: var(--text-muted); margin: 0; }
+    .legal-section { padding: 2.5rem 0; }
+    .legal-content { max-width: 760px; }
+    .legal-content h2 { font-size: 1.2rem; margin: 2rem 0 0.75rem; }
+    .legal-content p, .legal-content li { color: var(--text-muted); font-size: 0.9rem; line-height: 1.75; }
+    .legal-content ul { padding-left: 1.5rem; margin-bottom: 0.75rem; list-style: disc; }
+    .legal-content li { margin-bottom: 0.25rem; }
+    .legal-last-updated {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-size: 0.825rem; color: var(--text-muted);
+      background: var(--bg); border-radius: 999px;
+      padding: 0.25rem 0.75rem; margin-bottom: 1.5rem;
+    }
+    .a11y-commitment {
+      background: var(--primary-light);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem 2rem;
+      margin-bottom: 2rem;
+    }
+    .a11y-commitment h2 { margin-top: 0; }
+    .a11y-commitment p { margin: 0; color: var(--primary); }
+  </style>
+</head>
+<body>
+<nav id="navbar"></nav>
+
+<div class="legal-hero page-content" style="padding-top: calc(var(--nav-height) + 1.5rem);">
+  <div class="container">
+    <h1>Accessibility Statement</h1>
+    <p>Our commitment to making ImpactCircle accessible to everyone.</p>
+  </div>
+</div>
+
+<main class="legal-section">
+  <div class="container">
+    <div class="legal-content">
+
+      <span class="legal-last-updated">Last updated: May 2026</span>
+
+      <div class="a11y-commitment">
+        <h2>Our Commitment</h2>
+        <p>ImpactCircle is committed to ensuring digital accessibility for people with disabilities. We continually improve the user experience for everyone and apply the relevant accessibility standards.</p>
+      </div>
+
+      <h2>Standards We Follow</h2>
+      <p>We aim to conform to the <strong>Web Content Accessibility Guidelines (WCAG) 2.1 Level AA</strong>. These guidelines explain how to make web content more accessible to people with disabilities, including visual, auditory, physical, speech, cognitive, language, learning, and neurological disabilities.</p>
+
+      <h2>Measures We've Taken</h2>
+      <p>To support accessibility, ImpactCircle has taken the following steps:</p>
+      <ul>
+        <li>Semantic HTML structure with appropriate heading hierarchy</li>
+        <li>Descriptive alt text for all informational images</li>
+        <li>Keyboard navigation support throughout the platform</li>
+        <li>Visible focus indicators for interactive elements</li>
+        <li>Sufficient color contrast ratios for text and UI elements</li>
+        <li>ARIA labels and roles for dynamic and interactive components</li>
+        <li>Screen reader-compatible form labels and error messages</li>
+        <li>Responsive design that works on all device sizes</li>
+      </ul>
+
+      <h2>Known Limitations</h2>
+      <p>While we strive for full accessibility, some areas of the platform may not yet fully conform to all WCAG 2.1 Level AA criteria. We are actively working to identify and resolve these issues. Known areas of improvement include:</p>
+      <ul>
+        <li>Some dynamic content loaded via JavaScript may not announce correctly in all screen readers</li>
+        <li>Certain data tables may need improved headers for screen reader navigation</li>
+      </ul>
+
+      <h2>Assistive Technology Compatibility</h2>
+      <p>ImpactCircle has been tested with the following assistive technologies:</p>
+      <ul>
+        <li>NVDA and JAWS screen readers on Windows</li>
+        <li>VoiceOver on macOS and iOS</li>
+        <li>TalkBack on Android</li>
+        <li>Keyboard-only navigation on Chrome, Firefox, and Safari</li>
+      </ul>
+
+      <h2>Feedback and Contact</h2>
+      <p>We welcome your feedback on the accessibility of ImpactCircle. If you experience any barriers or have suggestions for improvement, please:</p>
+      <ul>
+        <li>Email us at <a href="mailto:accessibility@impactcircle.org">accessibility@impactcircle.org</a></li>
+        <li>Use our <a href="/contact">Contact Us</a> form</li>
+      </ul>
+      <p>We aim to respond to accessibility feedback within 5 business days.</p>
+
+      <h2>Formal Complaints</h2>
+      <p>If you are not satisfied with our response, you may contact the relevant national equality or accessibility authority in your country.</p>
+
+    </div>
+  </div>
+</main>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/footer.js"></script>
+</body>
+</html>

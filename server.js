@@ -50,27 +50,41 @@ app.use('/api/uploads', uploadRoutes);
 app.use('/api', auditLog);
 
 const pages = [
+  // ── Public pages (no login required) ──
   ['/', 'index.html'],
+  ['/about', 'pages/about.html'],
+  ['/how-it-works', 'pages/how-it-works.html'],
+  ['/volunteers', 'pages/volunteers.html'],
+  ['/organizations', 'pages/organizations.html'],
+  ['/categories', 'pages/categories.html'],
+  ['/upcoming-shifts', 'pages/upcoming-shifts.html'],
+  ['/contact', 'pages/contact.html'],
+  ['/faq', 'pages/faq.html'],
+  ['/privacy-policy', 'pages/privacy-policy.html'],
+  ['/terms', 'pages/terms.html'],
+  ['/accessibility', 'pages/accessibility.html'],
   ['/login', 'pages/login.html'],
   ['/register', 'pages/register.html'],
   ['/register-volunteer', 'pages/register-volunteer.html'],
   ['/register-org', 'pages/register-org.html'],
-  ['/register-csr', 'pages/register-csr.html'],
-  ['/volunteer-profile', 'pages/volunteer-profile.html'],
+
+  // ── Volunteer dashboard (logged in) ──
   ['/volunteer-dashboard', 'pages/volunteer-dashboard.html'],
-  ['/gigs', 'pages/gig-list.html'],
-  ['/gigs/:id', 'pages/gig-detail.html'],
-  ['/rewards', 'pages/rewards.html'],
+  ['/volunteer-profile', 'pages/volunteer-profile.html'],
+
+  // ── Organization dashboard (logged in) ──
   ['/org-dashboard', 'pages/org-dashboard.html'],
   ['/org-gig-create', 'pages/org-gig-create.html'],
+
+  // ── Opportunity detail ──
+  ['/gigs', 'pages/gig-list.html'],
+  ['/gigs/:id', 'pages/gig-detail.html'],
+
+  // ── Admin panel ──
   ['/admin', 'pages/admin-dashboard.html'],
   ['/admin/verify', 'pages/admin-verify.html'],
   ['/admin/categories', 'pages/admin-categories.html'],
-  ['/admin/rewards', 'pages/admin-rewards.html'],
-  ['/admin/disputes', 'pages/admin-disputes.html'],
-  ['/admin/audit', 'pages/admin-audit.html'],
   ['/admin/analytics', 'pages/admin-analytics.html'],
-  ['/csr-dashboard', 'pages/csr-dashboard.html'],
 ];
 
 pages.forEach(([route, file]) => {
