@@ -81,6 +81,9 @@ const pages = [
   // ── Organization dashboard (logged in) ──
   ['/org-dashboard', 'pages/org-dashboard.html'],
   ['/org-gig-create', 'pages/org-gig-create.html'],
+  ['/org/analytics', 'pages/org-analytics.html'],
+  ['/org/application/:id', 'pages/org-application-detail.html'],
+  ['/org/volunteers', 'pages/org-volunteers.html'],
 
   // ── Opportunity detail ──
   ['/gigs', 'pages/gig-list.html'],
@@ -88,9 +91,15 @@ const pages = [
 
   // ── Admin panel ──
   ['/admin', 'pages/admin-dashboard.html'],
+  ['/admin/users', 'pages/admin-users.html'],
+  ['/admin/organizations', 'pages/admin-organizations.html'],
+  ['/admin/opportunities', 'pages/admin-opportunities.html'],
+  ['/admin/events', 'pages/admin-events.html'],
   ['/admin/verify', 'pages/admin-verify.html'],
   ['/admin/categories', 'pages/admin-categories.html'],
   ['/admin/analytics', 'pages/admin-analytics.html'],
+  ['/admin/announcements', 'pages/admin-announcements.html'],
+  ['/admin/settings', 'pages/admin-settings.html'],
 ];
 
 pages.forEach(([route, file]) => {
