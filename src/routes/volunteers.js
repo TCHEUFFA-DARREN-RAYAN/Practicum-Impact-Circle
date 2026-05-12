@@ -106,12 +106,32 @@ router.put('/me', requireAuth, requireRole('volunteer'), async (req, res, next) 
   try {
     const allowed = ['firstName', 'lastName', 'phone', 'address', 'skills', 'interests',
       'languages', 'weeklyAvailabilityHours', 'weeklyAvailabilityDays',
-      'previousVolunteeringHistory', 'preferredCategories', 'references'];
+      'previousVolunteeringHistory', 'preferredCategories', 'references', 'bio'];
     const updates = {};
     allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
     await VolunteerProfile.update(updates, { where: { userId: req.user.id } });
     const updated = await VolunteerProfile.findOne({ where: { userId: req.user.id } });
     res.json({ success: true, message: 'Profile updated.', data: { profile: updated } });
+  } catch (err) { next(err); }
+});
+
+const resumeUpload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (path.extname(file.originalname).toLowerCase() !== '.pdf')
+      return cb(new Error('Only PDF files are allowed for resumes.'));
+    cb(null, true);
+  },
+});
+
+router.post('/me/resume', requireAuth, requireRole('volunteer'), resumeUpload.single('resume'), async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded.' });
+    const profile = await VolunteerProfile.findOne({ where: { userId: req.user.id } });
+    if (!profile) return res.status(404).json({ success: false, message: 'Profile not found.' });
+    await profile.update({ resumeUrl: req.file.filename });
+    res.json({ success: true, message: 'Resume uploaded.', data: { resumeUrl: req.file.filename } });
   } catch (err) { next(err); }
 });
 
@@ -153,7 +173,16 @@ router.get('/me/dashboard', requireAuth, requireRole('volunteer'), async (req, r
 
     const applications = await Application.findAll({
       where: { volunteerId: req.user.id },
-      include: [{ model: require('../models/index').Gig, as: 'gig', attributes: ['id', 'title', 'estimatedHours'], include: [{ model: Organization, as: 'org', attributes: ['orgName'] }] }],
+      include: [{
+        model: require('../models/index').Gig, as: 'gig',
+        attributes: ['id', 'title', 'estimatedHours', 'startDate', 'endDate',
+          'locationType', 'locationAddress', 'timeOfDay', 'startTime', 'endTime',
+          'isRecurring', 'recurrenceType', 'recurrenceDays'],
+        include: [
+          { model: Organization, as: 'org', attributes: ['orgName'] },
+          { model: Category, as: 'category', attributes: ['id', 'name', 'colorHex'] },
+        ],
+      }],
       order: [['createdAt', 'DESC']],
     });
 

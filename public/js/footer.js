@@ -117,11 +117,11 @@
         </div>
         <div class="gf-col">
           <h4>Impact Areas</h4>
-          <a href="/upcoming-shifts?category=Food+Security">Food Security</a>
-          <a href="/upcoming-shifts?category=Youth+Development">Youth Development</a>
-          <a href="/upcoming-shifts?category=Seniors+Support">Seniors Support</a>
-          <a href="/upcoming-shifts?category=Environment">Environment</a>
-          <a href="/upcoming-shifts?category=Education">Education</a>
+          <a href="/upcoming-shifts?category=Food+Security+%26+Nutrition">Food Security & Nutrition</a>
+          <a href="/upcoming-shifts?category=Youth+%26+Children">Youth & Children</a>
+          <a href="/upcoming-shifts?category=Newcomer+%26+Cultural+Integration">Newcomer & Cultural Integration</a>
+          <a href="/upcoming-shifts?category=Shelter+%26+Housing+Support">Shelter & Housing Support</a>
+          <a href="/upcoming-shifts?category=Community+Coordination">Community Coordination</a>
         </div>
         <div class="gf-col">
           <h4>About</h4>

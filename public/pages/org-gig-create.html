@@ -37,7 +37,7 @@
 
         <div class="form-group">
           <label for="description">Description <span class="required">*</span></label>
-          <textarea id="description" rows="5" placeholder="Describe the opportunity, what volunteers will do, and what impact they'll have. (Min 20 characters)"></textarea>
+          <textarea id="description" rows="5" placeholder="Describe the opportunity, what volunteers will do, and what impact they'll have."></textarea>
           <div class="form-hint">Be specific — volunteers use this to decide whether to apply.</div>
           <span class="field-error"></span>
         </div>
@@ -81,8 +81,9 @@
             </select>
           </div>
           <div class="form-group" id="addressGroup">
-            <label for="address">Address</label>
+            <label for="address">Address <span class="required" id="addressRequired">*</span></label>
             <input type="text" id="address" placeholder="123 Main St, Moncton, NB">
+            <span class="field-error"></span>
           </div>
         </div>
 
@@ -134,10 +135,13 @@
           <div class="form-group" id="daysGroup">
             <label>Days of the Week</label>
             <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.25rem">
-              ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => `
-                <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer;font-size:0.875rem">
-                  <input type="checkbox" class="day-cb" value="${d}" style="width:auto;accent-color:var(--primary)" onchange="calcTotal()"> ${d}
-                </label>`).join('')}
+              <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer;font-size:0.875rem"><input type="checkbox" class="day-cb" value="Mon" style="width:auto;accent-color:var(--primary)" onchange="calcTotal()"> Mon</label>
+              <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer;font-size:0.875rem"><input type="checkbox" class="day-cb" value="Tue" style="width:auto;accent-color:var(--primary)" onchange="calcTotal()"> Tue</label>
+              <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer;font-size:0.875rem"><input type="checkbox" class="day-cb" value="Wed" style="width:auto;accent-color:var(--primary)" onchange="calcTotal()"> Wed</label>
+              <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer;font-size:0.875rem"><input type="checkbox" class="day-cb" value="Thu" style="width:auto;accent-color:var(--primary)" onchange="calcTotal()"> Thu</label>
+              <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer;font-size:0.875rem"><input type="checkbox" class="day-cb" value="Fri" style="width:auto;accent-color:var(--primary)" onchange="calcTotal()"> Fri</label>
+              <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer;font-size:0.875rem"><input type="checkbox" class="day-cb" value="Sat" style="width:auto;accent-color:var(--primary)" onchange="calcTotal()"> Sat</label>
+              <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer;font-size:0.875rem"><input type="checkbox" class="day-cb" value="Sun" style="width:auto;accent-color:var(--primary)" onchange="calcTotal()"> Sun</label>
             </div>
           </div>
 
@@ -199,7 +203,7 @@ async function loadCategories() {
   try {
     const { data } = await API.get('/public/impact');
     document.getElementById('categoryId').innerHTML = '<option value="">Select a category</option>' +
-      data.categoryTotals.map(ct => `<option value="${ct.category.id}">${ct.category.icon} ${ct.category.name}</option>`).join('');
+      data.categoryTotals.map(ct => `<option value="${ct.category.id}">${ct.category.name}</option>`).join('');
   } catch {}
 }
 
@@ -224,8 +228,10 @@ function setupTagInput() {
 }
 
 document.getElementById('locationType').addEventListener('change', function() {
-  document.getElementById('addressGroup').style.display = this.value === 'remote' ? 'none' : 'block';
-  document.getElementById('address').disabled = this.value === 'remote';
+  const isRemote = this.value === 'remote';
+  document.getElementById('addressGroup').style.display = isRemote ? 'none' : 'block';
+  document.getElementById('address').disabled = isRemote;
+  if (!isRemote) Validator.clearError(document.getElementById('address'));
 });
 
 function toggleRecurring() {
@@ -292,15 +298,19 @@ document.getElementById('gigForm').addEventListener('submit', async (e) => {
 
   let valid = true;
   if (!title) { Validator.showError(document.getElementById('title'), 'Title is required.'); valid = false; }
-  if (description.length < 20) { Validator.showError(document.getElementById('description'), 'Min 20 characters.'); valid = false; }
+  if (!description) { Validator.showError(document.getElementById('description'), 'Description is required.'); valid = false; }
   if (!categoryId) { Validator.showError(document.getElementById('categoryId'), 'Select a category.'); valid = false; }
   if (!estimatedHours || estimatedHours < 0.5) { Validator.showError(document.getElementById('estimatedHours'), 'At least 0.5 hours required.'); valid = false; }
   if (!startDate) { Validator.showError(document.getElementById('startDate'), 'Start date required.'); valid = false; }
   if (!endDate) { Validator.showError(document.getElementById('endDate'), 'End date required.'); valid = false; }
   if (startDate && endDate && endDate < startDate) { Validator.showError(document.getElementById('endDate'), 'End date must be after start date.'); valid = false; }
+  const locType = document.getElementById('locationType').value;
+  if (locType === 'in-person' && !document.getElementById('address').value.trim()) {
+    Validator.showError(document.getElementById('address'), 'Address is required for in-person gigs.'); valid = false;
+  }
   if (isRec) {
     const hpo = parseFloat(document.getElementById('hoursPerOccurrence').value);
-    if (!hpo || hpo < 0.5) { Validator.showError(document.getElementById('hoursPerOccurrence'), 'Enter hours per session.'); valid = false; }
+    if (!hpo || hpo < 0.5) { Validator.showError(document.getElementById('hoursPerOccurrence'), 'Hours per session must be at least 0.5.'); valid = false; }
   }
   if (!valid) return;
 
@@ -308,7 +318,6 @@ document.getElementById('gigForm').addEventListener('submit', async (e) => {
   btn.disabled = true; btn.innerHTML = '<div class="spinner"></div> Posting...';
 
   try {
-    const locType = document.getElementById('locationType').value;
     const todVal = document.getElementById('timeOfDay').value;
     const payload = {
       title, description, categoryId, estimatedHours, startDate, endDate,
@@ -336,6 +345,12 @@ document.getElementById('gigForm').addEventListener('submit', async (e) => {
 
 loadCategories();
 setupTagInput();
+
+// Clear field errors as soon as the user interacts with that field
+document.querySelectorAll('#gigForm input, #gigForm textarea, #gigForm select').forEach(el => {
+  el.addEventListener('input',  () => Validator.clearError(el));
+  el.addEventListener('change', () => Validator.clearError(el));
+});
 </script>
 <script src="/js/footer.js"></script></body>
 </html>

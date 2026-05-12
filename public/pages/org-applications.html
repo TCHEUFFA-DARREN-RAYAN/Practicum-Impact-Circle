@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Volunteer Applications | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    .app-card { border:1px solid var(--border); border-radius:12px; padding:1.125rem; background:#fff; margin-bottom:0.875rem; display:flex; gap:1rem; align-items:flex-start; }
+    .vol-av { width:44px; height:44px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:700; color:#fff; overflow:hidden; flex-shrink:0; }
+    .vol-av img { width:100%; height:100%; object-fit:cover; }
+    .filter-bar { display:flex; gap:0.625rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+    .filter-btn { padding:0.35rem 0.875rem; border-radius:20px; border:1px solid var(--border); font-size:0.82rem; cursor:pointer; background:#fff; transition:all 0.12s; }
+    .filter-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+    .empty-state { text-align:center; padding:4rem 1rem; color:var(--text-muted); }
+    .action-btns { display:flex; gap:0.375rem; flex-wrap:wrap; }
+    .decide-modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+    .decide-modal-backdrop.is-open { display: flex; }
+  </style>
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside id="sidebar" class="sidebar"></aside>
+<div class="page-content">
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><h1>Volunteer Applications</h1><p class="text-muted" id="subtitle">Loading...</p></div>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="setF(this,'')">All</button>
+      <button class="filter-btn" onclick="setF(this,'pending')">Pending</button>
+      <button class="filter-btn" onclick="setF(this,'approved')">Approved</button>
+      <button class="filter-btn" onclick="setF(this,'rejected')">Rejected</button>
+    </div>
+
+    <div id="list"><div style="text-align:center;padding:3rem"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+<div id="decideModal" class="decide-modal-backdrop">
+  <div class="card" style="padding:1.5rem;width:100%;max-width:400px">
+    <h3 id="decideTitle" style="margin-bottom:0.5rem"></h3>
+    <p id="decideBody" style="font-size:0.875rem;color:var(--text-muted);margin-bottom:1.25rem"></p>
+    <div style="display:flex;gap:0.5rem;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="closeDecide()">Cancel</button>
+      <button class="btn btn-primary" id="decideConfirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/footer.js"></script>
+<script>
+API.requireAuth('org');
+let all = [], filterStatus = '';
+
+function setF(btn, s) {
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  filterStatus=s; render();
+}
+
+let pendingDecide = null;
+
+function openDecide(appId, action) {
+  pendingDecide = { appId, action };
+  document.getElementById('decideTitle').textContent = action === 'approved' ? 'Approve Application' : 'Reject Application';
+  document.getElementById('decideBody').textContent = action === 'approved'
+    ? 'The volunteer will be notified and added to this gig.'
+    : 'The volunteer will be notified that their application was not accepted.';
+  document.getElementById('decideConfirm').className = `btn btn-${action==='approved'?'primary':'danger'}`;
+  document.getElementById('decideConfirm').textContent = action === 'approved' ? 'Approve' : 'Reject';
+  document.getElementById('decideModal').classList.add('is-open');
+}
+
+function closeDecide() {
+  document.getElementById('decideModal').classList.remove('is-open');
+  pendingDecide=null;
+}
+
+document.getElementById('decideConfirm').addEventListener('click', async () => {
+  if (!pendingDecide) return;
+  const { appId, action } = pendingDecide;
+  try {
+    await API.patch(`/gigs/applications/${appId}/decide`, { decision: action });
+    Toast.success(action === 'approved' ? 'Application approved!' : 'Application rejected.');
+    closeDecide();
+    load();
+  } catch(e) { Toast.error(e.message); }
+});
+
+function render() {
+  const list = filterStatus ? all.filter(a=>a.status===filterStatus) : all;
+  document.getElementById('subtitle').textContent = `${all.length} total application${all.length!==1?'s':''}`;
+  if (!list.length) {
+    document.getElementById('list').innerHTML = `<div class="empty-state"><p>No applications found.</p></div>`;
+    return;
+  }
+  document.getElementById('list').innerHTML = list.map(a => {
+    const v = a.volunteer || {};
+    const vp = v.volunteerProfile || {};
+    const name = [vp.firstName,vp.lastName].filter(Boolean).join(' ')||v.email||'—';
+    const g = a.gig || {};
+    const avHtml = v.avatarUrl&&v.id
+      ? `<div class="vol-av"><img src="/api/uploads/${v.id}/${v.avatarUrl}" alt="${name}"></div>`
+      : `<div class="vol-av">${(name[0]||'?').toUpperCase()}</div>`;
+    const skills = Array.isArray(vp.skills)?vp.skills:[];
+    const SC = { pending:'#f59e0b', approved:'#22c55e', rejected:'#ef4444' };
+    return `<div class="app-card">
+      ${avHtml}
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700">${name}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.35rem">${v.email||''}${g.title?` · For: <strong>${g.title}</strong>`:''}</div>
+        ${skills.length?`<div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-bottom:0.4rem">${skills.slice(0,5).map(s=>`<span class="badge badge-primary" style="font-size:0.7rem">${s}</span>`).join('')}</div>`:''}
+        ${a.personalStatement?`<p style="font-size:0.82rem;color:var(--text-muted);margin:0.25rem 0;line-height:1.5">${a.personalStatement.slice(0,160)}${a.personalStatement.length>160?'…':''}</p>`:''}
+        <div style="font-size:0.75rem;color:var(--text-muted)">Applied ${fmt.date(a.createdAt)}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem;font-size:0.78rem">
+          ${v.id && vp.resumeUrl
+            ? `<a href="/api/uploads/${v.id}/${vp.resumeUrl}" target="_blank" class="btn btn-sm btn-secondary">Resume</a>`
+            : `<span style="color:var(--text-muted);padding:0.25rem 0.5rem;border:1px dashed var(--border);border-radius:6px">No resume uploaded</span>`}
+          ${v.id && vp.govId
+            ? `<a href="/api/uploads/${v.id}/${vp.govId}" target="_blank" class="btn btn-sm btn-secondary">Gov ID</a>`
+            : `<span style="color:var(--text-muted);padding:0.25rem 0.5rem;border:1px dashed var(--border);border-radius:6px">No ID uploaded</span>`}
+          ${v.id && vp.backgroundCheck
+            ? `<a href="/api/uploads/${v.id}/${vp.backgroundCheck}" target="_blank" class="btn btn-sm btn-secondary">Background Check</a>`
+            : `<span style="color:var(--text-muted);padding:0.25rem 0.5rem;border:1px dashed var(--border);border-radius:6px">No background check</span>`}
+        </div>
+        <div class="action-btns" style="margin-top:0.5rem">
+          ${a.status==='pending'?`<button class="btn btn-sm btn-primary" onclick="openDecide(${a.id},'approved')">Approve</button><button class="btn btn-sm btn-danger" onclick="openDecide(${a.id},'rejected')">Reject</button>`:''}
+          <button class="btn btn-sm btn-secondary" onclick="startChat(${v.id})">Message</button>
+        </div>
+      </div>
+      <span class="badge" style="background:${SC[a.status]||'var(--primary)'};color:#fff;flex-shrink:0">${a.status}</span>
+    </div>`;
+  }).join('');
+}
+
+async function startChat(userId) {
+  try {
+    const r = await API.post('/messages/conversations', { partnerId: userId });
+    window.location.href = `/messages?conv=${r.data.conversationId}`;
+  } catch(e) { Toast.error(e.message); }
+}
+
+async function load() {
+  document.getElementById('subtitle').textContent = 'Loading…';
+  try {
+    const { data } = await API.get('/orgs/me/applications');
+    all = data.applications || [];
+    const gid = new URLSearchParams(window.location.search).get('gig');
+    if (gid) {
+      const id = parseInt(gid, 10);
+      if (!Number.isNaN(id)) all = all.filter(a => (a.gig && a.gig.id === id) || parseInt(a.gigId, 10) === id);
+    }
+    all.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    render();
+  } catch (e) {
+    document.getElementById('list').innerHTML = `<div class="empty-state">${e.message || 'Could not load applications.'}</div>`;
+    document.getElementById('subtitle').textContent = '';
+  }
+}
+
+load();
+</script>
+</body>
+</html>

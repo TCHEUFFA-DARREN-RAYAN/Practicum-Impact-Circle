@@ -22,6 +22,7 @@ const adminRoutes = require('./src/routes/admin');
 const csrRoutes = require('./src/routes/csr');
 const publicRoutes = require('./src/routes/public');
 const uploadRoutes = require('./src/routes/uploads');
+const messageRoutes = require('./src/routes/messages');
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/csr', csrRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/messages', messageRoutes);
 
 app.use('/api', auditLog);
 
@@ -77,6 +79,12 @@ const pages = [
   // ── Volunteer dashboard (logged in) ──
   ['/volunteer-dashboard', 'pages/volunteer-dashboard.html'],
   ['/volunteer-profile', 'pages/volunteer-profile.html'],
+  ['/volunteer/settings', 'pages/volunteer-settings.html'],
+  ['/volunteer/applications', 'pages/volunteer-applications.html'],
+  ['/volunteer/matches', 'pages/gig-list.html'],
+  ['/volunteer/schedule', 'pages/volunteer-schedule.html'],
+  ['/volunteer/impact', 'pages/volunteer-impact.html'],
+  ['/messages', 'pages/messages.html'],
 
   // ── Organization dashboard (logged in) ──
   ['/org-dashboard', 'pages/org-dashboard.html'],
@@ -84,6 +92,10 @@ const pages = [
   ['/org/analytics', 'pages/org-analytics.html'],
   ['/org/application/:id', 'pages/org-application-detail.html'],
   ['/org/volunteers', 'pages/org-volunteers.html'],
+  ['/org/settings', 'pages/org-settings.html'],
+  ['/org/schedule', 'pages/org-schedule.html'],
+  ['/org/opportunities', 'pages/org-opportunities.html'],
+  ['/org/applications', 'pages/org-applications.html'],
 
   // ── Opportunity detail ──
   ['/gigs', 'pages/gig-list.html'],
@@ -100,6 +112,8 @@ const pages = [
   ['/admin/analytics', 'pages/admin-analytics.html'],
   ['/admin/announcements', 'pages/admin-announcements.html'],
   ['/admin/settings', 'pages/admin-settings.html'],
+  ['/admin/calendar', 'pages/admin-calendar.html'],
+  ['/admin/gigs/:id/applicants', 'pages/admin-gig-applicants.html'],
 ];
 
 pages.forEach(([route, file]) => {

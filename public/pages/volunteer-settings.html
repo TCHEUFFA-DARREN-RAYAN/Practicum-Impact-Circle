@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Settings | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    .settings-layout { display:grid; grid-template-columns:220px 1fr; gap:1.5rem; align-items:start; }
+    @media(max-width:720px){ .settings-layout{ grid-template-columns:1fr; } }
+    .settings-tabs { display:flex; flex-direction:column; gap:0.25rem; }
+    .stab { display:flex; align-items:center; gap:0.625rem; padding:0.625rem 0.875rem; border-radius:8px; font-size:0.875rem; font-weight:500; cursor:pointer; color:var(--text-muted); border:none; background:none; width:100%; text-align:left; transition:background 0.15s,color 0.15s; }
+    .stab:hover { background:var(--bg-subtle,#f1f5f9); color:var(--text); }
+    .stab.active { background:var(--primary); color:#fff; }
+    .stab svg { width:16px; height:16px; flex-shrink:0; }
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; }
+    .section-title { font-size:1.05rem; font-weight:700; margin-bottom:1.25rem; color:var(--text); }
+    .avatar-wrap { display:flex; align-items:center; gap:1.25rem; margin-bottom:1.5rem; }
+    .avatar-circle { width:80px; height:80px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:700; color:#fff; overflow:hidden; flex-shrink:0; }
+    .avatar-circle img { width:100%; height:100%; object-fit:cover; }
+    .chips-wrap { display:flex; flex-wrap:wrap; gap:0.375rem; padding:0.5rem; border:1px solid var(--border); border-radius:8px; min-height:42px; cursor:text; }
+    .chip { display:inline-flex; align-items:center; gap:0.25rem; background:var(--primary); color:#fff; border-radius:20px; padding:0.2rem 0.6rem; font-size:0.8rem; }
+    .chip-remove { background:none; border:none; color:#fff; cursor:pointer; padding:0; font-size:1rem; line-height:1; }
+    .chip-input { border:none; outline:none; background:transparent; font-size:0.875rem; flex:1; min-width:120px; }
+    .days-grid { display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:0.5rem; }
+    .day-btn { padding:0.375rem 0.75rem; border-radius:20px; border:1px solid var(--border); font-size:0.8rem; cursor:pointer; background:#fff; transition:background 0.12s,color 0.12s,border 0.12s; }
+    .day-btn.selected { background:var(--primary); color:#fff; border-color:var(--primary); }
+    .resume-box { border:2px dashed var(--border); border-radius:10px; padding:1.5rem; text-align:center; }
+    .resume-box.has-file { border-color:var(--primary); background:#eff6ff; }
+    .save-bar { display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.25rem; padding-top:1rem; border-top:1px solid var(--border); }
+  </style>
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside id="sidebar" class="sidebar"></aside>
+<div class="page-content">
+  <div class="container">
+    <div class="page-header"><div class="page-header-row"><div><h1>Settings</h1><p class="text-muted">Manage your account and profile</p></div></div></div>
+
+    <div class="settings-layout">
+      <div class="card" style="padding:0.75rem">
+        <div class="settings-tabs">
+          <button class="stab active" data-tab="account" onclick="switchTab('account')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg>Account
+          </button>
+          <button class="stab" data-tab="profile" onclick="switchTab('profile')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Profile
+          </button>
+          <button class="stab" data-tab="resume" onclick="switchTab('resume')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Resume
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <!-- Account -->
+        <div class="tab-panel active" id="panel-account">
+          <div class="card" style="padding:1.5rem;margin-bottom:1rem">
+            <div class="section-title">Profile Picture</div>
+            <div class="avatar-wrap">
+              <div class="avatar-circle" id="avatarPreview"></div>
+              <div>
+                <label class="btn btn-secondary" style="cursor:pointer;display:inline-block;margin-bottom:0.5rem">
+                  Choose Photo
+                  <input type="file" id="avatarFile" accept="image/*" style="display:none" onchange="previewAvatar(this)">
+                </label>
+                <p class="text-muted" style="font-size:0.8rem;margin:0">JPG, PNG, GIF or WEBP · Max 3MB</p>
+                <button class="btn btn-sm btn-primary" style="margin-top:0.5rem" onclick="uploadAvatar()">Save Photo</button>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="padding:1.5rem;margin-bottom:1rem">
+            <div class="section-title">Change Email</div>
+            <div id="emailAlert"></div>
+            <div class="form-group"><label>New Email Address</label><input type="email" id="newEmail"></div>
+            <div class="form-group"><label>Confirm with Password</label><input type="password" id="emailPassword"></div>
+            <div class="save-bar" style="border:none;padding:0;margin-top:0.75rem"><button class="btn btn-primary" onclick="updateEmail()">Update Email</button></div>
+          </div>
+          <div class="card" style="padding:1.5rem">
+            <div class="section-title">Change Password</div>
+            <div id="passwordAlert"></div>
+            <div class="form-group"><label>Current Password</label><input type="password" id="currentPwd"></div>
+            <div class="form-group"><label>New Password</label><input type="password" id="newPwd" placeholder="Min 8 chars, uppercase & number"></div>
+            <div class="form-group"><label>Confirm New Password</label><input type="password" id="confirmPwd"></div>
+            <div class="save-bar" style="border:none;padding:0;margin-top:0.75rem"><button class="btn btn-primary" onclick="changePassword()">Update Password</button></div>
+          </div>
+        </div>
+
+        <!-- Profile -->
+        <div class="tab-panel" id="panel-profile">
+          <div class="card" style="padding:1.5rem">
+            <div class="section-title">Personal Information</div>
+            <div id="profileAlert"></div>
+            <div class="form-row">
+              <div class="form-group"><label>First Name</label><input type="text" id="pFirst"></div>
+              <div class="form-group"><label>Last Name</label><input type="text" id="pLast"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Phone</label><input type="tel" id="pPhone"></div>
+              <div class="form-group"><label>Address</label><input type="text" id="pAddress"></div>
+            </div>
+            <div class="form-group"><label>About / Bio</label><textarea id="pBio" rows="3" placeholder="Tell organizations a bit about yourself..."></textarea></div>
+            <div class="form-group"><label>Volunteering History</label><textarea id="pHistory" rows="3" placeholder="Describe your previous experience..."></textarea></div>
+
+            <div class="section-title" style="margin-top:1.25rem">Skills</div>
+            <div class="chips-wrap" id="skillsWrap" onclick="document.getElementById('skillInput').focus()">
+              <input class="chip-input" id="skillInput" placeholder="Type skill + Enter" onkeydown="addChip(event,'skills')">
+            </div>
+
+            <div class="section-title" style="margin-top:1.25rem">Interests</div>
+            <div class="chips-wrap" id="interestsWrap" onclick="document.getElementById('interestInput').focus()">
+              <input class="chip-input" id="interestInput" placeholder="Type interest + Enter" onkeydown="addChip(event,'interests')">
+            </div>
+
+            <div class="section-title" style="margin-top:1.25rem">Languages</div>
+            <div class="chips-wrap" id="languagesWrap" onclick="document.getElementById('langInput').focus()">
+              <input class="chip-input" id="langInput" placeholder="Type language + Enter" onkeydown="addChip(event,'languages')">
+            </div>
+
+            <div class="section-title" style="margin-top:1.25rem">Availability</div>
+            <div class="form-group">
+              <label>Hours available per week</label>
+              <input type="number" id="pHours" min="0" max="168" style="max-width:160px">
+            </div>
+            <div class="form-group">
+              <label>Available days</label>
+              <div class="days-grid" id="daysGrid"></div>
+            </div>
+
+            <div class="save-bar">
+              <button class="btn btn-secondary" onclick="loadProfile()">Reset</button>
+              <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Documents -->
+        <div class="tab-panel" id="panel-resume">
+          <!-- Resume -->
+          <div class="card" style="padding:1.5rem;margin-bottom:1rem">
+            <div class="section-title">Resume / CV</div>
+            <div id="resumeAlert"></div>
+            <div class="resume-box" id="resumeBox">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin:0 auto 0.75rem;display:block"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <p id="resumeStatus" class="text-muted" style="margin:0 0 0.75rem;font-size:0.875rem">No resume uploaded yet.</p>
+              <div id="resumeActions"></div>
+            </div>
+            <div style="margin-top:1rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
+              <label class="btn btn-secondary" style="cursor:pointer;margin:0">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:0.375rem;vertical-align:middle"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload Resume
+                <input type="file" id="resumeFile" accept=".pdf" style="display:none" onchange="uploadResume(this)">
+              </label>
+              <span class="text-muted" style="font-size:0.78rem">PDF only · Max 5MB · Visible to organizations reviewing your application</span>
+            </div>
+          </div>
+
+          <!-- Government ID -->
+          <div class="card" style="padding:1.5rem;margin-bottom:1rem">
+            <div class="section-title">Government-Issued ID</div>
+            <div id="govIdAlert"></div>
+            <div class="resume-box" id="govIdBox">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin:0 auto 0.75rem;display:block"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+              <p id="govIdStatus" class="text-muted" style="margin:0 0 0.75rem;font-size:0.875rem">No government ID uploaded yet.</p>
+              <div id="govIdActions"></div>
+            </div>
+            <div style="margin-top:1rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
+              <label class="btn btn-secondary" style="cursor:pointer;margin:0">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:0.375rem;vertical-align:middle"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload ID
+                <input type="file" id="govIdFile" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="uploadDocument('govId', this)">
+              </label>
+              <span class="text-muted" style="font-size:0.78rem">PDF, JPG or PNG · Max 5MB · Used for identity verification</span>
+            </div>
+          </div>
+
+          <!-- Background Check -->
+          <div class="card" style="padding:1.5rem">
+            <div class="section-title">RCMP Background Check</div>
+            <div id="bgCheckAlert"></div>
+            <div class="resume-box" id="bgCheckBox">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin:0 auto 0.75rem;display:block"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <p id="bgCheckStatus" class="text-muted" style="margin:0 0 0.75rem;font-size:0.875rem">No background check uploaded yet.</p>
+              <div id="bgCheckActions"></div>
+            </div>
+            <div style="margin-top:1rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
+              <label class="btn btn-secondary" style="cursor:pointer;margin:0">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:0.375rem;vertical-align:middle"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload Background Check
+                <input type="file" id="bgCheckFile" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="uploadDocument('backgroundCheck', this)">
+              </label>
+              <span class="text-muted" style="font-size:0.78rem">PDF, JPG or PNG · Max 5MB · Optional — required for verified badge</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/footer.js"></script>
+<script>
+API.requireAuth('volunteer');
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+let chips = { skills:[], interests:[], languages:[] };
+let selDays = [];
+let myUserId = null;
+
+function switchTab(t) {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+t).classList.add('active');
+  document.querySelector(`.stab[data-tab="${t}"]`).classList.add('active');
+}
+
+function buildAvatar(user, profile) {
+  const el = document.getElementById('avatarPreview');
+  if (user && user.avatarUrl && user.id) {
+    el.innerHTML = `<img src="/api/uploads/${user.id}/${user.avatarUrl}" alt="Avatar">`;
+  } else {
+    const n = (profile && profile.firstName) || (user && user.email) || '?';
+    el.textContent = n[0].toUpperCase();
+  }
+}
+
+function previewAvatar(input) {
+  if (!input.files[0]) return;
+  const r = new FileReader();
+  r.onload = e => { document.getElementById('avatarPreview').innerHTML = `<img src="${e.target.result}">`; };
+  r.readAsDataURL(input.files[0]);
+}
+
+async function uploadAvatar() {
+  const file = document.getElementById('avatarFile').files[0];
+  if (!file) return Toast.error('Please choose an image first.');
+  const btn = document.querySelector('[onclick="uploadAvatar()"]');
+  if (btn.disabled) return;
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const form = new FormData(); form.append('avatar', file);
+  try {
+    const res = await API.upload('/auth/avatar', form);
+    if (res.data && res.data.user) API.setSession(API.getToken(), res.data.user);
+    Toast.success('Profile picture updated!');
+  } catch(e) { Toast.error(e.message); }
+  finally { btn.disabled = false; btn.textContent = 'Save Photo'; }
+}
+
+async function updateEmail() {
+  const email = document.getElementById('newEmail').value.trim();
+  const pwd = document.getElementById('emailPassword').value;
+  document.getElementById('emailAlert').innerHTML = '';
+  if (!email||!pwd) return Toast.error('Please fill in all fields.');
+  try {
+    const res = await API.put('/auth/update-email', { email, password: pwd });
+    if (res.data && res.data.token) API.setSession(res.data.token, res.data.user || API.getUser());
+    document.getElementById('emailAlert').innerHTML = '<div class="alert alert-success">Email updated.</div>';
+    document.getElementById('newEmail').value=''; document.getElementById('emailPassword').value='';
+  } catch(e) { document.getElementById('emailAlert').innerHTML=`<div class="alert alert-danger">${e.message}</div>`; }
+}
+
+async function changePassword() {
+  const cur = document.getElementById('currentPwd').value;
+  const nw = document.getElementById('newPwd').value;
+  const cf = document.getElementById('confirmPwd').value;
+  document.getElementById('passwordAlert').innerHTML = '';
+  if (!cur||!nw||!cf) return Toast.error('Please fill in all fields.');
+  if (nw !== cf) return Toast.error('New passwords do not match.');
+  try {
+    await API.post('/auth/change-password', { currentPassword:cur, newPassword:nw });
+    document.getElementById('passwordAlert').innerHTML = '<div class="alert alert-success">Password updated.</div>';
+    document.getElementById('currentPwd').value=''; document.getElementById('newPwd').value=''; document.getElementById('confirmPwd').value='';
+  } catch(e) { document.getElementById('passwordAlert').innerHTML=`<div class="alert alert-danger">${e.message}</div>`; }
+}
+
+function renderChips(type) {
+  const wrap = document.getElementById(type+'Wrap');
+  const inp = wrap.querySelector('input');
+  wrap.querySelectorAll('.chip').forEach(c=>c.remove());
+  chips[type].forEach((v,i) => {
+    const c = document.createElement('span'); c.className='chip';
+    c.innerHTML = `${v}<button class="chip-remove" type="button" onclick="removeChip('${type}',${i})">×</button>`;
+    wrap.insertBefore(c, inp);
+  });
+}
+
+function addChip(e, type) {
+  if (e.key==='Enter'||e.key===',') {
+    e.preventDefault();
+    const v = e.target.value.trim().replace(/,$/,'');
+    if (v && !chips[type].includes(v)) { chips[type].push(v); renderChips(type); }
+    e.target.value='';
+  }
+}
+
+function removeChip(type, i) { chips[type].splice(i,1); renderChips(type); }
+
+function buildDays() {
+  document.getElementById('daysGrid').innerHTML = DAYS.map(d =>
+    `<button type="button" class="day-btn${selDays.includes(d)?' selected':''}" onclick="toggleDay('${d}')">${d.slice(0,3)}</button>`
+  ).join('');
+}
+
+function toggleDay(d) {
+  selDays.includes(d) ? selDays=selDays.filter(x=>x!==d) : selDays.push(d);
+  buildDays();
+}
+
+async function loadProfile() {
+  try {
+    const { data } = await API.get('/volunteers/me');
+    myUserId = data.user && data.user.id;
+    buildAvatar(data.user, data.profile);
+    document.getElementById('newEmail').placeholder = (data.user && data.user.email) || '';
+    const p = data.profile || {};
+    document.getElementById('pFirst').value = p.firstName||'';
+    document.getElementById('pLast').value = p.lastName||'';
+    document.getElementById('pPhone').value = p.phone||'';
+    document.getElementById('pAddress').value = p.address||'';
+    document.getElementById('pBio').value = p.bio||'';
+    document.getElementById('pHistory').value = p.previousVolunteeringHistory||'';
+    document.getElementById('pHours').value = p.weeklyAvailabilityHours||'';
+    chips.skills = Array.isArray(p.skills)?[...p.skills]:[];
+    chips.interests = Array.isArray(p.interests)?[...p.interests]:[];
+    chips.languages = Array.isArray(p.languages)?[...p.languages]:[];
+    renderChips('skills'); renderChips('interests'); renderChips('languages');
+    selDays = Array.isArray(p.weeklyAvailabilityDays)?[...p.weeklyAvailabilityDays]:[];
+    buildDays();
+    setDocBox('resume',  p.resumeUrl,       'Resume uploaded',           'No resume uploaded yet.',           'Download Resume');
+    setDocBox('govId',   p.govId,            'Government ID uploaded',    'No government ID uploaded yet.',    'View ID');
+    setDocBox('bgCheck', p.backgroundCheck,  'Background check uploaded', 'No background check uploaded yet.', 'View Document');
+  } catch(e) { Toast.error('Failed to load: '+e.message); }
+}
+
+function setDocBox(key, filename, uploadedLabel, emptyLabel, downloadLabel) {
+  const box     = document.getElementById(key + 'Box');
+  const status  = document.getElementById(key + 'Status');
+  const actions = document.getElementById(key + 'Actions');
+  if (!box) return;
+  if (filename) {
+    box.classList.add('has-file');
+    status.innerHTML = `<strong style="color:var(--primary)">${uploadedLabel}</strong><br><span style="font-size:0.8rem;color:var(--text-muted)">${filename}</span>`;
+    actions.innerHTML = `<a href="/api/uploads/${myUserId}/${filename}" target="_blank" download class="btn btn-primary btn-sm">${downloadLabel}</a>`;
+  } else {
+    box.classList.remove('has-file');
+    status.textContent = emptyLabel;
+    actions.innerHTML = '';
+  }
+}
+
+async function saveProfile() {
+  document.getElementById('profileAlert').innerHTML='';
+  try {
+    await API.put('/volunteers/me', {
+      firstName: document.getElementById('pFirst').value.trim(),
+      lastName: document.getElementById('pLast').value.trim(),
+      phone: document.getElementById('pPhone').value.trim(),
+      address: document.getElementById('pAddress').value.trim(),
+      bio: document.getElementById('pBio').value.trim(),
+      previousVolunteeringHistory: document.getElementById('pHistory').value.trim(),
+      weeklyAvailabilityHours: parseFloat(document.getElementById('pHours').value)||0,
+      weeklyAvailabilityDays: selDays,
+      skills: chips.skills, interests: chips.interests, languages: chips.languages,
+    });
+    document.getElementById('profileAlert').innerHTML='<div class="alert alert-success">Profile saved.</div>';
+  } catch(e) { document.getElementById('profileAlert').innerHTML=`<div class="alert alert-danger">${e.message}</div>`; }
+}
+
+async function uploadResume(input) {
+  if (!input.files[0]) return;
+  const form = new FormData(); form.append('resume', input.files[0]);
+  document.getElementById('resumeAlert').innerHTML = '';
+  try {
+    await API.upload('/volunteers/me/resume', form);
+    Toast.success('Resume uploaded!');
+    await loadProfile();
+  } catch(e) {
+    document.getElementById('resumeAlert').innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+  }
+  input.value = '';
+}
+
+async function uploadDocument(field, input) {
+  if (!input.files[0]) return;
+  const alertKey = field === 'govId' ? 'govIdAlert' : 'bgCheckAlert';
+  document.getElementById(alertKey).innerHTML = '';
+  const form = new FormData(); form.append(field, input.files[0]);
+  try {
+    await API.upload('/volunteers/me/documents', form);
+    Toast.success('Document uploaded!');
+    await loadProfile();
+  } catch(e) {
+    document.getElementById(alertKey).innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+  }
+  input.value = '';
+}
+
+loadProfile();
+</script>
+</body>
+</html>

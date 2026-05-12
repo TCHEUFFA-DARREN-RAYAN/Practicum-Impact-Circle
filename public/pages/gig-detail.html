@@ -37,8 +37,7 @@
       <div id="applyAlert"></div>
       <div class="form-group">
         <label for="statement">Personal Statement <span class="required">*</span></label>
-        <textarea id="statement" rows="5" placeholder="Tell the organization why you want to volunteer for this gig and what skills you bring. (Min 20 characters)"></textarea>
-        <div class="form-hint">Minimum 20 characters</div>
+        <textarea id="statement" rows="5" placeholder="Tell the organization why you want to volunteer for this gig and what skills you bring."></textarea>
         <span class="field-error"></span>
       </div>
     </div>
@@ -56,6 +55,24 @@ const gigId = window.location.pathname.split('/').pop();
 
 const TIME_LABELS = { morning: 'Morning', afternoon: 'Afternoon', evening: 'Evening', flexible: 'Flexible' };
 
+function formatDays(days) {
+  if (!days || !days.length) return '';
+  if (days.length === 1) return days[0];
+  return days.slice(0, -1).join(', ') + ' & ' + days[days.length - 1];
+}
+
+const DI = {
+  cal:  `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:#64748b"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+  clk:  `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:#64748b"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+  pin:  `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:#64748b"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+  usr:  `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:#64748b"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  rec:  `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`,
+  mail: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:#64748b"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+  web:  `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:#64748b"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
+};
+
+let currentApplicantCount = 0;
+
 async function load() {
   try {
     const user = API.getUser();
@@ -66,7 +83,7 @@ async function load() {
       isVolunteer ? API.get(`/gigs/${gigId}/my-application`).catch(() => null) : Promise.resolve(null),
     ]);
     const { gig } = gigRes.data;
-    const appData = appRes?.data?.data;
+    const appData = appRes?.data;
 
     document.getElementById('breadcrumbTitle').textContent = gig.title || 'Gig Detail';
     document.title = `${gig.title} | ImpactCircle`;
@@ -75,13 +92,16 @@ async function load() {
 
     /* Build time-commitment text */
     const hours = gig.hoursPerOccurrence || gig.estimatedHours;
-    let timeCommitText = `${hours} hour${hours !== 1 ? 's' : ''}`;
+    let timeCommitText = hours ? `${hours} hr${hours !== 1 ? 's' : ''}/session` : '';
     if (gig.isRecurring && gig.recurrenceType) {
-      const days = gig.recurrenceDays?.length ? gig.recurrenceDays.join(' & ') : '';
-      const freq = days ? `Every ${days}` : gig.recurrenceType.charAt(0).toUpperCase() + gig.recurrenceType.slice(1);
-      timeCommitText = `${hours} hr/session · ${freq}`;
+      const days = formatDays(gig.recurrenceDays);
+      const freq = days || (gig.recurrenceType.charAt(0).toUpperCase() + gig.recurrenceType.slice(1));
+      if (timeCommitText) timeCommitText += ` · ${freq}`;
+      else timeCommitText = freq;
     }
     if (gig.startTime) timeCommitText += ` · ${gig.startTime}${gig.endTime ? ' – ' + gig.endTime : ''}`;
+
+    currentApplicantCount = gig.applicantCount || 0;
 
     /* Build apply-section HTML based on application state */
     let applyHtml = '';
@@ -95,8 +115,11 @@ async function load() {
       } else if (appData.status === 'rejected') {
         applyHtml = `<div class="alert alert-danger" style="text-align:center">Your application was not accepted for this gig.</div>`;
       } else {
-        applyHtml = `<button class="btn btn-block btn-lg" disabled style="background:#94a3b8;color:#fff;cursor:not-allowed;border:none;opacity:0.85">Waiting for Approval</button>
-          <div class="form-hint" style="text-align:center;margin-top:0.5rem">Your application is being reviewed.</div>`;
+        applyHtml = `
+          <div style="border:1px solid #bbf7d0;background:#f0fdf4;border-radius:8px;padding:1rem;text-align:center">
+            <div style="font-weight:700;color:#15803d;margin-bottom:0.25rem">Application Submitted</div>
+            <div style="font-size:0.85rem;color:#166534">You have already applied for this position. You'll be notified of the decision.</div>
+          </div>`;
       }
     } else if (isVerifiedVolunteer) {
       applyHtml = `<button class="btn btn-primary btn-block btn-lg" onclick="openApply()">Apply Now</button>`;
@@ -123,12 +146,13 @@ async function load() {
             <h1 style="font-size:1.5rem;margin-bottom:0.5rem">${gig.title}</h1>
             <div style="color:var(--text-muted);font-size:0.875rem;margin-bottom:0.5rem">${gig.org?.orgName || ''}</div>
             ${gig.isRecurring && gig.recurrenceType ? `
-              <div style="font-size:0.85rem;color:#16a34a;margin-bottom:1rem;font-weight:600">
-                🔄 ${gig.recurrenceType === 'weekly' && gig.recurrenceDays?.length
-                  ? `Every ${gig.recurrenceDays.join(' & ')}`
+              <div style="display:flex;align-items:center;gap:0.4rem;font-size:0.84rem;color:#16a34a;margin-bottom:1rem;font-weight:600">
+                ${DI.rec}
+                ${gig.recurrenceType === 'weekly' && gig.recurrenceDays?.length
+                  ? formatDays(gig.recurrenceDays)
                   : gig.recurrenceType.charAt(0).toUpperCase() + gig.recurrenceType.slice(1)}
-                ${gig.timeOfDay ? ' · ' + TIME_LABELS[gig.timeOfDay] : ''}
-                ${gig.startTime ? ' · ' + gig.startTime + (gig.endTime ? '–' + gig.endTime : '') : ''}
+                ${gig.timeOfDay && gig.timeOfDay !== 'flexible' ? `<span style="color:#94a3b8;font-weight:400;margin:0 0.1rem">·</span><span style="color:#64748b;font-weight:500">${TIME_LABELS[gig.timeOfDay]}</span>` : ''}
+                ${gig.startTime ? `<span style="color:#94a3b8;font-weight:400;margin:0 0.1rem">·</span><span style="color:#64748b;font-weight:500">${gig.startTime}${gig.endTime ? ' – ' + gig.endTime : ''}</span>` : ''}
               </div>` : ''}
             <div class="divider"></div>
             <h3 style="margin-bottom:0.75rem">About This Opportunity</h3>
@@ -146,20 +170,20 @@ async function load() {
             <h3 style="margin-bottom:1rem">Gig Details</h3>
             <div style="display:flex;flex-direction:column;gap:0.875rem">
               <div style="display:flex;gap:0.75rem;align-items:flex-start">
-                <span style="font-size:1.25rem">📅</span>
-                <div><div style="font-size:0.775rem;font-weight:700;text-transform:uppercase;color:var(--text-muted)">Dates</div><div style="font-size:0.875rem;margin-top:0.125rem">${fmt.date(gig.startDate)} — ${fmt.date(gig.endDate)}</div></div>
+                ${DI.cal}
+                <div><div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted)">Dates</div><div style="font-size:0.875rem;margin-top:0.125rem">${fmt.date(gig.startDate)} — ${fmt.date(gig.endDate)}</div></div>
               </div>
               <div style="display:flex;gap:0.75rem;align-items:flex-start">
-                <span style="font-size:1.25rem">⏱️</span>
-                <div><div style="font-size:0.775rem;font-weight:700;text-transform:uppercase;color:var(--text-muted)">Time Commitment</div><div style="font-size:0.875rem;margin-top:0.125rem">${timeCommitText}</div></div>
+                ${DI.clk}
+                <div><div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted)">Time Commitment</div><div style="font-size:0.875rem;margin-top:0.125rem">${timeCommitText}</div></div>
               </div>
               <div style="display:flex;gap:0.75rem;align-items:flex-start">
-                <span style="font-size:1.25rem">📍</span>
-                <div><div style="font-size:0.775rem;font-weight:700;text-transform:uppercase;color:var(--text-muted)">Location</div><div style="font-size:0.875rem;margin-top:0.125rem">${gig.locationType === 'remote' ? '🌐 Remote' : gig.locationAddress || 'In-Person'}</div></div>
+                ${DI.pin}
+                <div><div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted)">Location</div><div style="font-size:0.875rem;margin-top:0.125rem">${gig.locationType === 'remote' ? 'Remote' : gig.locationAddress || 'In-Person'}</div></div>
               </div>
               <div style="display:flex;gap:0.75rem;align-items:flex-start">
-                <span style="font-size:1.25rem">👥</span>
-                <div><div style="font-size:0.775rem;font-weight:700;text-transform:uppercase;color:var(--text-muted)">Applicants</div><div style="font-size:0.875rem;margin-top:0.125rem">${gig.applicantCount || 0} applied</div></div>
+                ${DI.usr}
+                <div><div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted)">Applicants</div><div style="font-size:0.875rem;margin-top:0.125rem" id="applicantCount">${currentApplicantCount} applied</div></div>
               </div>
             </div>
             <div class="divider"></div>
@@ -168,9 +192,9 @@ async function load() {
           <div class="card">
             <h4 style="margin-bottom:0.75rem">About ${gig.org?.orgName || 'the Organization'}</h4>
             ${gig.org?.missionStatement ? `<p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem">${gig.org.missionStatement}</p>` : ''}
-            ${gig.org?.address ? `<div class="gig-meta-item" style="font-size:0.8rem">📍 ${gig.org.address}</div>` : ''}
-            ${gig.org?.contactEmail ? `<div class="gig-meta-item" style="font-size:0.8rem">✉️ ${gig.org.contactEmail}</div>` : ''}
-            ${gig.org?.website ? `<div class="gig-meta-item" style="font-size:0.8rem">🌐 <a href="${gig.org.website}" target="_blank">${gig.org.website}</a></div>` : ''}
+            ${gig.org?.address ? `<div class="gig-meta-item" style="font-size:0.8rem;display:flex;align-items:center;gap:0.35rem">${DI.pin} ${gig.org.address}</div>` : ''}
+            ${gig.org?.contactEmail ? `<div class="gig-meta-item" style="font-size:0.8rem;display:flex;align-items:center;gap:0.35rem">${DI.mail} ${gig.org.contactEmail}</div>` : ''}
+            ${gig.org?.website ? `<div class="gig-meta-item" style="font-size:0.8rem;display:flex;align-items:center;gap:0.35rem">${DI.web} <a href="${gig.org.website}" target="_blank">${gig.org.website}</a></div>` : ''}
           </div>
         </div>
       </div>
@@ -202,15 +226,22 @@ function closeApply() { document.getElementById('applyModal').classList.remove('
 document.getElementById('submitApply').addEventListener('click', async () => {
   const stmt = document.getElementById('statement').value.trim();
   const alertEl = document.getElementById('applyAlert');
-  if (stmt.length < 20) { Validator.showError(document.getElementById('statement'), 'Minimum 20 characters required.'); return; }
+  if (!stmt) { Validator.showError(document.getElementById('statement'), 'Please write a personal statement.'); return; }
 
   const btn = document.getElementById('submitApply');
   btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
   try {
     await API.post(`/gigs/${gigId}/apply`, { personalStatement: stmt });
     closeApply();
-    Toast.success('Application submitted successfully! ');
-    document.getElementById('applySection').innerHTML = `<div class="alert alert-success"> Application submitted! You'll be notified of the decision.</div>`;
+    Toast.success('Application submitted successfully!');
+    document.getElementById('applySection').innerHTML = `
+      <div style="border:1px solid #bbf7d0;background:#f0fdf4;border-radius:8px;padding:1rem;text-align:center">
+        <div style="font-weight:700;color:#15803d;margin-bottom:0.25rem">Application Submitted</div>
+        <div style="font-size:0.85rem;color:#166534">You have already applied for this position. You'll be notified of the decision.</div>
+      </div>`;
+    currentApplicantCount++;
+    const el = document.getElementById('applicantCount');
+    if (el) el.textContent = `${currentApplicantCount} applied`;
   } catch (err) {
     alertEl.innerHTML = `<div class="alert alert-danger"> ${err.message}</div>`;
     btn.disabled = false; btn.textContent = 'Submit Application';

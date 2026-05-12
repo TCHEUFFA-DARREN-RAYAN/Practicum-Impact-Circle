@@ -1,7 +1,31 @@
 const router = require('express').Router();
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 const { fn, col, Op } = require('sequelize');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { Organization, Gig, Application, Task, HourRecord, Category, User, VolunteerProfile } = require('../models/index');
+
+const logoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(__dirname, '../../src/uploads', String(req.user.id));
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `logo-${Date.now()}${path.extname(file.originalname)}`);
+  },
+});
+const logoUpload = multer({
+  storage: logoStorage,
+  limits: { fileSize: 3 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    if (!allowed.includes(path.extname(file.originalname).toLowerCase()))
+      return cb(new Error('Only image files are allowed.'));
+    cb(null, true);
+  },
+});
 
 router.get('/me', requireAuth, requireRole('org'), async (req, res, next) => {
   try {
@@ -54,6 +78,34 @@ router.get('/me/dashboard', requireAuth, requireRole('org'), async (req, res, ne
         },
       },
     });
+  } catch (err) { next(err); }
+});
+
+router.get('/me/applications', requireAuth, requireRole('org'), async (req, res, next) => {
+  try {
+    const org = await Organization.findOne({ where: { userId: req.user.id } });
+    if (!org) return res.status(404).json({ success: false, message: 'Organization not found.' });
+
+    const applications = await Application.findAll({
+      include: [
+        {
+          model: Gig,
+          as: 'gig',
+          where: { orgId: org.id },
+          required: true,
+          include: [{ model: Category, as: 'category', attributes: ['name', 'colorHex', 'icon'] }],
+        },
+        {
+          model: User,
+          as: 'volunteer',
+          attributes: ['id', 'email', 'verificationStatus', 'avatarUrl'],
+          include: [{ model: VolunteerProfile, as: 'volunteerProfile' }],
+        },
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+
+    res.json({ success: true, data: { applications } });
   } catch (err) { next(err); }
 });
 
@@ -181,6 +233,46 @@ router.get('/me/volunteers', requireAuth, requireRole('org'), async (req, res, n
     }));
 
     res.json({ success: true, data: { volunteers } });
+  } catch (err) { next(err); }
+});
+
+router.post('/me/logo', requireAuth, requireRole('org'), logoUpload.single('logo'), async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded.' });
+    await Organization.update({ logoUrl: req.file.filename }, { where: { userId: req.user.id } });
+    res.json({ success: true, message: 'Logo updated.', data: { logoUrl: req.file.filename } });
+  } catch (err) { next(err); }
+});
+
+router.get('/me/calendar', requireAuth, requireRole('org'), async (req, res, next) => {
+  try {
+    const org = await Organization.findOne({ where: { userId: req.user.id } });
+    if (!org) return res.status(404).json({ success: false, message: 'Organization not found.' });
+    const year = parseInt(req.query.year) || new Date().getFullYear();
+    const month = parseInt(req.query.month) || (new Date().getMonth() + 1);
+    const startOfMonth = `${year}-${String(month).padStart(2,'0')}-01`;
+    const endDate = new Date(year, month, 0);
+    const endOfMonth = `${year}-${String(month).padStart(2,'0')}-${String(endDate.getDate()).padStart(2,'0')}`;
+    const gigs = await Gig.findAll({
+      where: { orgId: org.id, startDate: { [Op.lte]: endOfMonth }, endDate: { [Op.gte]: startOfMonth } },
+      attributes: ['id', 'title', 'startDate', 'endDate', 'startTime', 'endTime', 'locationType'],
+      include: [{
+        model: Task, foreignKey: 'gigId',
+        where: { status: { [Op.in]: ['accepted', 'inProgress', 'completed', 'approved'] } },
+        required: false,
+        include: [{ model: User, as: 'volunteer', attributes: ['id', 'email', 'avatarUrl'],
+          include: [{ model: VolunteerProfile, as: 'volunteerProfile', attributes: ['firstName', 'lastName'] }] }],
+      }],
+    });
+    const byDate = {};
+    gigs.forEach(g => {
+      for (let d = new Date(g.startDate); d <= new Date(g.endDate); d.setDate(d.getDate() + 1)) {
+        const key = d.toISOString().slice(0, 10);
+        if (!byDate[key]) byDate[key] = [];
+        byDate[key].push(g.toJSON());
+      }
+    });
+    res.json({ success: true, data: { calendar: byDate, year, month } });
   } catch (err) { next(err); }
 });
 

@@ -1,11 +1,37 @@
 const router = require('express').Router();
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 const { Op } = require('sequelize');
 const { body } = require('express-validator');
 const { User, VolunteerProfile, Organization, CsrPartner } = require('../models/index');
 const validate = require('../middleware/validate');
+const { requireAuth } = require('../middleware/auth');
 const { sendEmail, templates, publicAppUrl } = require('../services/email');
+
+const avatarStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(__dirname, '../../src/uploads', String(req.user.id));
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `avatar-${Date.now()}${ext}`);
+  },
+});
+const avatarUpload = multer({
+  storage: avatarStorage,
+  limits: { fileSize: 3 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    if (!allowed.includes(path.extname(file.originalname).toLowerCase()))
+      return cb(new Error('Only image files are allowed (JPG, PNG, GIF, WEBP).'));
+    cb(null, true);
+  },
+});
 
 const issueToken = (user) =>
   jwt.sign({ id: user.id, role: user.role, email: user.email }, process.env.JWT_SECRET, {
@@ -152,13 +178,55 @@ router.post('/reset-password', [
   } catch (err) { next(err); }
 });
 
-router.get('/me', require('../middleware/auth').requireAuth, async (req, res, next) => {
+router.get('/me', requireAuth, async (req, res, next) => {
   try {
     const user = await User.findByPk(req.user.id, { attributes: { exclude: ['passwordHash'] } });
     res.json({ success: true, data: { user } });
-  } catch (err) {
-    next(err);
-  }
+  } catch (err) { next(err); }
+});
+
+router.post('/change-password', requireAuth, [
+  body('currentPassword').notEmpty().withMessage('Current password is required.'),
+  body('newPassword').isLength({ min: 8 }).withMessage('Password must be at least 8 characters.')
+    .matches(/[A-Z]/).withMessage('Password must contain an uppercase letter.')
+    .matches(/[0-9]/).withMessage('Password must contain a number.'),
+], validate, async (req, res, next) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+    const valid = await user.comparePassword(req.body.currentPassword);
+    if (!valid) return res.status(400).json({ success: false, message: 'Current password is incorrect.' });
+    await user.update({ passwordHash: req.body.newPassword });
+    res.json({ success: true, message: 'Password updated successfully.' });
+  } catch (err) { next(err); }
+});
+
+router.put('/update-email', requireAuth, [
+  body('email').isEmail().normalizeEmail().withMessage('Valid email required.'),
+  body('password').notEmpty().withMessage('Password is required to confirm this change.'),
+], validate, async (req, res, next) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+    const valid = await user.comparePassword(req.body.password);
+    if (!valid) return res.status(400).json({ success: false, message: 'Password is incorrect.' });
+    const existing = await User.findOne({ where: { email: req.body.email } });
+    if (existing && existing.id !== user.id)
+      return res.status(409).json({ success: false, message: 'That email is already in use.' });
+    await user.update({ email: req.body.email });
+    await user.reload();
+    const token = issueToken(user);
+    res.json({ success: true, message: 'Email updated.', data: { token, user: user.toSafeObject() } });
+  } catch (err) { next(err); }
+});
+
+router.post('/avatar', requireAuth, avatarUpload.single('avatar'), async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded.' });
+    await User.update({ avatarUrl: req.file.filename }, { where: { id: req.user.id } });
+    const user = await User.findByPk(req.user.id, { attributes: { exclude: ['passwordHash'] } });
+    res.json({ success: true, message: 'Avatar updated.', data: { avatarUrl: req.file.filename, user: user.toSafeObject() } });
+  } catch (err) { next(err); }
 });
 
 module.exports = router;

@@ -25,6 +25,15 @@
       font-size: 2rem; font-weight: 800; color: white;
       border: 3px solid rgba(255,255,255,0.35);
       flex-shrink: 0;
+      overflow: hidden; position: relative;
+    }
+    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .avatar-upload-btn {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: rgba(0,0,0,0.55); color: #fff;
+      font-size: 0.55rem; font-weight: 700; text-align: center;
+      padding: 3px 0; cursor: pointer; border: none;
+      letter-spacing: 0.03em; text-transform: uppercase;
     }
     .profile-info { flex: 1; min-width: 0; }
     .profile-name { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.2rem; }
@@ -83,7 +92,13 @@
 
       <!-- Profile Header -->
       <div class="profile-header" id="profileHeader">
-        <div class="profile-avatar" id="profileAvatar">?</div>
+        <div class="profile-avatar" id="profileAvatar">
+          ?
+          <label class="avatar-upload-btn" title="Change photo">
+            Photo
+            <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="handleAvatarUpload(this)">
+          </label>
+        </div>
         <div class="profile-info">
           <div class="profile-name" id="profileName">—</div>
           <div class="profile-email" id="profileEmail">—</div>
@@ -112,18 +127,18 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="phone">Phone Number</label>
+              <label for="phone">Phone Number <span class="required">*</span></label>
               <input type="tel" id="phone" placeholder="506-555-0001">
               <span class="field-error"></span>
             </div>
             <div class="form-group">
-              <label for="weeklyAvailabilityHours">Weekly Availability (hours)</label>
-              <input type="number" id="weeklyAvailabilityHours" min="0" max="80" placeholder="10">
+              <label for="weeklyAvailabilityHours">Weekly Availability (hours) <span class="required">*</span></label>
+              <input type="number" id="weeklyAvailabilityHours" min="1" max="80" placeholder="10">
               <span class="field-error"></span>
             </div>
           </div>
           <div class="form-group">
-            <label for="address">Home Address</label>
+            <label for="address">Home Address <span class="required">*</span></label>
             <input type="text" id="address" placeholder="123 Main St, Moncton, NB">
             <span class="field-error"></span>
           </div>
@@ -288,7 +303,12 @@
       const email    = user.email || API.getUser()?.email || '';
       const initials = (profile.firstName?.[0] || email[0] || '?').toUpperCase();
 
-      document.getElementById('profileAvatar').textContent = initials;
+      const avEl = document.getElementById('profileAvatar');
+      if (user.avatarUrl && user.id) {
+        avEl.innerHTML = `<img src="/api/uploads/${user.id}/${user.avatarUrl}" alt="Avatar"><label class="avatar-upload-btn" title="Change photo">Photo<input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="handleAvatarUpload(this)"></label>`;
+      } else {
+        avEl.innerHTML = `${initials}<label class="avatar-upload-btn" title="Change photo">Photo<input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="handleAvatarUpload(this)"></label>`;
+      }
       document.getElementById('profileName').textContent   = fullName;
       document.getElementById('profileEmail').textContent  = email;
       document.getElementById('verificationBadge').innerHTML =
@@ -330,6 +350,39 @@
     }
   }
 
+  // ── Avatar upload ──────────────────────────────────────────────────────────
+  async function handleAvatarUpload(input) {
+    if (!input.files[0]) return;
+    const file = input.files[0];
+    if (file.size > 3 * 1024 * 1024) {
+      Toast.error('Image must be under 3 MB.');
+      return;
+    }
+    // Preview immediately
+    const reader = new FileReader();
+    reader.onload = e => {
+      const av = document.getElementById('profileAvatar');
+      const existing = av.querySelector('img');
+      if (existing) existing.src = e.target.result;
+      else {
+        av.innerHTML = `<img src="${e.target.result}" alt="Avatar"><label class="avatar-upload-btn" title="Change photo">Photo<input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="handleAvatarUpload(this)"></label>`;
+      }
+    };
+    reader.readAsDataURL(file);
+
+    const form = new FormData();
+    form.append('avatar', file);
+    try {
+      const res = await API.upload('/auth/avatar', form);
+      if (res.data && res.data.user) API.setSession(API.getToken(), res.data.user);
+      Toast.success('Profile picture updated!');
+    } catch (err) {
+      Toast.error('Upload failed: ' + (err.message || 'Please try again.'));
+    }
+  }
+
+  const NAME_REGEX = /^[a-zA-ZÀ-ÿ\s'\-]+$/;
+
   // ── Save Profile ───────────────────────────────────────────────────────────
   document.getElementById('profileForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -339,16 +392,36 @@
     let ok = true;
     const firstName = document.getElementById('firstName');
     const lastName  = document.getElementById('lastName');
+    const phone     = document.getElementById('phone');
     const hours     = document.getElementById('weeklyAvailabilityHours');
+    const address   = document.getElementById('address');
 
     if (!Validator.required(firstName.value)) {
       Validator.showError(firstName, 'First name is required.'); ok = false;
+    } else if (!NAME_REGEX.test(firstName.value.trim())) {
+      Validator.showError(firstName, 'Name must contain only letters, spaces, hyphens, or apostrophes.'); ok = false;
     }
     if (!Validator.required(lastName.value)) {
       Validator.showError(lastName, 'Last name is required.'); ok = false;
+    } else if (!NAME_REGEX.test(lastName.value.trim())) {
+      Validator.showError(lastName, 'Name must contain only letters, spaces, hyphens, or apostrophes.'); ok = false;
     }
-    if (hours.value && (parseFloat(hours.value) < 0 || parseFloat(hours.value) > 80)) {
-      Validator.showError(hours, 'Enter a value between 0 and 80.'); ok = false;
+    const phoneVal = phone.value.trim();
+    if (!phoneVal) {
+      Validator.showError(phone, 'Phone number is required.'); ok = false;
+    } else {
+      const digits = phoneVal.replace(/\D/g, '');
+      if (digits.length < 7 || digits.length > 15) {
+        Validator.showError(phone, 'Enter a valid phone number (7–15 digits).'); ok = false;
+      }
+    }
+    if (!Validator.required(hours.value)) {
+      Validator.showError(hours, 'Weekly availability is required.'); ok = false;
+    } else if (parseFloat(hours.value) < 1 || parseFloat(hours.value) > 80) {
+      Validator.showError(hours, 'Enter a value between 1 and 80.'); ok = false;
+    }
+    if (!Validator.required(address.value)) {
+      Validator.showError(address, 'Home address is required.'); ok = false;
     }
     if (!ok) return;
 
@@ -369,8 +442,12 @@
 
       // Refresh displayed name
       const fullName = [payload.firstName, payload.lastName].filter(Boolean).join(' ');
-      document.getElementById('profileName').textContent   = fullName;
-      document.getElementById('profileAvatar').textContent = (payload.firstName[0] || '?').toUpperCase();
+      document.getElementById('profileName').textContent = fullName;
+      const avEl2 = document.getElementById('profileAvatar');
+      if (!avEl2.querySelector('img')) {
+        const labelEl = avEl2.querySelector('label');
+        if (labelEl) avEl2.innerHTML = (payload.firstName[0] || '?').toUpperCase() + labelEl.outerHTML;
+      }
 
       Toast.success('Profile updated successfully.');
       document.getElementById('alertArea').innerHTML =

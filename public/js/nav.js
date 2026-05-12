@@ -204,34 +204,34 @@
       { href: '/admin/users',           label: 'Manage Users',             icon: 'users'       },
       { href: '/admin/organizations',   label: 'Manage Organizations',     icon: 'building'    },
       { href: '/admin/opportunities',   label: 'Manage Opportunities',     icon: 'briefcase'   },
+      { href: '/gigs',                  label: 'All Gigs',                 icon: 'search'      },
       { href: '/admin/categories',      label: 'Manage Categories',        icon: 'tag'         },
       { href: '/admin/events',          label: 'Manage Events',            icon: 'calendar'    },
       { href: '/admin/analytics',       label: 'Reports & Analytics',      icon: 'chart'       },
       { href: '/admin/verify',          label: 'Approvals & Verification', icon: 'verify'      },
       { href: '/admin/announcements',   label: 'Announcements',            icon: 'bell'        },
+      { href: '/messages',              label: 'Messages',                 icon: 'message'     },
       { href: '/admin/settings',        label: 'Settings',                 icon: 'settings'    },
     ],
     volunteer: [
       { href: '/volunteer-dashboard',   label: 'My Dashboard',             icon: 'home'        },
-      { href: '/volunteer-profile',     label: 'My Profile',               icon: 'user'        },
       { href: '/volunteer/applications',label: 'My Applications',          icon: 'clipboard'   },
-      { href: '/volunteer/matches',     label: 'My Matches',               icon: 'heart'       },
+      { href: '/gigs',                  label: 'Browse Gigs',              icon: 'heart'       },
       { href: '/volunteer/schedule',    label: 'My Schedule',              icon: 'calendar'    },
       { href: '/volunteer/impact',      label: 'My Impact',                icon: 'trending'    },
-      { href: '/volunteer/saved',       label: 'Saved Opportunities',      icon: 'bookmark'    },
       { href: '/messages',              label: 'Messages',                 icon: 'message'     },
-      { href: '/settings',              label: 'Settings',                 icon: 'settings'    },
+      { href: '/volunteer/settings',    label: 'Settings',                 icon: 'settings'    },
     ],
     org: [
       { href: '/org-dashboard',         label: 'Organization Dashboard',   icon: 'dashboard'   },
-      { href: '/org/profile',           label: 'Organization Profile',     icon: 'building'    },
+      { href: '/org/opportunities',     label: 'My Posted Gigs',           icon: 'briefcase'   },
       { href: '/org-gig-create',        label: 'Post an Opportunity',      icon: 'plus'        },
-      { href: '/org/opportunities',     label: 'Manage Opportunities',     icon: 'briefcase'   },
+      { href: '/gigs',                  label: 'All Gigs',                 icon: 'search'      },
       { href: '/org/applications',      label: 'Volunteer Applications',   icon: 'clipboard'   },
-      { href: '/org/volunteers',         label: 'Volunteer Tracker',        icon: 'checkCircle' },
+      { href: '/org/volunteers',        label: 'Volunteer Tracker',        icon: 'checkCircle' },
       { href: '/org/schedule',          label: 'Schedule & Shifts',        icon: 'calendar'    },
       { href: '/messages',              label: 'Messages',                 icon: 'message'     },
-      { href: '/org/analytics',          label: 'Analytics',                icon: 'chart'       },
+      { href: '/org/analytics',         label: 'Analytics',                icon: 'chart'       },
       { href: '/org/settings',          label: 'Settings',                 icon: 'settings'    },
     ],
   };
@@ -274,7 +274,7 @@
       </div>
     </div>
     <div class="nav-user">
-      <div class="nav-avatar">${(user.email?.[0] || '?').toUpperCase()}</div>
+      <div class="nav-avatar" style="${user.avatarUrl ? 'padding:0;overflow:hidden;' : ''}">${user.avatarUrl && user.id ? `<img src="/api/uploads/${user.id}/${user.avatarUrl}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : (user.email?.[0] || '?').toUpperCase()}</div>
       <div>
         <div style="color:#0f172a;font-size:0.8rem;font-weight:700;line-height:1.2">${user.email?.split('@')[0]}</div>
         <div style="color:#64748b;font-size:0.68rem;text-transform:capitalize;line-height:1.2">${user.role}</div>

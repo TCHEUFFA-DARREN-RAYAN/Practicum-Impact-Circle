@@ -6,14 +6,17 @@ require('../models/index');
 const { User, VolunteerProfile, Organization, CsrPartner, Category, Gig, Reward, VolunteerCategoryHours } = require('../models/index');
 
 const CATEGORIES = [
-  { name: 'Food Security',          description: 'Programs addressing hunger and food access',          pointsPerHour: 12, colorHex: '#f59e0b', icon: '' },
-  { name: 'Women Support',          description: 'Services empowering women and girls',                 pointsPerHour: 11, colorHex: '#ec4899', icon: '' },
-  { name: 'Youth Development',      description: 'Programs for children and youth',                     pointsPerHour: 11, colorHex: '#8b5cf6', icon: '' },
-  { name: 'Seniors Support',        description: 'Assistance for elderly community members',            pointsPerHour: 12, colorHex: '#06b6d4', icon: '' },
-  { name: 'Environment',            description: 'Environmental stewardship and sustainability',        pointsPerHour: 10, colorHex: '#10b981', icon: '' },
-  { name: 'Education',              description: 'Literacy, skill-building, and learning programs',     pointsPerHour: 11, colorHex: '#3b82f6', icon: '' },
-  { name: 'Newcomer Integration',   description: 'Support for immigrants and refugees',                 pointsPerHour: 12, colorHex: '#f97316', icon: '' },
-  { name: 'Volunteer Opportunities',description: 'General platform-driven volunteer coordination',      pointsPerHour: 10, colorHex: '#6366f1', icon: '⭐' },
+  { name: 'Food Security & Nutrition',       description: 'Programs addressing hunger, food access, and nutrition',        pointsPerHour: 12, colorHex: '#f59e0b', icon: '' },
+  { name: 'Newcomer & Cultural Integration', description: 'Support for immigrants, refugees, and cultural inclusion',       pointsPerHour: 12, colorHex: '#f97316', icon: '' },
+  { name: 'Shelter & Housing Support',       description: 'Emergency shelter, affordable housing, and homelessness relief', pointsPerHour: 12, colorHex: '#0d9488', icon: '' },
+  { name: 'Youth & Children',                description: 'Programs and mentorship for children and youth',                 pointsPerHour: 11, colorHex: '#8b5cf6', icon: '' },
+  { name: 'Health & Palliative Care',        description: 'Health services, wellness programs, and end-of-life care',       pointsPerHour: 12, colorHex: '#ec4899', icon: '' },
+  { name: 'Disability & Special Needs',      description: 'Support and inclusion for people with disabilities',             pointsPerHour: 11, colorHex: '#3b82f6', icon: '' },
+  { name: 'Community Coordination',          description: 'General community organizing, events, and coordination',         pointsPerHour: 10, colorHex: '#6366f1', icon: '' },
+  { name: 'Faith & Spiritual Support',       description: 'Faith-based community outreach and spiritual care',              pointsPerHour: 10, colorHex: '#d97706', icon: '' },
+  { name: 'Social Clubs',                    description: 'Social groups and recreational community activities',             pointsPerHour: 10, colorHex: '#10b981', icon: '' },
+  { name: 'Industry Associations',           description: 'Professional and trade association volunteering',                 pointsPerHour: 10, colorHex: '#06b6d4', icon: '' },
+  { name: 'Govt & Crown Corporations',       description: 'Government-affiliated and crown corporation volunteer programs',  pointsPerHour: 10, colorHex: '#475569', icon: '' },
 ];
 
 const seed = async () => {
@@ -53,7 +56,7 @@ const seed = async () => {
         userId: orgUser.id,
         orgName: 'Moncton Cares',
         missionStatement: 'Building a stronger, more connected Greater Moncton community.',
-        categories: [catMap['Food Security'], catMap['Youth Development']],
+        categories: [catMap['Food Security & Nutrition'], catMap['Youth & Children']],
         contactName: 'Ketan Raval',
         contactEmail: 'ketan@monctoncares.ca',
         address: '123 Main Street, Moncton, NB',
@@ -71,7 +74,7 @@ const seed = async () => {
         {
           orgId: org.id, title: 'Food Bank Sorting Volunteers',
           description: 'Help sort and package food donations at the Moncton Food Bank. No experience necessary — just bring your energy and good attitude!',
-          categoryId: catMap['Food Security'],
+          categoryId: catMap['Food Security & Nutrition'],
           startDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
           endDate: new Date(Date.now() + 8 * 86400000).toISOString().split('T')[0],
           estimatedHours: 4, locationType: 'in-person', locationAddress: '56 Church St, Moncton, NB',
@@ -80,7 +83,7 @@ const seed = async () => {
         {
           orgId: org.id, title: 'After-School Tutoring Program',
           description: 'Support students with homework and learning in a safe, structured environment. Ideal for education students or graduates who want to make a real difference.',
-          categoryId: catMap['Youth Development'],
+          categoryId: catMap['Youth & Children'],
           startDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
           endDate: new Date(Date.now() + 60 * 86400000).toISOString().split('T')[0],
           estimatedHours: 2, locationType: 'in-person', locationAddress: '200 Lutz St, Moncton, NB',
@@ -89,7 +92,7 @@ const seed = async () => {
         {
           orgId: org.id, title: 'Community Garden Cleanup',
           description: 'Virtual planning and coordination for our annual community garden project. Help plan plots, coordinate volunteers, and document progress from anywhere.',
-          categoryId: catMap['Environment'],
+          categoryId: catMap['Community Coordination'],
           startDate: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
           endDate: new Date(Date.now() + 21 * 86400000).toISOString().split('T')[0],
           estimatedHours: 3, locationType: 'remote', locationAddress: '',
@@ -113,13 +116,13 @@ const seed = async () => {
         languages: ['English', 'French'],
         weeklyAvailabilityHours: 10,
         weeklyAvailabilityDays: ['Saturday', 'Sunday'],
-        preferredCategories: [catMap['Food Security']],
+        preferredCategories: [catMap['Food Security & Nutrition']],
         totalVerifiedHours: 15,
         totalPoints: 180,
         registrationStep: 6,
         consentGiven: true,
       });
-      await VolunteerCategoryHours.create({ volunteerId: volUser.id, categoryId: catMap['Food Security'], hours: 15 });
+      await VolunteerCategoryHours.create({ volunteerId: volUser.id, categoryId: catMap['Food Security & Nutrition'], hours: 15 });
       console.log(`   Volunteer: ${volEmail}`);
     }
 
@@ -136,11 +139,11 @@ const seed = async () => {
     const rewardCount = await Reward.count();
     if (rewardCount === 0) {
       await Reward.bulkCreate([
-        { name: 'Food Bank Champion Badge', description: 'Digital badge for outstanding food security volunteers', categoryId: catMap['Food Security'], sponsorName: 'Moncton Cares', pointsRequired: 100, categoryHoursRequired: 10, type: 'badge' },
-        { name: '15% Coffee Shop Voucher', description: '15% discount at participating local coffee shops', categoryId: catMap['Volunteer Opportunities'], sponsorName: 'Atlantic Tech Solutions', pointsRequired: 150, categoryHoursRequired: 5, type: 'discount' },
-        { name: "Women's Empowerment Certificate", description: 'Certificate of Excellence for Women Support volunteers', categoryId: catMap['Women Support'], sponsorName: 'Platform', pointsRequired: 200, categoryHoursRequired: 10, type: 'certificate' },
-        { name: 'Youth Mentor Recognition Award', description: 'Award for top youth development volunteers', categoryId: catMap['Youth Development'], sponsorName: 'Platform', pointsRequired: 400, categoryHoursRequired: 20, type: 'perk' },
-        { name: 'Community Event Pass', description: 'Free access to a community event of your choice', categoryId: catMap['Environment'], sponsorName: 'Moncton Cares', pointsRequired: 200, categoryHoursRequired: 10, type: 'eventPass' },
+        { name: 'Food Bank Champion Badge',        description: 'Digital badge for outstanding food security volunteers',       categoryId: catMap['Food Security & Nutrition'],       sponsorName: 'Moncton Cares',          pointsRequired: 100, categoryHoursRequired: 10, type: 'badge' },
+        { name: '15% Coffee Shop Voucher',          description: '15% discount at participating local coffee shops',            categoryId: catMap['Community Coordination'],          sponsorName: 'Atlantic Tech Solutions', pointsRequired: 150, categoryHoursRequired: 5,  type: 'discount' },
+        { name: 'Newcomer Welcome Certificate',     description: 'Certificate of Excellence for newcomer integration volunteers', categoryId: catMap['Newcomer & Cultural Integration'], sponsorName: 'Platform',               pointsRequired: 200, categoryHoursRequired: 10, type: 'certificate' },
+        { name: 'Youth Mentor Recognition Award',   description: 'Award for top youth and children volunteers',                  categoryId: catMap['Youth & Children'],                sponsorName: 'Platform',               pointsRequired: 400, categoryHoursRequired: 20, type: 'perk' },
+        { name: 'Community Event Pass',             description: 'Free access to a community event of your choice',              categoryId: catMap['Community Coordination'],          sponsorName: 'Moncton Cares',          pointsRequired: 200, categoryHoursRequired: 10, type: 'eventPass' },
       ]);
       console.log('   Sample rewards seeded');
     }

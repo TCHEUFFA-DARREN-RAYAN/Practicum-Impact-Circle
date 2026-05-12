@@ -62,6 +62,33 @@
           </select>
         </div>
 
+        <!-- Time of Day -->
+        <div class="filter-group">
+          <label for="filterTime">Time of Day</label>
+          <select id="filterTime">
+            <option value="">Any Time</option>
+            <option value="morning">Morning</option>
+            <option value="afternoon">Afternoon</option>
+            <option value="evening">Evening</option>
+            <option value="flexible">Flexible</option>
+          </select>
+        </div>
+
+        <!-- Day of Week -->
+        <div class="filter-group">
+          <label for="filterDay">Day of Week</label>
+          <select id="filterDay">
+            <option value="">Any Day</option>
+            <option value="Mon">Monday</option>
+            <option value="Tue">Tuesday</option>
+            <option value="Wed">Wednesday</option>
+            <option value="Thu">Thursday</option>
+            <option value="Fri">Friday</option>
+            <option value="Sat">Saturday</option>
+            <option value="Sun">Sunday</option>
+          </select>
+        </div>
+
         <!-- Verified Only -->
         <div class="filter-group">
           <label for="filterVerified">Access</label>
@@ -110,6 +137,8 @@
 <script src="/js/nav.js"></script>
 <script>
   // ── State ──────────────────────────────────────────────────────────────────
+  const _userRole = API.isLoggedIn() ? (API.getUser()?.role || '') : '';
+  const _viewOnly = _userRole === 'org' || _userRole === 'admin';
   let currentPage = 1;
   const PAGE_SIZE = 12;
   let totalPages  = 1;
@@ -126,16 +155,19 @@
     return `cat-pill cat-pill-${categoryColorMap[catId]}`;
   }
 
-  function formatDate(d) {
-    if (!d) return 'Flexible';
-    return new Date(d).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' });
+  function fmtDate(d) {
+    if (!d) return null;
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
-  function locationType(gig) {
-    if (gig.locationType === 'remote') return '&#x1F4BB; Remote';
-    if (gig.locationType === 'in-person') return `&#x1F4CD; ${gig.location || 'In-Person'}`;
-    return gig.location || 'TBD';
-  }
+  const TIME_LABELS = { morning: 'Morning', afternoon: 'Afternoon', evening: 'Evening', flexible: 'Flexible', custom: 'Custom' };
+
+  const SVG = {
+    cal:  `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+    clk:  `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+    pin:  `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+    bldg: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>`,
+  };
 
   // ── Load Categories ────────────────────────────────────────────────────────
   async function loadCategories() {
@@ -166,11 +198,15 @@
 
     const cat      = document.getElementById('filterCategory').value;
     const loc      = document.getElementById('filterLocation').value;
+    const time     = document.getElementById('filterTime').value;
+    const day      = document.getElementById('filterDay').value;
     const verified = document.getElementById('filterVerified').value;
     const search   = document.getElementById('filterSearch').value.trim();
 
     if (cat)      params.set('category', cat);
-    if (loc)      params.set('locationType', loc);
+    if (loc)      params.set('location', loc);
+    if (time)     params.set('timeOfDay', time);
+    if (day)      params.set('dayOfWeek', day);
     if (verified) params.set('verifiedOnly', verified);
     if (search)   params.set('search', search);
 
@@ -179,37 +215,48 @@
 
   // ── Render Gig Card ────────────────────────────────────────────────────────
   function renderGigCard(gig) {
-    const catName  = gig.category?.name || 'General';
-    const catId    = gig.category?.id || 'default';
-    const catIcon  = gig.category?.icon || '';
-    const pillCls  = getCatPillClass(catId);
-    const lockBadge = gig.verifiedOnly
-      ? `<span class="verified-lock">&#x1F512; Verified Only</span>`
-      : '';
+    const catName = gig.category?.name || 'General';
+    const catId   = gig.category?.id || 'default';
+    const pillCls = getCatPillClass(catId);
+    const orgName = gig.org?.orgName || gig.organization?.orgName || '';
+
+    const dateStr = fmtDate(gig.startDate);
+    const dateEnd = gig.endDate && gig.endDate !== gig.startDate ? ` – ${fmtDate(gig.endDate)}` : '';
+
+    const timeLabel = gig.timeOfDay && gig.timeOfDay !== 'flexible'
+      ? (gig.startTime && gig.endTime ? `${gig.startTime} – ${gig.endTime}` : TIME_LABELS[gig.timeOfDay] || gig.timeOfDay)
+      : null;
+
+    const locStr = gig.locationType === 'remote'
+      ? 'Remote'
+      : (gig.locationAddress || gig.location || 'In-Person');
+
+    const hours = gig.estimatedHours || gig.hoursRequired;
+    const lockBadge = gig.verifiedOnly ? `<span class="verified-lock">Verified Only</span>` : '';
 
     return `
       <div class="gig-card" onclick="goToGig('${gig.id}')">
         <div class="gig-card-top">
           <div style="flex:1;min-width:0">
             <div class="gig-title truncate">${gig.title}</div>
-            <div class="gig-org">&#x1F3DB; ${gig.org?.orgName || gig.organization?.orgName || 'Organization'}</div>
+            ${orgName ? `<div class="gig-org" style="display:flex;align-items:center;gap:0.3rem">${SVG.bldg} ${orgName}</div>` : ''}
           </div>
-          <span class="${pillCls}" style="flex-shrink:0">${catIcon} ${catName}</span>
+          <span class="${pillCls}" style="flex-shrink:0">${catName}</span>
         </div>
 
         ${gig.description ? `<p style="font-size:0.825rem;color:var(--text-muted);margin:0.5rem 0 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${gig.description}</p>` : ''}
 
-        <div class="gig-meta">
-          <span class="gig-meta-item">&#x1F4C5; ${formatDate(gig.date)}</span>
-          <span class="gig-meta-item">&#x1F4CD; ${locationType(gig)}</span>
-          ${gig.hoursRequired ? `<span class="gig-meta-item">&#x23F1; ${fmt.hours(gig.hoursRequired)}</span>` : ''}
-          ${gig.pointsReward ? `<span class="gig-meta-item" style="color:var(--primary);font-weight:600">+${gig.pointsReward} pts</span>` : ''}
+        <div class="gig-meta" style="margin-top:0.6rem;display:flex;flex-direction:column;gap:0.3rem">
+          ${dateStr ? `<span class="gig-meta-item" style="display:flex;align-items:center;gap:0.35rem">${SVG.cal} ${dateStr}${dateEnd}</span>` : ''}
+          ${timeLabel ? `<span class="gig-meta-item" style="display:flex;align-items:center;gap:0.35rem">${SVG.clk} ${timeLabel}</span>` : ''}
+          <span class="gig-meta-item" style="display:flex;align-items:center;gap:0.35rem">${SVG.pin} ${locStr}</span>
+          ${hours ? `<span class="gig-meta-item" style="display:flex;align-items:center;gap:0.35rem">${SVG.clk} ${hours} hr${hours !== 1 ? 's' : ''} per session</span>` : ''}
         </div>
 
         <div class="gig-card-footer">
           ${lockBadge || '<span></span>'}
           <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();goToGig('${gig.id}')">
-            View &amp; Apply &#x2192;
+            ${_viewOnly ? 'View &rarr;' : 'View &amp; Apply &rarr;'}
           </button>
         </div>
       </div>

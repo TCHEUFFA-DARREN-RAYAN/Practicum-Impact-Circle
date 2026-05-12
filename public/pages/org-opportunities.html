@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Posted Gigs | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    .gig-card { border:1px solid var(--border); border-radius:12px; padding:1.25rem; background:#fff; margin-bottom:1rem; }
+    .gig-header { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap; }
+    .gig-title { font-weight:700; font-size:0.95rem; margin-bottom:0.2rem; }
+    .gig-meta { display:flex; flex-wrap:wrap; gap:0.5rem; font-size:0.78rem; color:var(--text-muted); margin-top:0.5rem; }
+    .gig-actions { display:flex; gap:0.5rem; margin-top:0.875rem; }
+    .filter-bar { display:flex; gap:0.625rem; flex-wrap:wrap; margin-bottom:1.25rem; align-items:center; }
+    .filter-btn { padding:0.35rem 0.875rem; border-radius:20px; border:1px solid var(--border); font-size:0.82rem; cursor:pointer; background:#fff; transition:all 0.12s; }
+    .filter-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+    .empty-state { text-align:center; padding:4rem 1rem; color:var(--text-muted); }
+  </style>
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside id="sidebar" class="sidebar"></aside>
+<div class="page-content">
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><h1>My Posted Gigs</h1><p class="text-muted">All opportunities your organization has posted</p></div>
+        <a href="/org-gig-create" class="btn btn-primary">+ Post New Gig</a>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <button class="filter-btn active" data-s="" onclick="setF(this,'')">All</button>
+      <button class="filter-btn" data-s="open" onclick="setF(this,'open')">Open</button>
+      <button class="filter-btn" data-s="inProgress" onclick="setF(this,'inProgress')">In Progress</button>
+      <button class="filter-btn" data-s="completed" onclick="setF(this,'completed')">Completed</button>
+      <button class="filter-btn" data-s="cancelled" onclick="setF(this,'cancelled')">Cancelled</button>
+      <input type="search" id="searchBox" placeholder="Search..." oninput="render()" style="margin-left:auto;padding:0.375rem 0.75rem;border:1px solid var(--border);border-radius:8px;font-size:0.875rem">
+    </div>
+
+    <div id="list"><div style="text-align:center;padding:3rem"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/footer.js"></script>
+<script>
+API.requireAuth('org');
+let all = [], filterStatus = '';
+
+const STATUS_STYLES = {
+  open:       'background:#dcfce7;color:#166534',
+  inProgress: 'background:#dbeafe;color:#1e40af',
+  completed:  'background:#f3f4f6;color:#374151',
+  cancelled:  'background:#fee2e2;color:#991b1b',
+  draft:      'background:#fef9c3;color:#92400e',
+};
+
+function setF(btn, s) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterStatus = s;
+  render();
+}
+
+function render() {
+  const searchEl = document.getElementById('searchBox');
+  const q = ((searchEl && searchEl.value) || '').toLowerCase();
+  let list = all;
+  if (filterStatus) list = list.filter(g => g.status === filterStatus);
+  if (q) list = list.filter(g => (g.title||'').toLowerCase().includes(q));
+  if (!list.length) {
+    document.getElementById('list').innerHTML = `<div class="empty-state">
+      <p>No gigs found.</p>
+      <a href="/org-gig-create" class="btn btn-primary" style="margin-top:0.75rem">Post Your First Gig</a>
+    </div>`;
+    return;
+  }
+  document.getElementById('list').innerHTML = list.map(g => `
+    <div class="gig-card">
+      <div class="gig-header">
+        <div>
+          <div class="gig-title">${g.title}</div>
+          <div class="gig-meta">
+            <span>📅 ${fmt.date(g.startDate)} – ${fmt.date(g.endDate)}</span>
+            <span>⏱ ${g.estimatedHours||'?'}h total</span>
+            <span>👥 ${g.applicantCount != null ? g.applicantCount : 0} applicants</span>
+            ${g.category?`<span style="background:${g.category.colorHex||'#6366f1'};color:#fff;padding:0.1rem 0.5rem;border-radius:20px;font-size:0.72rem">${g.category.name}</span>`:''}
+          </div>
+        </div>
+        <span class="badge" style="${STATUS_STYLES[g.status]||'background:#f3f4f6;color:#374151'}">${g.status}</span>
+      </div>
+      <div class="gig-actions">
+        <a href="/gigs/${g.id}" class="btn btn-sm btn-secondary">View</a>
+        <a href="/org/applications?gig=${g.id}" class="btn btn-sm btn-secondary">Applicants</a>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function load() {
+  try {
+    const res = await API.get('/orgs/me/dashboard');
+    const data = res && res.data;
+    all = (data && Array.isArray(data.gigs)) ? data.gigs : [];
+    render();
+  } catch (e) {
+    document.getElementById('list').innerHTML = `<div class="empty-state">${(e && e.message) || 'Could not load gigs.'}</div>`;
+  }
+}
+
+load();
+</script>
+</body>
+</html>

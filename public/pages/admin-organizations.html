@@ -57,18 +57,18 @@
     <div class="modal-body">
       <div id="editAlert"></div>
       <div class="form-row">
-        <div class="form-group"><label>Organization Name</label><input type="text" id="eOrgName"><span class="field-error"></span></div>
-        <div class="form-group"><label>Address</label><input type="text" id="eAddress"></div>
+        <div class="form-group"><label>Organization Name <span class="required">*</span></label><input type="text" id="eOrgName"><span class="field-error"></span></div>
+        <div class="form-group"><label>Address <span class="required">*</span></label><input type="text" id="eAddress"><span class="field-error"></span></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>Contact Name</label><input type="text" id="eContactName"></div>
+        <div class="form-group"><label>Contact Name <span class="required">*</span></label><input type="text" id="eContactName"><span class="field-error"></span></div>
         <div class="form-group"><label>Contact Email</label><input type="email" id="eContactEmail"></div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Contact Phone</label><input type="text" id="eContactPhone"></div>
         <div class="form-group"><label>Website</label><input type="url" id="eWebsite"></div>
       </div>
-      <div class="form-group"><label>Mission Statement</label><textarea id="eMission" rows="3"></textarea></div>
+      <div class="form-group"><label>Mission Statement <span class="required">*</span></label><textarea id="eMission" rows="3"></textarea><span class="field-error"></span></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('editModal')">Cancel</button>
@@ -83,6 +83,7 @@
 <script>
 API.requireAuth('admin');
 let currentOrgId = null;
+let currentOrgIsDeactivated = false;
 
 async function load() {
   try {
@@ -100,7 +101,7 @@ async function load() {
           <div style="display:flex;gap:0.375rem;flex-wrap:wrap">
             <button class="btn btn-sm btn-secondary" onclick="viewOrg('${o.id}')">View</button>
             <button class="btn btn-sm btn-warning" onclick="openEdit('${o.id}')">Edit</button>
-            <button class="btn btn-sm btn-danger" onclick="confirmDelete('${o.id}')">Deactivate</button>
+            ${!(u?.isBlocked || u?.verificationStatus === 'rejected') ? `<button class="btn btn-sm btn-danger" onclick="confirmDelete('${o.id}')">Deactivate</button>` : `<span class="badge badge-rejected" style="font-size:0.7rem;padding:0.3rem 0.6rem">Deactivated</span>`}
           </div>
         </td>
       </tr>`;
@@ -116,6 +117,9 @@ async function viewOrg(id) {
     const { data } = await API.get(`/admin/organizations/${id}`);
     const o = data.organization;
     const u = o.User || o.user;
+    currentOrgIsDeactivated = !!(u?.isBlocked || u?.verificationStatus === 'rejected');
+    const deactivateBtn = document.querySelector('#viewModal .modal-footer .btn-danger');
+    if (deactivateBtn) deactivateBtn.style.display = currentOrgIsDeactivated ? 'none' : '';
     document.getElementById('viewTitle').textContent = o.orgName;
     document.getElementById('viewBody').innerHTML = `
       <div class="detail-row"><span class="detail-label">Organization</span><span>${o.orgName}</span></div>
@@ -153,17 +157,50 @@ async function openEdit(id) {
 
 async function saveEdit() {
   if (!currentOrgId) return;
+  document.getElementById('editAlert').innerHTML = '';
+
+  const orgNameEl    = document.getElementById('eOrgName');
+  const contactNameEl= document.getElementById('eContactName');
+  const addressEl    = document.getElementById('eAddress');
+  const missionEl    = document.getElementById('eMission');
+
+  // Clear previous errors
+  [orgNameEl, contactNameEl, addressEl, missionEl].forEach(el => {
+    el.classList.remove('error');
+    const err = el.closest('.form-group')?.querySelector('.field-error');
+    if (err) { err.textContent = ''; err.classList.remove('show'); }
+  });
+
+  let valid = true;
+  if (!orgNameEl.value.trim()) {
+    orgNameEl.classList.add('error');
+    Validator.showError(orgNameEl, 'Organization name is required.'); valid = false;
+  }
+  if (!contactNameEl.value.trim()) {
+    Validator.showError(contactNameEl, 'Contact name is required.'); valid = false;
+  }
+  if (!addressEl.value.trim()) {
+    Validator.showError(addressEl, 'Address is required.'); valid = false;
+  }
+  if (missionEl.value.trim().length > 0 && missionEl.value.trim().length < 20) {
+    Validator.showError(missionEl, 'Mission statement must be at least 20 characters.'); valid = false;
+  }
+  if (!missionEl.value.trim()) {
+    Validator.showError(missionEl, 'Mission statement is required.'); valid = false;
+  }
+  if (!valid) return;
+
   const btn = document.getElementById('saveEditBtn');
   btn.disabled = true;
   try {
     await API.put(`/admin/organizations/${currentOrgId}`, {
-      orgName: document.getElementById('eOrgName').value.trim(),
-      address: document.getElementById('eAddress').value.trim(),
-      contactName: document.getElementById('eContactName').value.trim(),
+      orgName: orgNameEl.value.trim(),
+      address: addressEl.value.trim(),
+      contactName: contactNameEl.value.trim(),
       contactEmail: document.getElementById('eContactEmail').value.trim(),
       contactPhone: document.getElementById('eContactPhone').value.trim(),
       website: document.getElementById('eWebsite').value.trim(),
-      missionStatement: document.getElementById('eMission').value.trim(),
+      missionStatement: missionEl.value.trim(),
     });
     Toast.success('Organization updated.');
     closeModal('editModal');

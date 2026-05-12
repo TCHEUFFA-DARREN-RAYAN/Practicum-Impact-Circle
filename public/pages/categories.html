@@ -61,7 +61,6 @@
       transform: translateY(-3px); border-color: #0EA5E9;
       text-decoration: none;
     }
-    .category-emoji { font-size: 2rem; margin-bottom: 0.75rem; display: block; }
     .category-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.25rem; }
     .category-card span { font-size: 0.8rem; color: var(--text-muted); }
     #categories-loading { text-align: center; padding: 3rem; color: var(--text-muted); }
@@ -121,24 +120,6 @@
 <script src="/js/nav.js"></script>
 <script src="/js/footer.js"></script>
 <script>
-  const CATEGORY_EMOJIS = {
-    'Education':           '📚',
-    'Environment':         '🌿',
-    'Health & Wellness':   '❤️',
-    'Community Support':   '🤝',
-    'Arts & Culture':      '🎨',
-    'Animal Welfare':      '🐾',
-    'Elderly Care':        '👴',
-    'Youth Programs':      '🧒',
-    'Food & Nutrition':    '🍽️',
-    'Sports & Recreation': '⚽',
-    'Technology':          '💻',
-    'Disaster Relief':     '🆘',
-    'Housing & Shelter':   '🏠',
-    'Legal Aid':           '⚖️',
-    'Mental Health':       '🧠',
-  };
-
   async function loadCategories() {
     const grid = document.getElementById('categories-grid');
     const loading = document.getElementById('categories-loading');
@@ -153,7 +134,6 @@
       grid.style.display = 'grid';
       grid.innerHTML = cats.map(c => `
         <a href="/upcoming-shifts?category=${encodeURIComponent(c.name || c)}" class="category-card">
-          <span class="category-emoji">${CATEGORY_EMOJIS[c.name || c] || '🌟'}</span>
           <h3>${c.name || c}</h3>
           ${c.gigCount !== undefined ? `<span>${c.gigCount} opportunity${c.gigCount !== 1 ? 's' : ''}</span>` : ''}
         </a>

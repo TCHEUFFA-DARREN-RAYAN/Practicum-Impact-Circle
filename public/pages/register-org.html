@@ -187,8 +187,10 @@
 
   // ── Category dropdown ─────────────────────────────────────────
   const ORG_CATEGORIES = [
-    'Food Security', 'Women Support', 'Youth Development', 'Seniors Support',
-    'Environment', 'Education', 'Newcomer Integration', 'Volunteer Opportunities'
+    'Food Security & Nutrition', 'Newcomer & Cultural Integration', 'Shelter & Housing Support',
+    'Youth & Children', 'Health & Palliative Care', 'Disability & Special Needs',
+    'Community Coordination', 'Faith & Spiritual Support', 'Social Clubs',
+    'Industry Associations', 'Govt & Crown Corporations'
   ];
   let orgCatList = [];
 
@@ -291,9 +293,21 @@
     if (!Validator.required(phone.value)) {
       Validator.showError(phone, 'Contact phone is required.');
       ok = false;
+    } else {
+      const digits = phone.value.replace(/\D/g, '');
+      if (digits.length < 7 || digits.length > 15) {
+        Validator.showError(phone, 'Enter a valid phone number (7–15 digits).');
+        ok = false;
+      }
     }
-    if (!Validator.password(password.value)) {
-      Validator.showError(password, 'Min 8 characters, 1 uppercase letter, 1 number.');
+    if (!password.value || password.value.length < 8) {
+      Validator.showError(password, 'Password must be at least 8 characters.');
+      ok = false;
+    } else if (!/[A-Z]/.test(password.value)) {
+      Validator.showError(password, 'Password must contain at least one uppercase letter.');
+      ok = false;
+    } else if (!/[0-9]/.test(password.value)) {
+      Validator.showError(password, 'Password must contain at least one number.');
       ok = false;
     }
     if (password.value !== confirm.value) {

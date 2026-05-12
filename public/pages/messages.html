@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messages | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    /* Extra top padding so fixed navbar + sidebar header never clip the "+ New" row */
+    .page-content--messages { padding-left: 1rem; padding-right: 1rem; padding-bottom: 1rem; }
+    .chat-layout { display:grid; grid-template-columns:300px 1fr; height:calc(100vh - var(--nav-height, 64px) - 3rem); max-height: calc(100vh - var(--nav-height, 64px) - 3rem); gap:0; border:1px solid var(--border); border-radius:12px; overflow:hidden; background:#fff; margin-top: 0.5rem; }
+    @media(max-width:720px){ .chat-layout{ grid-template-columns:1fr; } .conv-list{ display:none; } .conv-list.show{ display:flex; } .chat-pane{ display:none; } .chat-pane.show{ display:flex; } }
+    .conv-list { flex-direction:column; border-right:1px solid var(--border); overflow:hidden; }
+    .conv-list-header { padding:1rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+    .conv-list-header h3 { margin:0; font-size:1rem; font-weight:700; }
+    .conv-search { padding:0.5rem 1rem; border-bottom:1px solid var(--border); }
+    .conv-search input { width:100%; padding:0.4rem 0.75rem; border:1px solid var(--border); border-radius:20px; font-size:0.82rem; outline:none; }
+    .conv-scroll { flex:1; overflow-y:auto; }
+    .conv-item { display:flex; gap:0.75rem; padding:0.875rem 1rem; cursor:pointer; border-bottom:1px solid var(--border); transition:background 0.1s; align-items:flex-start; }
+    .conv-item:hover { background:#f8fafc; }
+    .conv-item.active { background:#eff6ff; }
+    .conv-av { width:40px; height:40px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; font-size:1rem; overflow:hidden; flex-shrink:0; }
+    .conv-av img { width:100%; height:100%; object-fit:cover; }
+    .conv-name { font-weight:600; font-size:0.875rem; }
+    .conv-last { font-size:0.78rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px; }
+    .conv-time { font-size:0.72rem; color:var(--text-muted); white-space:nowrap; }
+    .unread-dot { background:var(--primary); color:#fff; border-radius:50%; width:18px; height:18px; font-size:0.65rem; font-weight:700; display:flex; align-items:center; justify-content:center; margin-left:auto; flex-shrink:0; }
+    .chat-pane { flex-direction:column; }
+    .chat-header { padding:0.875rem 1.25rem; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:0.75rem; }
+    .chat-header-av { width:36px; height:36px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; overflow:hidden; flex-shrink:0; }
+    .chat-header-av img { width:100%; height:100%; object-fit:cover; }
+    .chat-messages { flex:1; overflow-y:auto; padding:1rem 1.25rem; display:flex; flex-direction:column; gap:0.5rem; }
+    .msg-row { display:flex; }
+    .msg-row.mine { justify-content:flex-end; }
+    .msg-bubble { max-width:70%; padding:0.6rem 0.875rem; border-radius:14px; font-size:0.875rem; line-height:1.5; word-break:break-word; }
+    .msg-row:not(.mine) .msg-bubble { background:#f1f5f9; color:var(--text); border-bottom-left-radius:4px; }
+    .msg-row.mine .msg-bubble { background:var(--primary); color:#fff; border-bottom-right-radius:4px; }
+    .msg-time { font-size:0.65rem; opacity:0.6; margin-top:2px; text-align:right; }
+    .chat-input-wrap { padding:0.875rem 1.25rem; border-top:1px solid var(--border); display:flex; gap:0.625rem; align-items:flex-end; }
+    .chat-input { flex:1; border:1px solid var(--border); border-radius:20px; padding:0.5rem 1rem; font-size:0.875rem; resize:none; outline:none; max-height:100px; overflow-y:auto; font-family:inherit; line-height:1.4; }
+    .chat-input:focus { border-color:var(--primary); }
+    .send-btn { background:var(--primary); border:none; border-radius:50%; width:38px; height:38px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:opacity 0.12s; }
+    .send-btn:hover { opacity:0.85; }
+    .empty-chat { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-muted); text-align:center; padding:2rem; }
+    .new-chat-btn { background:none; border:1px solid var(--border); border-radius:8px; padding:0.375rem 0.625rem; font-size:0.78rem; cursor:pointer; display:flex; align-items:center; gap:0.3rem; }
+    .new-chat-btn:hover { background:#f8fafc; }
+    .search-users-drop { position:absolute; background:#fff; border:1px solid var(--border); border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.1); z-index:100; width:270px; }
+    .role-picker { display:flex; gap:0.4rem; padding:0.625rem; border-bottom:1px solid var(--border); }
+    .role-btn { flex:1; padding:0.35rem 0.3rem; border:1px solid var(--border); border-radius:6px; background:#fff; font-size:0.78rem; font-weight:600; cursor:pointer; text-align:center; transition:background 0.1s,border-color 0.1s,color 0.1s; }
+    .role-btn:hover { background:#f0f4ff; border-color:var(--primary); color:var(--primary); }
+    .role-btn.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+    .user-list-panel { max-height:240px; overflow-y:auto; }
+    .search-user-item { padding:0.625rem 0.875rem; cursor:pointer; display:flex; align-items:center; gap:0.625rem; font-size:0.85rem; }
+    .search-user-item:hover { background:#f8fafc; }
+    .search-av { width:28px; height:28px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700; color:#fff; }
+  </style>
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside id="sidebar" class="sidebar"></aside>
+<div class="page-content page-content--messages">
+  <div style="position:relative">
+    <div class="chat-layout" id="chatLayout">
+      <!-- Conversations list -->
+      <div class="conv-list show" id="convList">
+        <div class="conv-list-header">
+          <h3>Messages</h3>
+          <div style="position:relative">
+            <button class="new-chat-btn" onclick="toggleNewChat()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> New
+            </button>
+            <div id="newChatDrop" style="display:none;position:absolute;top:calc(100% + 6px);right:0" class="search-users-drop">
+              <div class="role-picker">
+                <button class="role-btn" id="roleVolunteer" onclick="selectRole('volunteer')">Volunteer</button>
+                <button class="role-btn" id="roleOrg"       onclick="selectRole('org')">Org</button>
+                <button class="role-btn" id="roleAdmin"     onclick="selectRole('admin')">Admin</button>
+              </div>
+              <div id="roleUserPanel" style="display:none">
+                <div style="padding:0.4rem 0.625rem;border-bottom:1px solid var(--border)">
+                  <input type="search" id="userSearch" placeholder="Search by email…" style="width:100%;padding:0.35rem 0.625rem;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;outline:none" oninput="searchUsers(this.value)">
+                </div>
+                <div id="userResults" class="user-list-panel"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="conv-scroll" id="convScroll">
+          <div style="text-align:center;padding:2rem"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <!-- Chat pane -->
+      <div class="chat-pane show" id="chatPane" style="display:flex">
+        <div class="empty-chat" id="emptyChat">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" style="opacity:0.3;margin-bottom:1rem"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <p style="margin:0;font-size:0.9rem">Select a conversation or start a new one</p>
+        </div>
+        <div id="activeChat" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+          <div class="chat-header" id="chatHeader"></div>
+          <div class="chat-messages" id="chatMessages"></div>
+          <div class="chat-input-wrap">
+            <textarea class="chat-input" id="msgInput" rows="1" placeholder="Type a message…" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+            <button class="send-btn" onclick="sendMessage()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/footer.js"></script>
+<script>
+let convs = [], activeConvId = null, pollTimer = null;
+
+function fmtTime(d) {
+  if (!d) return '';
+  const dt = new Date(d), now = new Date();
+  if (now - dt < 86400000) return dt.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+  return dt.toLocaleDateString('en-CA', { month:'short', day:'numeric' });
+}
+
+function avatarHtml(p, cls='conv-av') {
+  const init = ((p.name||p.email||'?')[0]).toUpperCase();
+  if (p.avatarUrl && p.id) return `<div class="${cls}"><img src="/api/uploads/${p.id}/${p.avatarUrl}" alt="${init}"></div>`;
+  if (p.logoUrl && p.id)   return `<div class="${cls}"><img src="/api/uploads/${p.id}/${p.logoUrl}" alt="${init}"></div>`;
+  return `<div class="${cls}">${init}</div>`;
+}
+
+function renderConvList() {
+  if (!convs.length) {
+    document.getElementById('convScroll').innerHTML = `<div style="text-align:center;padding:2rem;color:var(--text-muted);font-size:0.875rem">No messages yet.<br>Click <strong>+ New</strong> to start a conversation.</div>`;
+    return;
+  }
+  document.getElementById('convScroll').innerHTML = convs.map(c => `
+    <div class="conv-item${c.id===activeConvId?' active':''}" onclick="openConv(${c.id})">
+      ${avatarHtml(c.partner)}
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="conv-name">${c.partner.name||c.partner.email}</div>
+          ${c.lastMessage?`<div class="conv-time">${fmtTime(c.lastMessage.createdAt)}</div>`:''}
+        </div>
+        <div class="conv-last">${c.lastMessage?(c.lastMessage.mine?'You: ':'')+c.lastMessage.body:'No messages yet'}</div>
+      </div>
+      ${c.unread?`<div class="unread-dot">${c.unread}</div>`:''}
+    </div>
+  `).join('');
+}
+
+async function loadConversations() {
+  try {
+    const { data } = await API.get('/messages/conversations');
+    convs = data.conversations;
+    renderConvList();
+    const params = new URLSearchParams(window.location.search);
+    const conv = params.get('conv');
+    if (conv) openConv(parseInt(conv));
+  } catch(e) {}
+}
+
+async function openConv(id) {
+  activeConvId = id;
+  clearInterval(pollTimer);
+  renderConvList();
+  document.getElementById('emptyChat').style.display = 'none';
+  document.getElementById('activeChat').style.display = 'flex';
+  await loadMessages(id);
+  pollTimer = setInterval(() => loadMessages(id), 4000);
+}
+
+async function loadMessages(id) {
+  try {
+    const { data } = await API.get(`/messages/conversations/${id}`);
+    const p = data.partner;
+    document.getElementById('chatHeader').innerHTML = `
+      ${avatarHtml(p, 'chat-header-av')}
+      <div>
+        <div style="font-weight:700;font-size:0.9rem">${p.name||p.email}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted)">${p.email} · ${p.role}</div>
+      </div>
+      <button class="btn btn-sm btn-secondary" style="margin-left:auto" onclick="window.open('/messages','_self')">← Back</button>
+    `;
+    const msgs = data.messages;
+    const box = document.getElementById('chatMessages');
+    const wasAtBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+    box.innerHTML = msgs.length ? msgs.map(m => `
+      <div class="msg-row${m.mine?' mine':''}">
+        <div>
+          <div class="msg-bubble">${escHtml(m.body)}</div>
+          <div class="msg-time">${fmtTime(m.createdAt)}</div>
+        </div>
+      </div>
+    `).join('') : '<div style="text-align:center;color:var(--text-muted);font-size:0.85rem;padding:2rem">No messages yet. Say hello!</div>';
+    if (wasAtBottom) box.scrollTop = box.scrollHeight;
+    const c = convs.find(c=>c.id===id);
+    if (c) { c.unread = 0; renderConvList(); }
+  } catch(e) {}
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+async function sendMessage() {
+  const input = document.getElementById('msgInput');
+  const body = input.value.trim();
+  if (!body || !activeConvId) return;
+  input.value = ''; autoResize(input);
+  try {
+    await API.post(`/messages/conversations/${activeConvId}/send`, { body });
+    await loadMessages(activeConvId);
+    const box = document.getElementById('chatMessages');
+    box.scrollTop = box.scrollHeight;
+  } catch(e) { Toast.error(e.message); }
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+
+let newChatOpen = false, selectedRole = null;
+
+function toggleNewChat() {
+  newChatOpen = !newChatOpen;
+  document.getElementById('newChatDrop').style.display = newChatOpen ? 'block' : 'none';
+  if (newChatOpen) {
+    selectedRole = null;
+    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('roleUserPanel').style.display = 'none';
+    document.getElementById('userResults').innerHTML = '';
+  }
+}
+
+document.addEventListener('click', e => {
+  if (newChatOpen && !e.target.closest('#newChatDrop') && !e.target.closest('.new-chat-btn')) {
+    newChatOpen = false; document.getElementById('newChatDrop').style.display = 'none';
+  }
+});
+
+async function selectRole(role) {
+  selectedRole = role;
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('role' + role.charAt(0).toUpperCase() + role.slice(1)).classList.add('active');
+  document.getElementById('roleUserPanel').style.display = 'block';
+  document.getElementById('userSearch').value = '';
+  document.getElementById('userSearch').focus();
+  await loadUsersByRole('');
+}
+
+let searchTimer = null;
+function searchUsers(q) {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => loadUsersByRole(q), 280);
+}
+
+async function loadUsersByRole(q) {
+  if (!selectedRole) return;
+  try {
+    let url = `/messages/users?role=${encodeURIComponent(selectedRole)}`;
+    if (q.trim()) url += `&q=${encodeURIComponent(q.trim())}`;
+    const { data } = await API.get(url);
+    document.getElementById('userResults').innerHTML = data.users.length
+      ? data.users.map(u => `<div class="search-user-item" onclick="startConvWith(${u.id})">
+          <div class="search-av">${(u.name||u.email||'?')[0].toUpperCase()}</div>
+          <div><div style="font-weight:600">${u.name||u.email}</div><div style="font-size:0.72rem;color:var(--text-muted)">${u.email}</div></div>
+        </div>`).join('')
+      : '<div style="padding:0.75rem;text-align:center;color:var(--text-muted);font-size:0.82rem">No users found</div>';
+  } catch {}
+}
+
+async function startConvWith(userId) {
+  newChatOpen = false; document.getElementById('newChatDrop').style.display='none';
+  try {
+    const { data } = await API.post('/messages/conversations', { partnerId: userId });
+    await loadConversations();
+    openConv(data.conversationId);
+  } catch(e) { Toast.error(e.message); }
+}
+
+// Init
+API.requireAuth();
+loadConversations();
+</script>
+</body>
+</html>

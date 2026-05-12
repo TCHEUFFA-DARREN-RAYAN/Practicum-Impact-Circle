@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Impact | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    .stat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:1rem; margin-bottom:1.5rem; }
+    .stat-box { background:#fff; border:1px solid var(--border); border-radius:12px; padding:1.25rem; text-align:center; }
+    .stat-num { font-size:2rem; font-weight:800; color:var(--primary); }
+    .stat-lbl { font-size:0.8rem; color:var(--text-muted); margin-top:0.25rem; }
+    .cat-row { display:flex; align-items:center; gap:0.875rem; padding:0.875rem 0; border-bottom:1px solid var(--border); }
+    .cat-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+    .cat-bar-wrap { flex:1; height:8px; background:var(--border); border-radius:4px; overflow:hidden; }
+    .cat-bar { height:100%; border-radius:4px; }
+    .empty-state { text-align:center; padding:4rem 1rem; color:var(--text-muted); }
+  </style>
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside id="sidebar" class="sidebar"></aside>
+<div class="page-content">
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><h1>My Impact</h1><p class="text-muted">See the difference you're making</p></div>
+      </div>
+    </div>
+
+    <div id="content"><div style="text-align:center;padding:3rem"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/footer.js"></script>
+<script>
+API.requireAuth('volunteer');
+
+async function load() {
+  try {
+    const { data } = await API.get('/volunteers/me/dashboard');
+    const stats = data.stats || {};
+    const catHours = Array.isArray(data.categoryHours) ? data.categoryHours : [];
+    const maxHours = catHours.reduce((m,c) => Math.max(m, c.hours||0), 1);
+
+    document.getElementById('content').innerHTML = `
+      <div class="stat-grid">
+        <div class="stat-box"><div class="stat-num">${stats.totalHours||0}</div><div class="stat-lbl">Total Hours Contributed</div></div>
+        <div class="stat-box"><div class="stat-num">${stats.gigCount||0}</div><div class="stat-lbl">Gigs Completed</div></div>
+        <div class="stat-box"><div class="stat-num">${stats.redeemablePoints||0}</div><div class="stat-lbl">Points Earned</div></div>
+        <div class="stat-box"><div class="stat-num">${catHours.length}</div><div class="stat-lbl">Impact Categories</div></div>
+      </div>
+
+      <div class="card" style="padding:1.5rem;margin-bottom:1.25rem">
+        <h3 style="margin-bottom:1rem;font-size:1rem">Hours by Impact Category</h3>
+        ${catHours.length ? catHours.map(c => `
+          <div class="cat-row">
+            <div class="cat-dot" style="background:${c.category&&c.category.colorHex||'var(--primary)'}"></div>
+            <div style="min-width:140px;font-size:0.875rem;font-weight:600">${c.category&&c.category.name||'—'}</div>
+            <div class="cat-bar-wrap"><div class="cat-bar" style="width:${Math.round((c.hours/maxHours)*100)}%;background:${c.category&&c.category.colorHex||'var(--primary)'}"></div></div>
+            <div style="min-width:50px;text-align:right;font-size:0.875rem;font-weight:700;color:var(--text)">${c.hours}h</div>
+          </div>`).join('') : '<p class="text-muted" style="text-align:center;padding:1rem">Complete your first gig to see your impact here!</p>'}
+      </div>
+
+      ${data.eligibleRewards && data.eligibleRewards.length ? `
+      <div class="card" style="padding:1.5rem">
+        <h3 style="margin-bottom:1rem;font-size:1rem">Rewards You Can Redeem</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0.875rem">
+          ${data.eligibleRewards.map(r => `<div style="border:1px solid var(--border);border-radius:10px;padding:1rem">
+            <div style="font-weight:700;margin-bottom:0.25rem">${r.name}</div>
+            <div style="font-size:0.8rem;color:var(--text-muted)">${r.description||''}</div>
+            <div style="margin-top:0.5rem;font-weight:700;color:var(--primary)">${r.pointsRequired} pts</div>
+          </div>`).join('')}
+        </div>
+      </div>` : ''}
+    `;
+  } catch(e) { document.getElementById('content').innerHTML=`<div class="empty-state">${e.message}</div>`; }
+}
+
+load();
+</script>
+</body>
+</html>

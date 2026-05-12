@@ -10,7 +10,7 @@ const { sendEmail, templates } = require('../services/email');
 router.get('/', optionalAuth, async (req, res, next) => {
   try {
     const {
-      category, location, timeOfDay, dateFrom, dateTo,
+      category, location, timeOfDay, dayOfWeek, dateFrom, dateTo,
       org, search, minHours, maxHours, sortBy = 'createdAt',
       page = 1, limit = Math.min(parseInt(req.query.limit) || 12, 50),
     } = req.query;
@@ -18,6 +18,7 @@ router.get('/', optionalAuth, async (req, res, next) => {
     if (category) where.categoryId = parseInt(category);
     if (location) where.locationType = location;
     if (timeOfDay) where.timeOfDay = timeOfDay;
+    if (dayOfWeek) where.recurrenceDays = { [Op.like]: `%${dayOfWeek}%` };
     if (org) where.orgId = parseInt(org);
     if (dateFrom || dateTo) {
       where.startDate = {};
@@ -60,6 +61,24 @@ router.get('/:id/my-application', requireAuth, requireRole('volunteer'), async (
   } catch (err) { next(err); }
 });
 
+router.get('/:id/applications', requireAuth, requireRole('org'), async (req, res, next) => {
+  try {
+    const org = await Organization.findOne({ where: { userId: req.user.id } });
+    const gig = await Gig.findOne({ where: { id: req.params.id, orgId: org.id } });
+    if (!gig) return res.status(404).json({ success: false, message: 'Gig not found.' });
+
+    const applications = await Application.findAll({
+      where: { gigId: gig.id },
+      include: [{
+        model: User, as: 'volunteer', attributes: ['id', 'email', 'verificationStatus', 'avatarUrl'],
+        include: [{ model: VolunteerProfile, as: 'volunteerProfile' }],
+      }],
+      order: [['createdAt', 'DESC']],
+    });
+    res.json({ success: true, data: { applications, gig } });
+  } catch (err) { next(err); }
+});
+
 router.get('/:id', async (req, res, next) => {
   try {
     const gig = await Gig.findByPk(req.params.id, {
@@ -75,7 +94,7 @@ router.get('/:id', async (req, res, next) => {
 
 router.post('/', requireAuth, requireRole('org'), [
   body('title').trim().notEmpty().withMessage('Title is required.'),
-  body('description').trim().isLength({ min: 20 }).withMessage('Description must be at least 20 characters.'),
+  body('description').trim().notEmpty().withMessage('Description is required.'),
   body('categoryId').notEmpty().withMessage('Category is required.'),
   body('startDate').isISO8601().withMessage('Valid start date required.'),
   body('endDate').isISO8601().withMessage('Valid end date required.'),
@@ -183,24 +202,6 @@ router.post('/:id/apply', requireAuth, requireRole('volunteer'), [
     if (org) await createNotification(org.userId, `New application received for "${gig.title}"`, 'application', '/org-dashboard');
 
     res.status(201).json({ success: true, message: 'Application submitted.', data: { application } });
-  } catch (err) { next(err); }
-});
-
-router.get('/:id/applications', requireAuth, requireRole('org'), async (req, res, next) => {
-  try {
-    const org = await Organization.findOne({ where: { userId: req.user.id } });
-    const gig = await Gig.findOne({ where: { id: req.params.id, orgId: org.id } });
-    if (!gig) return res.status(404).json({ success: false, message: 'Gig not found.' });
-
-    const applications = await Application.findAll({
-      where: { gigId: gig.id },
-      include: [{
-        model: User, as: 'volunteer', attributes: ['id', 'email', 'verificationStatus'],
-        include: [{ model: VolunteerProfile, as: 'volunteerProfile' }],
-      }],
-      order: [['createdAt', 'DESC']],
-    });
-    res.json({ success: true, data: { applications, gig } });
   } catch (err) { next(err); }
 });
 

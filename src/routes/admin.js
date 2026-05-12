@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { fn, col, literal } = require('sequelize');
+const { fn, col, literal, Op } = require('sequelize');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { User, VolunteerProfile, Organization, Category, Gig, Application, Reward, Task, HourRecord, AuditLog, Notification } = require('../models/index');
 const { createNotification } = require('../services/notifications');
@@ -76,7 +76,11 @@ router.get('/users', ...adminAuth, async (req, res, next) => {
   try {
     const { role, status, page = 1, limit = 20 } = req.query;
     const where = {};
-    if (role) where.role = role;
+    if (role) {
+      where.role = role;
+    } else {
+      where.role = { [Op.notIn]: ['org'] };
+    }
     if (status) where.verificationStatus = status;
     const offset = (parseInt(page) - 1) * parseInt(limit);
     const { count: total, rows: users } = await User.findAndCountAll({ where, attributes: { exclude: ['passwordHash'] }, order: [['createdAt', 'DESC']], offset, limit: parseInt(limit) });
@@ -384,6 +388,71 @@ router.get('/analytics.csv', ...adminAuth, async (req, res, next) => {
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="analytics.csv"');
     res.send(lines.join('\n'));
+  } catch (err) { next(err); }
+});
+
+router.get('/gigs/:id/applications', ...adminAuth, async (req, res, next) => {
+  try {
+    const gig = await Gig.findByPk(req.params.id, {
+      include: [
+        { model: Organization, as: 'org', attributes: ['orgName'] },
+        { model: Category, as: 'category', attributes: ['name', 'colorHex'] },
+      ],
+    });
+    if (!gig) return res.status(404).json({ success: false, message: 'Gig not found.' });
+    const applications = await Application.findAll({
+      where: { gigId: gig.id },
+      include: [{ model: User, as: 'volunteer', attributes: ['id', 'email', 'verificationStatus', 'avatarUrl'],
+        include: [{ model: VolunteerProfile, as: 'volunteerProfile' }] }],
+      order: [['createdAt', 'DESC']],
+    });
+    res.json({ success: true, data: { gig, applications } });
+  } catch (err) { next(err); }
+});
+
+router.patch('/gigs/:gigId/applications/:appId/decide', ...adminAuth, async (req, res, next) => {
+  try {
+    const { decision, reason } = req.body;
+    if (!['approved', 'rejected'].includes(decision))
+      return res.status(400).json({ success: false, message: 'Decision must be approved or rejected.' });
+    const app = await Application.findByPk(req.params.appId);
+    if (!app) return res.status(404).json({ success: false, message: 'Application not found.' });
+    if (String(app.gigId) !== String(req.params.gigId))
+      return res.status(400).json({ success: false, message: 'Application does not belong to this gig.' });
+    await app.update({ status: decision, decisionReason: reason || null, decidedAt: new Date() });
+    res.json({ success: true, message: `Application ${decision}.` });
+  } catch (err) { next(err); }
+});
+
+router.get('/calendar', ...adminAuth, async (req, res, next) => {
+  try {
+    const year = parseInt(req.query.year) || new Date().getFullYear();
+    const month = parseInt(req.query.month) || (new Date().getMonth() + 1);
+    const startOfMonth = `${year}-${String(month).padStart(2,'0')}-01`;
+    const endDate = new Date(year, month, 0);
+    const endOfMonth = `${year}-${String(month).padStart(2,'0')}-${String(endDate.getDate()).padStart(2,'0')}`;
+    const gigs = await Gig.findAll({
+      where: { startDate: { [Op.lte]: endOfMonth }, endDate: { [Op.gte]: startOfMonth } },
+      attributes: ['id', 'title', 'startDate', 'endDate', 'startTime', 'endTime', 'locationType'],
+      include: [
+        { model: Organization, as: 'org', attributes: ['orgName'] },
+        { model: Category, as: 'category', attributes: ['name', 'colorHex'] },
+        { model: Task, foreignKey: 'gigId',
+          where: { status: { [Op.in]: ['accepted', 'inProgress', 'completed', 'approved'] } },
+          required: false,
+          include: [{ model: User, as: 'volunteer', attributes: ['id', 'email', 'avatarUrl'],
+            include: [{ model: VolunteerProfile, as: 'volunteerProfile', attributes: ['firstName', 'lastName'] }] }] },
+      ],
+    });
+    const byDate = {};
+    gigs.forEach(g => {
+      for (let d = new Date(g.startDate); d <= new Date(g.endDate); d.setDate(d.getDate() + 1)) {
+        const key = d.toISOString().slice(0, 10);
+        if (!byDate[key]) byDate[key] = [];
+        byDate[key].push(g.toJSON());
+      }
+    });
+    res.json({ success: true, data: { calendar: byDate, year, month } });
   } catch (err) { next(err); }
 });
 

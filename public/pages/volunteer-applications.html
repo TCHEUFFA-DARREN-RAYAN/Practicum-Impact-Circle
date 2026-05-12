@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Applications | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    .app-card { border:1px solid var(--border); border-radius:12px; padding:1.25rem; background:#fff; display:flex; gap:1rem; align-items:flex-start; }
+    .app-card + .app-card { margin-top:0.875rem; }
+    .app-cat-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-top:5px; }
+    .app-title { font-weight:700; font-size:0.95rem; margin-bottom:0.2rem; }
+    .app-org { font-size:0.82rem; color:var(--text-muted); margin-bottom:0.5rem; }
+    .app-meta { display:flex; flex-wrap:wrap; gap:0.5rem; font-size:0.78rem; color:var(--text-muted); }
+    .empty-state { text-align:center; padding:4rem 1rem; color:var(--text-muted); }
+    .filter-bar { display:flex; gap:0.625rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+    .filter-btn { padding:0.35rem 0.875rem; border-radius:20px; border:1px solid var(--border); font-size:0.82rem; cursor:pointer; background:#fff; transition:all 0.12s; }
+    .filter-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+  </style>
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside id="sidebar" class="sidebar"></aside>
+<div class="page-content">
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><h1>My Applications</h1><p class="text-muted">Track your volunteer applications</p></div>
+        <a href="/gigs" class="btn btn-primary">Browse More Gigs</a>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <button class="filter-btn active" data-status="" onclick="setFilter(this,'')">All</button>
+      <button class="filter-btn" data-status="pending" onclick="setFilter(this,'pending')">Pending</button>
+      <button class="filter-btn" data-status="approved" onclick="setFilter(this,'approved')">Approved</button>
+      <button class="filter-btn" data-status="rejected" onclick="setFilter(this,'rejected')">Rejected</button>
+    </div>
+
+    <div id="list"><div style="text-align:center;padding:3rem"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/footer.js"></script>
+<script>
+API.requireAuth('volunteer');
+let all = [], activeFilter = '';
+
+function setFilter(btn, status) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeFilter = status;
+  render();
+}
+
+function render() {
+  const list = activeFilter ? all.filter(a => a.status === activeFilter) : all;
+  if (!list.length) {
+    document.getElementById('list').innerHTML = `<div class="empty-state">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:block;margin:0 auto 1rem;opacity:0.35"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+      <p>${activeFilter ? 'No ' + activeFilter + ' applications.' : 'You haven\'t applied to any gigs yet.'}</p>
+      <a href="/gigs" class="btn btn-primary" style="margin-top:0.75rem">Browse Gigs</a>
+    </div>`;
+    return;
+  }
+  const STATUS_COLOR = { pending:'#f59e0b', approved:'#22c55e', rejected:'#ef4444' };
+  const TIME_LABELS  = { morning:'Morning', afternoon:'Afternoon', evening:'Evening', flexible:'Flexible' };
+  const SVG = {
+    cal: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+    clk: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+    pin: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+    rec: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`,
+  };
+
+  document.getElementById('list').innerHTML = list.map(a => {
+    const g   = a.gig || {};
+    const cat = g.category || {};
+    const org = g.org?.orgName || '—';
+
+    const dateStr = g.startDate ? fmt.date(g.startDate) + (g.endDate && g.endDate !== g.startDate ? ' – ' + fmt.date(g.endDate) : '') : null;
+
+    const timeLabel = g.timeOfDay && g.timeOfDay !== 'flexible'
+      ? (g.startTime ? `${g.startTime}${g.endTime ? ' – ' + g.endTime : ''}` : TIME_LABELS[g.timeOfDay] || g.timeOfDay)
+      : null;
+
+    const locStr = g.locationType === 'remote' ? 'Remote'
+      : (g.locationAddress || (g.locationType === 'in-person' ? 'In-Person' : null));
+
+    const recStr = g.isRecurring && g.recurrenceType
+      ? (g.recurrenceDays?.length
+          ? g.recurrenceDays.slice(0,-1).join(', ') + (g.recurrenceDays.length > 1 ? ' & ' : '') + g.recurrenceDays.slice(-1)
+          : g.recurrenceType.charAt(0).toUpperCase() + g.recurrenceType.slice(1))
+      : null;
+
+    const hours = g.estimatedHours;
+
+    return `<div class="app-card">
+      <div class="app-cat-dot" style="background:${cat.colorHex||'var(--primary)'}"></div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+          <div>
+            <div class="app-title">${g.title||'—'}</div>
+            <div class="app-org">${org}${cat.name ? ` · <span style="color:${cat.colorHex||'var(--primary)'};font-weight:600">${cat.name}</span>` : ''}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <span class="badge" style="background:${STATUS_COLOR[a.status]||'var(--primary)'};color:#fff;display:inline-block">${a.status}</span>
+            <div style="margin-top:0.4rem"><a href="/gigs/${g.id}" class="btn btn-sm btn-secondary">View Gig</a></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.3rem;margin-top:0.5rem;font-size:0.8rem;color:var(--text-muted)">
+          ${dateStr      ? `<span style="display:flex;align-items:center;gap:0.35rem">${SVG.cal} ${dateStr}</span>` : ''}
+          ${timeLabel    ? `<span style="display:flex;align-items:center;gap:0.35rem">${SVG.clk} ${timeLabel}</span>` : ''}
+          ${recStr       ? `<span style="display:flex;align-items:center;gap:0.35rem;color:#16a34a;font-weight:500">${SVG.rec} ${recStr}</span>` : ''}
+          ${locStr       ? `<span style="display:flex;align-items:center;gap:0.35rem">${SVG.pin} ${locStr}</span>` : ''}
+          ${hours        ? `<span style="display:flex;align-items:center;gap:0.35rem">${SVG.clk} ${hours} hr${hours!==1?'s':''}/session</span>` : ''}
+          <span style="display:flex;align-items:center;gap:0.35rem">${SVG.cal} Applied: ${fmt.date(a.createdAt)}</span>
+        </div>
+        ${a.personalStatement ? `<p style="font-size:0.82rem;color:var(--text-muted);margin:0.625rem 0 0;line-height:1.5;border-left:3px solid var(--border);padding-left:0.625rem">${a.personalStatement.slice(0,200)}${a.personalStatement.length>200?'…':''}</p>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function load() {
+  try {
+    const { data } = await API.get('/volunteers/me/dashboard');
+    all = (data.applications || []).map(a => ({
+      ...a,
+      gig: a.gig || a.Gig || {},
+    }));
+    render();
+  } catch(e) { document.getElementById('list').innerHTML=`<div class="empty-state">${e.message}</div>`; }
+}
+
+load();
+</script>
+</body>
+</html>

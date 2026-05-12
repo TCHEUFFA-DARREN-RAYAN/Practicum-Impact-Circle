@@ -81,7 +81,7 @@ const sendEmail = async (to, subject, html) => {
     return info;
   } catch (err) {
     console.error('[EMAIL] Failed to send:', err.message);
-    throw err;
+    return null;
   }
 };
 

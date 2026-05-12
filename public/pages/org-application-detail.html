@@ -142,8 +142,8 @@ async function decide(decision) {
   document.getElementById('decisionAlert').innerHTML = '';
   try {
     await API.patch(`/gigs/applications/${appId}/decide`, { decision, reason: reason || undefined });
-    Toast.success(`Application ${decision}!`);
-    setTimeout(() => window.location.href = '/org-dashboard', 800);
+    Toast.success(`Application ${decision === 'approved' ? 'approved' : 'rejected'}!`);
+    setTimeout(() => window.location.reload(), 900);
   } catch (e) {
     document.getElementById('decisionAlert').innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
   }

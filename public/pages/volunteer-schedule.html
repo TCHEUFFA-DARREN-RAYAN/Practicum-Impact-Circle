@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Schedule | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    .shift-card { border:1px solid var(--border); border-radius:12px; padding:1.25rem; background:#fff; margin-bottom:1rem; display:flex; gap:1.25rem; align-items:flex-start; }
+    .date-badge { flex-shrink:0; text-align:center; background:var(--primary); color:#fff; border-radius:10px; padding:0.5rem 0.75rem; min-width:52px; }
+    .date-badge .mon { font-size:0.7rem; font-weight:700; text-transform:uppercase; opacity:0.85; }
+    .date-badge .day { font-size:1.4rem; font-weight:800; line-height:1; }
+    .shift-title { font-weight:700; font-size:0.95rem; margin-bottom:0.25rem; }
+    .shift-org { font-size:0.82rem; color:var(--text-muted); margin-bottom:0.4rem; }
+    .shift-meta { display:flex; flex-wrap:wrap; gap:0.5rem; font-size:0.78rem; color:var(--text-muted); }
+    .status-pill { display:inline-flex; align-items:center; gap:0.2rem; padding:0.2rem 0.625rem; border-radius:20px; font-size:0.75rem; font-weight:600; }
+    .empty-state { text-align:center; padding:4rem 1rem; color:var(--text-muted); }
+    .section-head { font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin:1.5rem 0 0.75rem; }
+  </style>
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside id="sidebar" class="sidebar"></aside>
+<div class="page-content">
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><h1>My Schedule</h1><p class="text-muted">Upcoming and past volunteer shifts</p></div>
+        <a href="/gigs" class="btn btn-primary">Find More Gigs</a>
+      </div>
+    </div>
+
+    <div id="content"><div style="text-align:center;padding:3rem"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/footer.js"></script>
+<script>
+API.requireAuth('volunteer');
+
+const STATUS_COLORS = {
+  accepted:   { bg:'#dcfce7', color:'#166534' },
+  inProgress: { bg:'#dbeafe', color:'#1e40af' },
+  completed:  { bg:'#f3f4f6', color:'#374151' },
+  approved:   { bg:'#d1fae5', color:'#065f46' },
+};
+
+function calBadge(d) {
+  if (!d) return { mon: '—', day: '' };
+  const dt = new Date(d);
+  return { mon: dt.toLocaleString('default',{month:'short'}), day: dt.getDate() };
+}
+
+function fmtFull(d) {
+  return d ? new Date(d).toLocaleDateString('en-CA', { month:'short', day:'numeric', year:'numeric' }) : '—';
+}
+
+function shiftCard(t) {
+  const g = t.gig || {};
+  const df = calBadge(g.startDate);
+  const sc = STATUS_COLORS[t.status] || { bg:'#f3f4f6', color:'#374151' };
+  return `<div class="shift-card">
+    <div class="date-badge">
+      <div class="mon">${df.mon||'?'}</div>
+      <div class="day">${df.day||'?'}</div>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div class="shift-title">${g.title||'—'}</div>
+      <div class="shift-org">${(g.org && g.org.orgName)||'—'}</div>
+      <div class="shift-meta">
+        <span>📅 ${fmtFull(g.startDate)} – ${fmtFull(g.endDate)}</span>
+        ${g.startTime&&g.endTime?`<span>🕐 ${g.startTime}–${g.endTime}</span>`:''}
+        <span>⏱ ${g.estimatedHours||'?'}h</span>
+        ${g.locationType?`<span>📍 ${g.locationType}</span>`:''}
+      </div>
+    </div>
+    <div style="flex-shrink:0">
+      <span class="status-pill" style="background:${sc.bg};color:${sc.color}">${t.status}</span>
+      <div style="margin-top:0.5rem"><a href="/gigs/${g.id}" class="btn btn-sm btn-secondary">View Gig</a></div>
+    </div>
+  </div>`;
+}
+
+async function load() {
+  try {
+    const { data } = await API.get('/volunteers/me/dashboard');
+    const tasks = (data.tasks || []).filter(t => ['accepted','inProgress','completed','approved'].includes(t.status));
+    if (!tasks.length) {
+      document.getElementById('content').innerHTML = `<div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:block;margin:0 auto 1rem;opacity:0.35"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <p>No upcoming shifts yet.</p>
+        <a href="/gigs" class="btn btn-primary" style="margin-top:0.75rem">Find Volunteer Gigs</a>
+      </div>`;
+      return;
+    }
+    const now = new Date();
+    const upcoming = tasks.filter(t => t.gig && new Date(t.gig.endDate) >= now && t.status !== 'completed' && t.status !== 'approved');
+    const past = tasks.filter(t => !upcoming.includes(t));
+    let html = '';
+    if (upcoming.length) {
+      html += `<div class="section-head">Upcoming (${upcoming.length})</div>`;
+      html += upcoming.map(shiftCard).join('');
+    }
+    if (past.length) {
+      html += `<div class="section-head">Completed / Past (${past.length})</div>`;
+      html += past.map(shiftCard).join('');
+    }
+    document.getElementById('content').innerHTML = html;
+  } catch(e) { document.getElementById('content').innerHTML=`<div class="empty-state">${e.message}</div>`; }
+}
+
+load();
+</script>
+</body>
+</html>

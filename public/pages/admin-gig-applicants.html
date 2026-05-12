@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Gig Applicants | Admin | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    .app-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:1.25rem; }
+    .app-card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:1.25rem; display:flex; flex-direction:column; gap:0.875rem; }
+    .card-top { display:flex; gap:1rem; align-items:flex-start; }
+    .app-av { width:56px; height:56px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:1.25rem; font-weight:700; color:#fff; overflow:hidden; flex-shrink:0; }
+    .app-av img { width:100%; height:100%; object-fit:cover; }
+    .pill-list { display:flex; flex-wrap:wrap; gap:0.3rem; }
+    .card-actions { display:flex; gap:0.5rem; flex-wrap:wrap; padding-top:0.75rem; border-top:1px solid var(--border); margin-top:auto; }
+    .gig-banner { background:#fff; border:1px solid var(--border); border-radius:12px; padding:1.25rem 1.5rem; margin-bottom:1.5rem; }
+    .gig-meta { display:flex; flex-wrap:wrap; gap:0.75rem; margin-top:0.625rem; font-size:0.8rem; color:var(--text-muted); }
+    .gig-meta span { display:flex; align-items:center; gap:0.25rem; }
+  </style>
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside id="sidebar" class="sidebar"></aside>
+<div class="page-content">
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div>
+          <a href="/admin/events" style="font-size:0.85rem;color:var(--text-muted);text-decoration:none;display:inline-block;margin-bottom:0.375rem">← Browse Gigs</a>
+          <h1 id="pageTitle">Gig Applicants</h1>
+          <p class="text-muted" id="pageSubtitle">Loading...</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="gigBanner" class="gig-banner" style="display:none">
+      <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
+        <h2 id="gigTitle" style="margin:0;font-size:1.1rem"></h2>
+        <span id="gigStatus" class="badge badge-primary"></span>
+        <span id="gigCat" class="badge"></span>
+      </div>
+      <div class="gig-meta">
+        <span>📅 <span id="gigDates"></span></span>
+        <span>🕐 <span id="gigHours"></span></span>
+        <span>🏢 <span id="gigOrg"></span></span>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem">
+      <span id="countLabel" class="text-muted" style="font-size:0.875rem"></span>
+      <select id="statusFilter" onchange="filterCards()" style="padding:0.375rem 0.75rem;border:1px solid var(--border);border-radius:8px;font-size:0.875rem">
+        <option value="">All statuses</option>
+        <option value="pending">Pending</option>
+        <option value="approved">Approved</option>
+        <option value="rejected">Rejected</option>
+      </select>
+    </div>
+
+    <div class="app-grid" id="appGrid">
+      <div style="grid-column:1/-1;text-align:center;padding:3rem"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/footer.js"></script>
+<script>
+API.requireAuth('admin');
+let allApps = [];
+
+function gigIdFromPath() {
+  const m = window.location.pathname.match(/\/admin\/gigs\/(\d+)\/applicants/);
+  return m ? m[1] : null;
+}
+
+function renderCards(list) {
+  document.getElementById('countLabel').textContent = `${list.length} applicant${list.length!==1?'s':''}`;
+  if (!list.length) {
+    document.getElementById('appGrid').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted)">No applicants found.</div>`;
+    return;
+  }
+  document.getElementById('appGrid').innerHTML = list.map(app => {
+    const v = app.volunteer || {};
+    const vp = v.volunteerProfile || {};
+    const name = [vp.firstName, vp.lastName].filter(Boolean).join(' ') || '—';
+    const skills = Array.isArray(vp.skills) ? vp.skills : [];
+    const avHtml = v.avatarUrl && v.id
+      ? `<div class="app-av"><img src="/api/uploads/${v.id}/${v.avatarUrl}" alt="${name}"></div>`
+      : `<div class="app-av">${(name[0]||'?').toUpperCase()}</div>`;
+    const statusMap = { pending:'badge-pending', approved:'badge-verified', rejected:'badge-rejected' };
+    const resumeBtn = vp.resumeUrl
+      ? `<a href="/api/uploads/${v.id}/${vp.resumeUrl}" target="_blank" download class="btn btn-sm btn-secondary">Download Resume</a>`
+      : `<span style="font-size:0.8rem;color:var(--text-muted);align-self:center">No resume</span>`;
+
+    return `<div class="app-card">
+      <div class="card-top">
+        ${avHtml}
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:0.95rem">${name}</div>
+          <div style="font-size:0.8rem;color:var(--text-muted)">${v.email||'—'}</div>
+          <div style="margin-top:0.375rem;display:flex;gap:0.3rem;flex-wrap:wrap">
+            <span class="badge ${v.verificationStatus==='verified'?'badge-verified':v.verificationStatus==='rejected'?'badge-rejected':'badge-pending'}" style="font-size:0.7rem">${v.verificationStatus||'—'}</span>
+            <span class="badge ${statusMap[app.status]||'badge-primary'}" style="font-size:0.7rem">${app.status}</span>
+          </div>
+        </div>
+      </div>
+      ${skills.length ? `<div>
+        <div style="font-size:0.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.375rem">Skills</div>
+        <div class="pill-list">${skills.slice(0,8).map(s=>`<span class="badge badge-primary">${s}</span>`).join('')}${skills.length>8?`<span class="badge badge-primary">+${skills.length-8}</span>`:''}</div>
+      </div>` : ''}
+      ${app.personalStatement ? `<div>
+        <div style="font-size:0.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.375rem">Statement</div>
+        <p style="font-size:0.84rem;color:var(--text-muted);margin:0;line-height:1.55">${app.personalStatement.length>200?app.personalStatement.slice(0,200)+'…':app.personalStatement}</p>
+      </div>` : ''}
+      ${vp.bio ? `<div>
+        <div style="font-size:0.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.375rem">About</div>
+        <p style="font-size:0.84rem;color:var(--text-muted);margin:0;line-height:1.55">${vp.bio.length>150?vp.bio.slice(0,150)+'…':vp.bio}</p>
+      </div>` : ''}
+      <div class="card-actions">
+        ${resumeBtn}
+        ${app.status === 'pending' ? `
+          <button class="btn btn-sm btn-success" onclick="decide(${app.id},'approved')">Approve ✓</button>
+          <button class="btn btn-sm btn-danger" onclick="decide(${app.id},'rejected')">Reject</button>
+        ` : `<span class="badge ${statusMap[app.status]||'badge-primary'}" style="font-size:0.75rem;align-self:center">${app.status === 'approved' ? '✓ Approved' : '✗ Rejected'}</span>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterCards() {
+  const s = document.getElementById('statusFilter').value;
+  renderCards(s ? allApps.filter(a=>a.status===s) : allApps);
+}
+
+async function load() {
+  const gigId = gigIdFromPath();
+  if (!gigId) return Toast.error('Invalid URL.');
+  try {
+    const { data } = await API.get(`/admin/gigs/${gigId}/applications`);
+    const gig = data.gig;
+    allApps = data.applications || [];
+    document.getElementById('pageTitle').textContent = gig.title;
+    document.getElementById('pageSubtitle').textContent = `${allApps.length} applicant${allApps.length!==1?'s':''}`;
+    document.getElementById('gigTitle').textContent = gig.title;
+    document.getElementById('gigStatus').textContent = gig.status;
+    if (gig.category) {
+      const c = document.getElementById('gigCat');
+      c.textContent = gig.category.name;
+      c.style.background = gig.category.colorHex || 'var(--primary)';
+      c.style.color = '#fff';
+    }
+    document.getElementById('gigDates').textContent = `${gig.startDate} — ${gig.endDate}`;
+    document.getElementById('gigHours').textContent = `${gig.estimatedHours}h`;
+    document.getElementById('gigOrg').textContent = (gig.org && gig.org.orgName) || '—';
+    document.getElementById('gigBanner').style.display = '';
+    renderCards(allApps);
+  } catch(e) { Toast.error('Failed to load: '+e.message); }
+}
+
+async function decide(appId, decision) {
+  if (!confirm(`${decision === 'approved' ? 'Approve' : 'Reject'} this application?`)) return;
+  try {
+    const gigId = gigIdFromPath();
+    await API.patch(`/admin/gigs/${gigId}/applications/${appId}/decide`, { decision });
+    Toast.success(`Application ${decision === 'approved' ? 'approved' : 'rejected'}.`);
+    setTimeout(() => window.location.reload(), 800);
+  } catch (e) { Toast.error('Failed: ' + e.message); }
+}
+
+load();
+</script>
+</body>
+</html>

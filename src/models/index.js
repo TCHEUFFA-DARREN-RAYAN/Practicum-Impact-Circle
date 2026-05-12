@@ -14,6 +14,7 @@ const User = sequelize.define('User', {
   /* Password reset — columns must exist in MySQL; run doc/mysql-add-password-reset.sql if missing */
   resetPasswordToken:   { type: DataTypes.STRING(255), allowNull: true },
   resetPasswordExpires: { type: DataTypes.DATE, allowNull: true },
+  avatarUrl:            { type: DataTypes.STRING(255), allowNull: true },
 });
 
 User.beforeCreate(async (u) => { u.passwordHash = await bcrypt.hash(u.passwordHash, 12); });
@@ -48,6 +49,8 @@ const VolunteerProfile = sequelize.define('VolunteerProfile', {
   badges:                       { type: DataTypes.JSON, defaultValue: [] },
   registrationStep:             { type: DataTypes.INTEGER, defaultValue: 1 },
   consentGiven:                 { type: DataTypes.BOOLEAN, defaultValue: false },
+  resumeUrl:                    { type: DataTypes.STRING(255), allowNull: true },
+  bio:                          { type: DataTypes.TEXT, allowNull: true },
 });
 
 /* ────────────────────── VOLUNTEER CATEGORY HOURS ────────────────────────── */
@@ -147,7 +150,7 @@ const Application = sequelize.define('Application', {
 
 /* ──────────────────────────────── TASK ──────────────────────────────────── */
 const VALID_TRANSITIONS = {
-  accepted: ['inProgress'],
+  accepted: ['inProgress', 'completed'],
   inProgress: ['completed'],
   completed: ['approved', 'rejected'],
 };
@@ -240,6 +243,21 @@ const AuditLog = sequelize.define('AuditLog', {
   timestamp:    { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
 }, { updatedAt: false });
 
+/* ─────────────────────────── CONVERSATION / CHAT ───────────────────────── */
+const Conversation = sequelize.define('Conversation', {
+  id:       { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  user1Id:  { type: DataTypes.INTEGER, allowNull: false },
+  user2Id:  { type: DataTypes.INTEGER, allowNull: false },
+}, { timestamps: true });
+
+const ChatMessage = sequelize.define('ChatMessage', {
+  id:             { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  conversationId: { type: DataTypes.INTEGER, allowNull: false },
+  senderId:       { type: DataTypes.INTEGER, allowNull: false },
+  body:           { type: DataTypes.TEXT, allowNull: false },
+  isRead:         { type: DataTypes.BOOLEAN, defaultValue: false },
+}, { timestamps: true, updatedAt: false });
+
 /* ─────────────────────────── ASSOCIATIONS ───────────────────────────────── */
 User.hasOne(VolunteerProfile, { foreignKey: 'userId', as: 'volunteerProfile' });
 VolunteerProfile.belongsTo(User, { foreignKey: 'userId' });
@@ -292,6 +310,12 @@ Notification.belongsTo(User, { foreignKey: 'userId' });
 VolunteerCategoryHours.belongsTo(User, { foreignKey: 'volunteerId' });
 VolunteerCategoryHours.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });
 
+Conversation.hasMany(ChatMessage, { foreignKey: 'conversationId', as: 'messages' });
+ChatMessage.belongsTo(Conversation, { foreignKey: 'conversationId' });
+
+User.hasMany(ChatMessage, { foreignKey: 'senderId', as: 'sentMessages' });
+ChatMessage.belongsTo(User, { foreignKey: 'senderId', as: 'sender' });
+
 module.exports = {
   sequelize,
   User,
@@ -309,4 +333,6 @@ module.exports = {
   Redemption,
   Notification,
   AuditLog,
+  Conversation,
+  ChatMessage,
 };
