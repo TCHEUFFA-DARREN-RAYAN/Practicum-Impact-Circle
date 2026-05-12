@@ -506,6 +506,29 @@ body.public-page {
   to   { opacity: 1; transform: translateY(0);    }
 }
 
+/* Hero bottom wave — taller + deeper curve into next section */
+.ph-wave {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  line-height: 0;
+}
+.ph-wave svg {
+  display: block;
+  width: 100%;
+  /* Desktop & tablet landscape: subtler wave */
+  height: clamp(40px, 3.5vw, 68px) !important;
+}
+
+/* Phone / small tablet: keep the deeper hero wave */
+@media (max-width: 900px) {
+  .ph-wave svg {
+    height: clamp(96px, 22vw, 160px) !important;
+  }
+}
+
 /* Responsive: hide desktop links, show hamburger below 900px */
 @media (max-width: 900px) {
   .gn-links      { display: none; }
