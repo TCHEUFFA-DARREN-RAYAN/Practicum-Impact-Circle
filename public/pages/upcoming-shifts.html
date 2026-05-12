@@ -7,89 +7,106 @@
   <link rel="stylesheet" href="/css/base.css">
   <style>
     .page-hero {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-      color: white;
-      padding: 3.5rem 0 2.5rem;
-      text-align: center;
+      position: relative; overflow: hidden;
+      min-height: 260px; display: flex; align-items: center;
+      color: white; text-align: center;
     }
-    .page-hero h1 { color: white; font-size: 2.25rem; margin-bottom: 0.75rem; }
-    .page-hero p { font-size: 1rem; opacity: 0.9; max-width: 560px; margin: 0 auto; }
-    .shifts-section { padding: 2.5rem 0; }
+    .ph-bg {
+      position: absolute; inset: 0;
+      background-image: url('https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=1400&fit=crop&auto=format&q=80');
+      background-size: cover; background-position: center 50%;
+      filter: brightness(0.4);
+    }
+    .ph-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.42); }
+    .ph-content {
+      position: relative; z-index: 1;
+      padding: calc(var(--nav-height) + 2.5rem) 1.5rem 4rem; width: 100%;
+    }
+    .ph-content h1 { font-size: clamp(1.7rem,4vw,2.5rem); font-weight: 800; color: white; margin-bottom: 0.6rem; }
+    .ph-content p { font-size: 1rem; opacity: 0.92; max-width: 540px; margin: 0 auto; }
+    .ph-wave { position: absolute; bottom: -1px; left: 0; right: 0; z-index: 2; }
+    .ph-wave svg { display: block; width: 100%; height: 60px; }
+
+    .shifts-section { padding: 2.5rem 0 4.5rem; }
     .filters-bar {
       display: flex; gap: 0.75rem; flex-wrap: wrap;
-      margin-bottom: 2rem;
-      align-items: center;
+      margin-bottom: 2rem; align-items: center;
     }
     .filters-bar input, .filters-bar select {
       flex: 1 1 160px; min-width: 140px; max-width: 240px;
     }
     .shifts-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 1.25rem;
     }
     .shift-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 1.5rem;
-      transition: all 0.15s;
+      background: white; border: 1px solid #e5e7eb;
+      border-radius: 14px; padding: 1.5rem;
+      transition: all 0.15s; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
-    .shift-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .shift-card:hover { box-shadow: 0 6px 20px rgba(14,165,233,0.12); transform: translateY(-2px); }
     .shift-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
     .badge {
       display: inline-flex; align-items: center;
-      padding: 0.2rem 0.6rem;
-      border-radius: 999px;
+      padding: 0.2rem 0.6rem; border-radius: 999px;
       font-size: 0.75rem; font-weight: 600;
-      background: var(--primary-light); color: var(--primary);
+      background: #EFF6FF; color: #0284C7;
     }
-    .badge-inperson { background: var(--success-light); color: var(--success); }
-    .badge-remote { background: var(--info-light); color: var(--info); }
-    .shift-card h3 { font-size: 1rem; margin-bottom: 0.35rem; }
-    .shift-card .org-name { font-size: 0.825rem; color: var(--text-muted); margin-bottom: 0.5rem; }
-    .shift-detail { font-size: 0.825rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.25rem; }
+    .badge-inperson { background: #DCFCE7; color: #16A34A; }
+    .badge-remote { background: #EDE9FE; color: #7C3AED; }
+    .shift-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.35rem; }
+    .shift-card .org-name { font-size: 0.825rem; color: #666; margin-bottom: 0.5rem; }
+    .shift-detail { font-size: 0.825rem; color: #666; display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.25rem; }
     .shift-detail svg { flex-shrink: 0; }
     .shift-actions { margin-top: 1rem; display: flex; gap: 0.5rem; }
-    #shifts-loading { text-align: center; padding: 4rem; color: var(--text-muted); }
-    #shifts-empty { display:none; text-align:center; padding: 4rem; color: var(--text-muted); }
+    #shifts-loading { text-align: center; padding: 4rem; color: #666; }
+    #shifts-empty { display:none; text-align:center; padding: 4rem; color: #666; }
     .pagination { display: flex; gap: 0.5rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap; }
   </style>
 </head>
 <body>
 <nav id="navbar"></nav>
 
-<div class="page-hero page-content" style="padding-top: calc(var(--nav-height) + 2rem);">
-  <div class="container">
+<div class="page-hero page-content">
+  <div class="ph-bg"></div>
+  <div class="ph-overlay"></div>
+  <div class="ph-content container">
     <h1>Upcoming Volunteer Shifts</h1>
     <p>Browse available opportunities and find the perfect match for your schedule and interests.</p>
   </div>
+  <div class="ph-wave">
+    <svg viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#ffffff" d="M0,30 C360,60 1080,0 1440,30 L1440,60 L0,60 Z"/>
+    </svg>
+  </div>
 </div>
 
-<main class="shifts-section">
-  <div class="container">
-    <div class="filters-bar">
-      <input type="text" id="search-input" placeholder="Search shifts…" />
-      <select id="category-filter"><option value="">All Categories</option></select>
-      <select id="time-filter">
-        <option value="">Any Time</option>
-        <option value="morning">Morning</option>
-        <option value="afternoon">Afternoon</option>
-        <option value="evening">Evening</option>
-      </select>
-      <select id="type-filter">
-        <option value="">In-Person or Remote</option>
-        <option value="in-person">In-Person</option>
-        <option value="remote">Remote</option>
-      </select>
-      <button class="btn btn-primary" id="search-btn">Search</button>
-    </div>
+<main>
+  <section class="shifts-section">
+    <div class="container">
+      <div class="filters-bar">
+        <input type="text" id="search-input" placeholder="Search shifts…" />
+        <select id="category-filter"><option value="">All Categories</option></select>
+        <select id="time-filter">
+          <option value="">Any Time</option>
+          <option value="morning">Morning</option>
+          <option value="afternoon">Afternoon</option>
+          <option value="evening">Evening</option>
+        </select>
+        <select id="type-filter">
+          <option value="">In-Person or Remote</option>
+          <option value="in-person">In-Person</option>
+          <option value="remote">Remote</option>
+        </select>
+        <button class="btn btn-primary" id="search-btn">Search</button>
+      </div>
 
-    <div id="shifts-loading">Loading shifts…</div>
-    <div id="shifts-empty">No shifts found matching your criteria.</div>
-    <div class="shifts-grid" id="shifts-grid"></div>
-    <div class="pagination" id="pagination"></div>
-  </div>
+      <div id="shifts-loading">Loading shifts…</div>
+      <div id="shifts-empty">No shifts found matching your criteria.</div>
+      <div class="shifts-grid" id="shifts-grid"></div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </section>
 </main>
 
 <script src="/js/api.js"></script>
@@ -103,15 +120,20 @@
   async function loadCategories() {
     try {
       const { data } = await API.get('/public/categories');
-      const cats = Array.isArray(data) ? data : (data.categories || []);
+      const cats = Array.isArray(data) ? data : (data.categories || data || []);
       const sel = document.getElementById('category-filter');
       cats.forEach(c => {
         const opt = document.createElement('option');
-        opt.value = c.name || c;
+        opt.value = c.id || c.name || c;
         opt.textContent = c.name || c;
         sel.appendChild(opt);
       });
-      if (params.get('category')) sel.value = params.get('category');
+      // Match by name if coming from categories page link
+      const catParam = params.get('category');
+      if (catParam) {
+        const match = cats.find(c => (c.name || c) === catParam);
+        if (match) sel.value = match.id || match.name || match;
+      }
     } catch {}
   }
 
@@ -124,39 +146,50 @@
     empty.style.display = 'none';
 
     const q = new URLSearchParams({
-      page,
-      limit: 12,
+      page, limit: 12,
       search: document.getElementById('search-input').value.trim(),
       category: document.getElementById('category-filter').value,
-      time: document.getElementById('time-filter').value,
-      type: document.getElementById('type-filter').value,
+      location: document.getElementById('type-filter').value,
     });
+    // Remove empty params
+    ['search','category','location'].forEach(k => { if (!q.get(k)) q.delete(k); });
 
     try {
-      const { data } = await API.get(`/public/gigs?${q}`);
+      const { data } = await API.get(`/gigs?${q}`);
       const gigs = data.gigs || data || [];
       loading.style.display = 'none';
 
       if (!gigs.length) { empty.style.display = 'block'; return; }
 
-      grid.innerHTML = gigs.map(g => `
+      const esc = (s) => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      const catName = (g) => {
+        const c = g.category;
+        if (!c) return '';
+        if (typeof c === 'string') return c;
+        return c.name || '';
+      };
+
+      grid.innerHTML = gigs.map(g => {
+        const cname = catName(g);
+        return `
         <div class="shift-card">
           <div class="shift-meta">
-            ${g.category ? `<span class="badge">${g.category}</span>` : ''}
+            ${cname ? `<span class="badge">${esc(cname)}</span>` : ''}
             ${g.locationType === 'remote' ? '<span class="badge badge-remote">Remote</span>' : '<span class="badge badge-inperson">In-Person</span>'}
           </div>
-          <h3>${g.title || 'Untitled Shift'}</h3>
-          <div class="org-name">${g.Organization?.name || g.orgName || ''}</div>
-          ${g.date ? `<div class="shift-detail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${g.date}</div>` : ''}
-          ${g.time || g.timeSlot ? `<div class="shift-detail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${g.time || g.timeSlot}</div>` : ''}
-          ${g.hours ? `<div class="shift-detail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>${g.hours} hr${g.hours !== 1 ? 's' : ''}</div>` : ''}
+          <h3>${esc(g.title || 'Untitled Gig')}</h3>
+          <div class="org-name">${esc(g.org?.orgName || g.Organization?.name || g.orgName || '')}</div>
+          ${g.startDate ? `<div class="shift-detail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${esc(new Date(g.startDate).toLocaleDateString())}</div>` : ''}
+          ${g.timeSlot ? `<div class="shift-detail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${esc(g.timeSlot)}</div>` : ''}
+          ${g.hoursPerShift ? `<div class="shift-detail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>${esc(g.hoursPerShift)} hr${g.hoursPerShift !== 1 ? 's' : ''}</div>` : ''}
           <div class="shift-actions">
             <a href="/gigs/${g.id}" class="btn btn-primary btn-sm">View Details</a>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
 
-      renderPagination(data.totalPages || 1, page);
+      renderPagination(data.pages || data.totalPages || 1, page);
     } catch {
       loading.textContent = 'Could not load shifts. Please try again later.';
     }
@@ -173,7 +206,6 @@
   }
 
   function goPage(p) { currentPage = p; loadShifts(p); window.scrollTo(0, 0); }
-
   document.getElementById('search-btn').addEventListener('click', () => { currentPage = 1; loadShifts(1); });
   document.getElementById('search-input').addEventListener('keydown', e => { if (e.key === 'Enter') { currentPage = 1; loadShifts(1); } });
 

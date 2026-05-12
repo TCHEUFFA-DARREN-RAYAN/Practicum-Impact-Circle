@@ -89,15 +89,7 @@
         <div class="gn-inner">
 
           <a href="/" class="gn-brand">
-            <div class="gn-logo-icon">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="white">
-                <rect x="1"   y="1"   width="5.5" height="5.5" rx="1.2"/>
-                <rect x="9.5" y="1"   width="5.5" height="5.5" rx="1.2"/>
-                <rect x="1"   y="9.5" width="5.5" height="5.5" rx="1.2"/>
-                <rect x="9.5" y="9.5" width="5.5" height="5.5" rx="1.2"/>
-              </svg>
-            </div>
-            <span class="gn-brand-text">ImpactCircle</span>
+            <img src="/images/logo.png" alt="ImpactCircle" class="gn-logo-img">
           </a>
 
           <nav class="gn-links">${desktopHTML}</nav>

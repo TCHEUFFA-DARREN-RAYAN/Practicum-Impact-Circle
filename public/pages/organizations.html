@@ -3,117 +3,235 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Organizations | ImpactCircle</title>
+  <title>For Organizations | ImpactCircle</title>
   <link rel="stylesheet" href="/css/base.css">
   <style>
     .page-hero {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-      color: white;
-      padding: 4rem 0 3rem;
-      text-align: center;
+      position: relative; overflow: hidden;
+      min-height: 300px; display: flex; align-items: center;
+      color: white; text-align: center;
     }
-    .page-hero h1 { color: white; font-size: 2.5rem; margin-bottom: 1rem; }
-    .page-hero p { font-size: 1.125rem; opacity: 0.9; max-width: 600px; margin: 0 auto; }
-    .org-section { padding: 3rem 0; }
+    .ph-bg {
+      position: absolute; inset: 0;
+      background-image: url('https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1400&fit=crop&auto=format&q=80');
+      background-size: cover; background-position: center 30%;
+      filter: brightness(0.4);
+    }
+    .ph-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.42); }
+    .ph-content {
+      position: relative; z-index: 1;
+      padding: calc(var(--nav-height) + 3rem) 1.5rem 4.5rem; width: 100%;
+    }
+    .ph-content h1 { font-size: clamp(1.9rem,4vw,2.75rem); font-weight: 800; color: white; margin-bottom: 0.75rem; }
+    .ph-content p { font-size: 1.1rem; opacity: 0.92; max-width: 580px; margin: 0 auto; }
+    .ph-wave { position: absolute; bottom: -1px; left: 0; right: 0; z-index: 2; }
+    .ph-wave svg { display: block; width: 100%; height: 60px; }
+
+    .org-section { padding: 3.5rem 0; }
+    .section-label {
+      display: inline-block;
+      background: #EFF6FF; color: #0284C7;
+      font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.3rem 0.9rem; border-radius: 999px; margin-bottom: 0.75rem;
+    }
+    .section-title { font-size: 1.7rem; font-weight: 800; margin-bottom: 0.5rem; }
+
+    .split-row {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 3.5rem; align-items: center;
+    }
+    @media (max-width: 768px) { .split-row { grid-template-columns: 1fr; gap: 2rem; } }
+    .split-img { border-radius: 16px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.12); aspect-ratio: 4/3; }
+    .split-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .split-text h2 { font-size: 1.7rem; font-weight: 800; margin-bottom: 1rem; }
+    .split-text p { color: #555; line-height: 1.75; margin-bottom: 1rem; }
+    .split-text ul { list-style: none; padding: 0; margin: 0 0 1.5rem; }
+    .split-text ul li {
+      display: flex; align-items: flex-start; gap: 0.75rem;
+      padding: 0.5rem 0; color: #444; font-size: 0.95rem; line-height: 1.6;
+    }
+    .check-icon {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #E0F2FE; color: #0284C7;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px;
+    }
+
     .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
-      margin: 2rem 0;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem; margin-top: 2.5rem;
     }
     .feature-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 1.75rem;
+      background: white; border: 1px solid #e5e7eb;
+      border-radius: 14px; padding: 1.75rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      transition: transform 0.15s, box-shadow 0.15s;
     }
+    .feature-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.09); }
     .feature-icon {
-      width: 48px; height: 48px;
-      background: var(--primary-light);
-      border-radius: var(--radius);
-      display: flex; align-items: center; justify-content: center;
-      color: var(--primary);
-      margin-bottom: 1rem;
+      width: 48px; height: 48px; border-radius: 12px;
+      background: #EFF6FF; color: #0284C7;
+      display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;
     }
-    .feature-card h3 { margin-bottom: 0.4rem; }
-    .feature-card p { color: var(--text-muted); font-size: 0.875rem; margin: 0; }
-    .cta-band {
-      background: var(--primary-light);
-      border-radius: var(--radius-lg);
-      padding: 2.5rem;
-      text-align: center;
-      margin-top: 2rem;
+    .feature-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .feature-card p { color: #666; font-size: 0.875rem; line-height: 1.65; margin: 0; }
+
+    .testimonial-strip {
+      background: #F0F9FF; border-radius: 18px; padding: 2.5rem;
+      display: flex; gap: 1.5rem; align-items: flex-start;
     }
-    .cta-band h2 { margin-bottom: 0.75rem; }
-    .cta-band p { color: var(--text-muted); margin-bottom: 1.5rem; }
+    .testimonial-strip .quote-icon { font-size: 2.5rem; line-height: 1; color: #BAE6FD; flex-shrink: 0; margin-top: -6px; }
+    .testimonial-strip blockquote { margin: 0; font-size: 1.05rem; line-height: 1.75; color: #334155; font-style: italic; }
+    .testimonial-strip cite { display: block; margin-top: 0.75rem; font-style: normal; font-weight: 700; color: #0284C7; font-size: 0.9rem; }
+
+    .cta-block {
+      background: linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%);
+      border-radius: 18px; padding: 3rem 2rem;
+      text-align: center; color: white; margin-top: 1rem;
+    }
+    .cta-block h2 { color: white; font-size: 1.6rem; margin-bottom: 0.75rem; }
+    .cta-block p { opacity: 0.88; margin-bottom: 1.75rem; }
+    .btn-white { background: white; color: #0284C7; font-weight: 700; padding: 0.7rem 1.75rem; border-radius: 10px; text-decoration: none; border: none; cursor: pointer; display: inline-block; }
+    .btn-white:hover { opacity: 0.9; text-decoration: none; color: #0284C7; }
   </style>
 </head>
 <body>
 <nav id="navbar"></nav>
 
-<div class="page-hero page-content" style="padding-top: calc(var(--nav-height) + 2rem);">
-  <div class="container">
+<div class="page-hero page-content">
+  <div class="ph-bg"></div>
+  <div class="ph-overlay"></div>
+  <div class="ph-content container">
     <h1>For Organizations</h1>
-    <p>Recruit reliable, verified volunteers to support your mission and multiply your community impact.</p>
+    <p>Recruit reliable, verified volunteers for your programs — and show the community the real difference your work is making.</p>
+  </div>
+  <div class="ph-wave">
+    <svg viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#ffffff" d="M0,30 C360,60 1080,0 1440,30 L1440,60 L0,60 Z"/>
+    </svg>
   </div>
 </div>
 
-<main class="org-section">
-  <div class="container">
+<main>
 
-    <h2>Everything Your Organization Needs</h2>
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+  <!-- Intro split -->
+  <section class="org-section">
+    <div class="container">
+      <div class="split-row">
+        <div class="split-text">
+          <span class="section-label">Why ImpactCircle</span>
+          <h2>Stop chasing volunteers. Start attracting them.</h2>
+          <p>Most nonprofits spend more time recruiting volunteers than managing them. ImpactCircle changes that. Your organization gets a verified public profile, a clean listing of your shifts, and a built-in pipeline of motivated volunteers searching for exactly what you offer.</p>
+          <p>Every applicant has a verified account and a visible history — so you can make confident decisions about who shows up to your programs.</p>
+          <ul>
+            <li>
+              <span class="check-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+              Verified organization badge increases volunteer trust
+            </li>
+            <li>
+              <span class="check-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+              Manage all your shifts from a single dashboard
+            </li>
+            <li>
+              <span class="check-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+              Downloadable impact reports for funders and boards
+            </li>
+          </ul>
+          <a href="/register" class="btn btn-primary">Register Your Organization</a>
         </div>
-        <h3>Verified Profiles</h3>
-        <p>Every volunteer on the platform is verified, giving you confidence in who shows up to your shifts.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <div class="split-img">
+          <img src="https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800&fit=crop&auto=format&q=80" alt="Organization team at a volunteer event" loading="lazy">
         </div>
-        <h3>Shift Management</h3>
-        <p>Post one-time or recurring shifts, manage applicants, and track attendance all in one dashboard.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        </div>
-        <h3>Applicant Review</h3>
-        <p>See detailed volunteer profiles, review applications, and approve the best fits for your opportunities.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        </div>
-        <h3>Impact Reports</h3>
-        <p>Generate detailed reports on volunteer hours, participation rates, and community outcomes.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        </div>
-        <h3>Direct Messaging</h3>
-        <p>Communicate directly with volunteers through our built-in messaging system.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        </div>
-        <h3>Multiple Categories</h3>
-        <p>Tag your opportunities with multiple categories to reach the right volunteers for your specific needs.</p>
       </div>
     </div>
+  </section>
 
-    <div class="cta-band">
-      <h2>Register Your Organization</h2>
-      <p>Get verified and start recruiting dedicated volunteers today.</p>
-      <a href="/register" class="btn btn-primary btn-lg">Get Started</a>
+  <!-- Features grid -->
+  <section class="org-section" style="background:#F8FAFC;">
+    <div class="container">
+      <h2 class="section-title" style="text-align:center;">Everything your organization needs</h2>
+      <p style="text-align:center; color:#666; max-width:520px; margin:0 auto 0;">From posting your first shift to reporting your annual impact, ImpactCircle covers the full volunteer management lifecycle.</p>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </div>
+          <h3>Verified Volunteer Profiles</h3>
+          <p>Every volunteer on the platform has a verified account with a visible record of past shifts, skills, and hours — so you know who you're working with.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <h3>Flexible Shift Posting</h3>
+          <p>Create one-time or recurring shifts with custom details on timing, location, required skills, and capacity. Edit or cancel at any time.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <h3>Applicant Review</h3>
+          <p>See who applied, browse their full profiles, and approve or decline with one click. Communicate directly through the platform.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </div>
+          <h3>Impact Reports</h3>
+          <p>Generate clean reports showing total volunteer hours, participation by shift, and community outcomes — shareable with funders and your board.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <h3>Built-in Messaging</h3>
+          <p>No more back-and-forth emails. Communicate with applicants and approved volunteers directly inside the dashboard.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <h3>Category Targeting</h3>
+          <p>Tag your opportunities across multiple cause areas to reach volunteers who are specifically passionate about your type of work.</p>
+        </div>
+      </div>
     </div>
+  </section>
 
-  </div>
+  <!-- Photo + testimonial -->
+  <section class="org-section">
+    <div class="container">
+      <div class="split-row">
+        <div class="split-img">
+          <img src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800&fit=crop&auto=format&q=80" alt="Volunteers working at an organization event" loading="lazy">
+        </div>
+        <div>
+          <span class="section-label">What organizations say</span>
+          <div class="testimonial-strip" style="margin-top:1.5rem;">
+            <span class="quote-icon">"</span>
+            <div>
+              <blockquote>Before ImpactCircle, we were managing volunteer sign-ups through a Google Form and chasing people by email. Now we post a shift, get applicants within 48 hours, and have a full record of who came. It changed how we operate.</blockquote>
+              <cite>— Marcus T., Community Programs Director, Moncton Food Hub</cite>
+            </div>
+          </div>
+          <p style="margin-top:2rem; color:#555; line-height:1.75;">Our platform is built with nonprofits in mind. We know your resources are limited — which is why everything from onboarding to reporting is designed to take minutes, not hours.</p>
+          <a href="/how-it-works" class="btn btn-secondary" style="margin-top:0.5rem;">See How It Works</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="org-section" style="padding-bottom:4.5rem;">
+    <div class="container">
+      <div class="cta-block">
+        <h2>Register Your Organization Today</h2>
+        <p>Get verified, post your first shift, and start building the volunteer team your mission deserves.</p>
+        <a href="/register" class="btn-white">Get Started Free</a>
+      </div>
+    </div>
+  </section>
+
 </main>
 
 <script src="/js/api.js"></script>

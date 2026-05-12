@@ -6,34 +6,51 @@
   <title>Privacy Policy | ImpactCircle</title>
   <link rel="stylesheet" href="/css/base.css">
   <style>
-    .legal-hero {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 2.5rem 0;
+    .page-hero {
+      position: relative; overflow: hidden;
+      min-height: 220px; display: flex; align-items: center;
+      color: white; text-align: center;
     }
-    .legal-hero h1 { font-size: 2rem; margin-bottom: 0.5rem; }
-    .legal-hero p { color: var(--text-muted); margin: 0; }
-    .legal-section { padding: 2.5rem 0; }
+    .ph-bg {
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, #0284C7 0%, #0EA5E9 60%, #38BDF8 100%);
+    }
+    .ph-content {
+      position: relative; z-index: 1;
+      padding: calc(var(--nav-height) + 2.5rem) 1.5rem 3.5rem; width: 100%;
+    }
+    .ph-content h1 { font-size: clamp(1.6rem,3.5vw,2.25rem); font-weight: 800; color: white; margin-bottom: 0.6rem; }
+    .ph-content p { font-size: 1rem; opacity: 0.9; max-width: 500px; margin: 0 auto; }
+    .ph-wave { position: absolute; bottom: -1px; left: 0; right: 0; z-index: 2; }
+    .ph-wave svg { display: block; width: 100%; height: 50px; }
+
+    .legal-section { padding: 2.75rem 0 5rem; }
     .legal-content { max-width: 760px; }
-    .legal-content h2 { font-size: 1.2rem; margin: 2rem 0 0.75rem; }
-    .legal-content p, .legal-content li { color: var(--text-muted); font-size: 0.9rem; line-height: 1.75; }
+    .legal-content h2 { font-size: 1.1rem; font-weight: 700; margin: 2rem 0 0.6rem; color: #111; }
+    .legal-content p, .legal-content li { color: #555; font-size: 0.9rem; line-height: 1.8; }
     .legal-content ul { padding-left: 1.5rem; margin-bottom: 0.75rem; list-style: disc; }
     .legal-content li { margin-bottom: 0.25rem; }
     .legal-last-updated {
       display: inline-flex; align-items: center; gap: 0.4rem;
-      font-size: 0.825rem; color: var(--text-muted);
-      background: var(--bg); border-radius: 999px;
-      padding: 0.25rem 0.75rem; margin-bottom: 1.5rem;
+      font-size: 0.825rem; color: #666;
+      background: #F0F9FF; border: 1px solid #BAE6FD;
+      border-radius: 999px; padding: 0.25rem 0.75rem; margin-bottom: 1.5rem;
     }
   </style>
 </head>
 <body>
 <nav id="navbar"></nav>
 
-<div class="legal-hero page-content" style="padding-top: calc(var(--nav-height) + 1.5rem);">
-  <div class="container">
+<div class="page-hero page-content">
+  <div class="ph-bg"></div>
+  <div class="ph-content container">
     <h1>Privacy Policy</h1>
-    <p>How we collect, use, and protect your information.</p>
+    <p>How we collect, use, and protect your personal information.</p>
+  </div>
+  <div class="ph-wave">
+    <svg viewBox="0 0 1440 50" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#ffffff" d="M0,25 C360,50 1080,0 1440,25 L1440,50 L0,50 Z"/>
+    </svg>
   </div>
 </div>
 

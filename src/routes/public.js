@@ -9,6 +9,16 @@ const setCache = (k, d) => cache.set(k, { data: d, ts: Date.now() });
 
 router.get('/health', (req, res) => res.json({ success: true, message: 'API is running.', uptime: process.uptime() }));
 
+router.get('/categories', async (req, res, next) => {
+  try {
+    const cached = getCache('categories');
+    if (cached) return res.json({ success: true, data: { categories: cached } });
+    const categories = await Category.findAll({ where: { isActive: true }, order: [['name', 'ASC']] });
+    setCache('categories', categories);
+    res.json({ success: true, data: { categories } });
+  } catch (err) { next(err); }
+});
+
 router.get('/impact', async (req, res, next) => {
   try {
     const cached = getCache('impact');

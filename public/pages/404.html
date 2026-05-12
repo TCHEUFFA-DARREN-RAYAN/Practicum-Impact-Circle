@@ -6,41 +6,80 @@
   <title>Page Not Found | ImpactCircle</title>
   <link rel="stylesheet" href="/css/base.css">
   <style>
-    body { background: #0f0f0f; }
-    .not-found-page {
-      min-height: 100vh;
-      display: flex; align-items: center; justify-content: center;
-      flex-direction: column; text-align: center; padding: 2rem;
+    .nf-wrap {
+      min-height: calc(100vh - var(--nav-height) - 120px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1.5rem 4rem;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(14, 165, 233, 0.12), transparent 55%),
+        linear-gradient(180deg, #f8fafc 0%, #ffffff 45%);
     }
-    .not-found-code { font-size: 7rem; font-weight: 900; color: #222; line-height: 1; margin-bottom: 0.5rem; }
-    .not-found-title { font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 0.75rem; }
-    .not-found-sub { color: #666; font-size: 0.9375rem; margin-bottom: 2rem; max-width: 360px; line-height: 1.65; }
-    .not-found-btns { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
-    .btn-nf-primary {
-      background: #5b5ef4; color: white; padding: 0.6875rem 1.5rem;
-      border-radius: 8px; font-weight: 600; font-size: 0.9rem;
-      text-decoration: none; transition: background 0.15s;
+    .nf-card {
+      max-width: 520px;
+      text-align: center;
+      background: #fff;
+      border: 1px solid rgba(14, 165, 233, 0.18);
+      border-radius: 20px;
+      padding: 3rem 2.25rem 2.75rem;
+      box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06), 0 1px 0 rgba(255, 255, 255, 1) inset;
     }
-    .btn-nf-primary:hover { background: #4649d4; color: white; text-decoration: none; }
-    .btn-nf-outline {
-      background: transparent; color: #888; padding: 0.6875rem 1.5rem;
-      border-radius: 8px; font-weight: 600; font-size: 0.9rem;
-      border: 1px solid #333; text-decoration: none; transition: all 0.15s;
+    .nf-code {
+      font-size: clamp(4.5rem, 14vw, 6.5rem);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 50%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 0.35rem;
     }
-    .btn-nf-outline:hover { color: #ccc; border-color: #555; text-decoration: none; }
+    .nf-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+    }
+    .nf-sub {
+      color: #64748b;
+      font-size: 1rem;
+      line-height: 1.65;
+      margin-bottom: 2rem;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .nf-btns {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
   </style>
 </head>
 <body>
-  <div class="not-found-page">
-    <div class="not-found-code">404</div>
-    <h1 class="not-found-title">Page not found</h1>
-    <p class="not-found-sub">The page you're looking for doesn't exist or may have been moved.</p>
-    <div class="not-found-btns">
-      <a href="/" class="btn-nf-primary">Back to Home</a>
-      <a href="/gigs" class="btn-nf-outline">Browse Gigs</a>
+  <nav id="navbar"></nav>
+
+  <main class="nf-wrap page-content">
+    <div class="nf-card">
+      <div class="nf-code" aria-hidden="true">404</div>
+      <h1 class="nf-title">Page not found</h1>
+      <p class="nf-sub">
+        The page you are looking for does not exist or may have been moved.
+        Try the home page or browse open volunteer gigs.
+      </p>
+      <div class="nf-btns">
+        <a href="/" class="btn btn-primary">Back to Home</a>
+        <a href="/upcoming-shifts" class="btn btn-secondary">Browse gigs</a>
+      </div>
     </div>
-  </div>
-<script src="/js/footer.js"></script></body>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/nav.js"></script>
+  <script src="/js/footer.js"></script>
+</body>
 </html>
-
-

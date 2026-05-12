@@ -7,145 +7,169 @@
   <link rel="stylesheet" href="/css/base.css">
   <style>
     .page-hero {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-      color: white;
-      padding: 4rem 0 3rem;
-      text-align: center;
+      position: relative; overflow: hidden;
+      min-height: 280px; display: flex; align-items: center;
+      color: white; text-align: center;
     }
-    .page-hero h1 { color: white; font-size: 2.5rem; margin-bottom: 1rem; }
-    .page-hero p { font-size: 1.125rem; opacity: 0.9; max-width: 600px; margin: 0 auto; }
-    .contact-section { padding: 3rem 0; }
+    .ph-bg {
+      position: absolute; inset: 0;
+      background-image: url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1400&fit=crop&auto=format&q=80');
+      background-size: cover; background-position: center 35%;
+      filter: brightness(0.4);
+    }
+    .ph-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.42); }
+    .ph-content {
+      position: relative; z-index: 1;
+      padding: calc(var(--nav-height) + 3rem) 1.5rem 4.5rem; width: 100%;
+    }
+    .ph-content h1 { font-size: clamp(1.9rem,4vw,2.75rem); font-weight: 800; color: white; margin-bottom: 0.75rem; }
+    .ph-content p { font-size: 1.1rem; opacity: 0.92; max-width: 580px; margin: 0 auto; }
+    .ph-wave { position: absolute; bottom: -1px; left: 0; right: 0; z-index: 2; }
+    .ph-wave svg { display: block; width: 100%; height: 60px; }
+
+    .contact-section { padding: 3.5rem 0 5rem; }
     .contact-layout {
-      display: grid;
-      grid-template-columns: 1fr 1.5fr;
-      gap: 3rem;
-      align-items: start;
+      display: grid; grid-template-columns: 1fr 1.6fr;
+      gap: 3.5rem; align-items: start;
     }
-    @media (max-width: 720px) { .contact-layout { grid-template-columns: 1fr; } }
-    .contact-info h2 { margin-bottom: 1.25rem; }
+    @media (max-width: 768px) { .contact-layout { grid-template-columns: 1fr; } }
+
+    .contact-info h2 { font-size: 1.4rem; font-weight: 800; margin-bottom: 1.25rem; }
     .contact-item {
-      display: flex; align-items: flex-start; gap: 1rem;
-      margin-bottom: 1.5rem;
+      display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem;
     }
     .contact-item-icon {
       width: 44px; height: 44px; flex-shrink: 0;
-      background: var(--primary-light);
-      border-radius: var(--radius);
-      display: flex; align-items: center; justify-content: center;
-      color: var(--primary);
+      background: #EFF6FF; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; color: #0284C7;
     }
-    .contact-item h4 { margin-bottom: 0.2rem; font-size: 0.9rem; }
-    .contact-item p { color: var(--text-muted); font-size: 0.875rem; margin: 0; }
+    .contact-item h4 { margin-bottom: 0.2rem; font-size: 0.9rem; font-weight: 700; }
+    .contact-item p { color: #666; font-size: 0.875rem; margin: 0; }
+
+    .contact-team-img {
+      border-radius: 14px; overflow: hidden; margin-top: 2rem;
+      aspect-ratio: 16/7; box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    .contact-team-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
     .contact-form-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 2rem;
-      box-shadow: var(--shadow);
+      background: white; border: 1px solid #e5e7eb;
+      border-radius: 16px; padding: 2.25rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.07);
     }
-    .contact-form-card h2 { margin-bottom: 1.5rem; }
+    .contact-form-card h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: 1.5rem; }
     #contact-success {
       display: none;
-      background: var(--success-light);
-      color: var(--success);
-      border-radius: var(--radius);
-      padding: 1rem;
-      margin-top: 1rem;
-      text-align: center;
-      font-weight: 600;
+      background: #DCFCE7; color: #15803D;
+      border-radius: 10px; padding: 1rem;
+      margin-top: 1rem; text-align: center; font-weight: 600;
     }
   </style>
 </head>
 <body>
 <nav id="navbar"></nav>
 
-<div class="page-hero page-content" style="padding-top: calc(var(--nav-height) + 2rem);">
-  <div class="container">
+<div class="page-hero page-content">
+  <div class="ph-bg"></div>
+  <div class="ph-overlay"></div>
+  <div class="ph-content container">
     <h1>Contact Us</h1>
-    <p>Have a question or need help? We'd love to hear from you.</p>
+    <p>Have a question, a partnership idea, or need support? Our team is here to help.</p>
+  </div>
+  <div class="ph-wave">
+    <svg viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#ffffff" d="M0,30 C360,60 1080,0 1440,30 L1440,60 L0,60 Z"/>
+    </svg>
   </div>
 </div>
 
-<main class="contact-section">
-  <div class="container">
-    <div class="contact-layout">
+<main>
+  <section class="contact-section">
+    <div class="container">
+      <div class="contact-layout">
 
-      <div class="contact-info">
-        <h2>Get in Touch</h2>
-        <div class="contact-item">
-          <div class="contact-item-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          </div>
-          <div>
-            <h4>Email</h4>
-            <p>hello@impactcircle.org</p>
-          </div>
-        </div>
-        <div class="contact-item">
-          <div class="contact-item-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.37 2 2 0 0 1 3.59 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l.81-.81a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-          </div>
-          <div>
-            <h4>Phone</h4>
-            <p>+1 (555) 000-0000</p>
-          </div>
-        </div>
-        <div class="contact-item">
-          <div class="contact-item-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          </div>
-          <div>
-            <h4>Location</h4>
-            <p>Community Hub, Impact Avenue<br>Your City, Country</p>
-          </div>
-        </div>
-        <div class="contact-item">
-          <div class="contact-item-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          </div>
-          <div>
-            <h4>Response Time</h4>
-            <p>We typically respond within 24–48 hours on business days.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="contact-form-card">
-        <h2>Send Us a Message</h2>
-        <form id="contact-form">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="cf-name">Full Name <span class="required">*</span></label>
-              <input type="text" id="cf-name" placeholder="Your name" required>
+        <div class="contact-info">
+          <h2>Get in Touch</h2>
+          <div class="contact-item">
+            <div class="contact-item-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
             </div>
-            <div class="form-group">
-              <label for="cf-email">Email <span class="required">*</span></label>
-              <input type="email" id="cf-email" placeholder="you@example.com" required>
+            <div>
+              <h4>Email Us</h4>
+              <p>hello@impactcircle.org</p>
             </div>
           </div>
-          <div class="form-group">
-            <label for="cf-subject">Subject <span class="required">*</span></label>
-            <select id="cf-subject" required>
-              <option value="">Select a topic…</option>
-              <option>General Inquiry</option>
-              <option>Volunteer Support</option>
-              <option>Organization Support</option>
-              <option>Technical Issue</option>
-              <option>Partnership</option>
-              <option>Other</option>
-            </select>
+          <div class="contact-item">
+            <div class="contact-item-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.37 2 2 0 0 1 3.59 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l.81-.81a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </div>
+            <div>
+              <h4>Phone</h4>
+              <p>+1 (506) 000-0000</p>
+            </div>
           </div>
-          <div class="form-group">
-            <label for="cf-message">Message <span class="required">*</span></label>
-            <textarea id="cf-message" rows="5" placeholder="How can we help?" required></textarea>
+          <div class="contact-item">
+            <div class="contact-item-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div>
+              <h4>Location</h4>
+              <p>Greater Moncton, New Brunswick<br>Canada</p>
+            </div>
           </div>
-          <button type="submit" class="btn btn-primary btn-block">Send Message</button>
-        </form>
-        <div id="contact-success">Thank you! Your message has been sent. We'll get back to you soon.</div>
-      </div>
+          <div class="contact-item">
+            <div class="contact-item-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div>
+              <h4>Response Time</h4>
+              <p>We reply within 1–2 business days.<br>Urgent? Mark your subject "Urgent".</p>
+            </div>
+          </div>
 
+          <div class="contact-team-img">
+            <img src="https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=800&fit=crop&auto=format&q=80" alt="ImpactCircle team volunteers" loading="lazy">
+          </div>
+        </div>
+
+        <div class="contact-form-card">
+          <h2>Send Us a Message</h2>
+          <form id="contact-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="cf-name">Full Name <span class="required">*</span></label>
+                <input type="text" id="cf-name" placeholder="Your name" required>
+              </div>
+              <div class="form-group">
+                <label for="cf-email">Email <span class="required">*</span></label>
+                <input type="email" id="cf-email" placeholder="you@example.com" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="cf-subject">Subject <span class="required">*</span></label>
+              <select id="cf-subject" required>
+                <option value="">Select a topic…</option>
+                <option>General Inquiry</option>
+                <option>Volunteer Support</option>
+                <option>Organization Support</option>
+                <option>Technical Issue</option>
+                <option>Partnership</option>
+                <option>Media & Press</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="cf-message">Message <span class="required">*</span></label>
+              <textarea id="cf-message" rows="5" placeholder="How can we help?" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Send Message</button>
+          </form>
+          <div id="contact-success">Thank you! Your message has been sent. We will get back to you within 1–2 business days.</div>
+        </div>
+
+      </div>
     </div>
-  </div>
+  </section>
 </main>
 
 <script src="/js/api.js"></script>
