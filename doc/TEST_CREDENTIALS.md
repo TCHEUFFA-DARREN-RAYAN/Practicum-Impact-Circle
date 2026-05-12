@@ -23,3 +23,5 @@
 - If login returns a database error about `resetPasswordToken`, run `doc/mysql-add-password-reset.sql` on your MySQL database once (the app checks for this on startup and prints instructions).
 - Verified organizations for posting gigs: `org01`, `org02`, `org03`
 - Pending organizations: `org04`, `org05`, `org06`, `org07`
+- Blocked users return **401 Account suspended** on every authenticated request — unblock via `/admin/users`
+- To create fresh demo accounts run: `node scripts/seed-demo.js`
