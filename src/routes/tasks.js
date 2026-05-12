@@ -1,6 +1,8 @@
 const router = require('express').Router();
+const { body } = require('express-validator');
+const validate = require('../middleware/validate');
 const { requireAuth, requireRole } = require('../middleware/auth');
-const { Task, Gig, Organization, User } = require('../models/index');
+const { Task, Gig, Organization, User, VolunteerProfile } = require('../models/index');
 const { awardPoints } = require('../services/points');
 const { createNotification } = require('../services/notifications');
 const { sendEmail, templates } = require('../services/email');
@@ -68,6 +70,22 @@ router.patch('/:id/verify', requireAuth, requireRole('org'), async (req, res, ne
     }
 
     res.json({ success: true, message: `Task ${decision}.` });
+  } catch (err) { next(err); }
+});
+
+router.patch('/:id/rate', requireAuth, requireRole('org'), [
+  body('orgRating').isInt({ min: 1, max: 5 }).withMessage('Rating must be 1–5.'),
+], validate, async (req, res, next) => {
+  try {
+    const org = await Organization.findOne({ where: { userId: req.user.id } });
+    if (!org) return res.status(403).json({ success: false, message: 'Organization not found.' });
+
+    const task = await Task.findOne({ where: { id: req.params.id, orgId: org.id, status: 'approved' } });
+    if (!task) return res.status(404).json({ success: false, message: 'Approved task not found.' });
+
+    const { orgRating, orgFeedback } = req.body;
+    await task.update({ orgRating: parseInt(orgRating), orgFeedback: orgFeedback || null });
+    res.json({ success: true, message: 'Rating saved.', data: { task } });
   } catch (err) { next(err); }
 });
 
