@@ -4,43 +4,224 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>Analytics | Admin | ImpactCircle</title>
+  <title>Platform Analytics | Admin | ImpactCircle</title>
   <link rel="stylesheet" href="/css/base.css">
+  <style>
+    /* ── KPI cards ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .kpi-grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.35rem 1.45rem;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      min-height: 108px;
+    }
+    .kpi-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .kpi-icon svg { width: 22px; height: 22px; }
+    .ki-blue   { background: #dbeafe; color: #1e40af; }
+    .ki-green  { background: #dcfce7; color: #16a34a; }
+    .ki-purple { background: #ede9fe; color: #7c3aed; }
+    .ki-amber  { background: #fef3c7; color: #d97706; }
+    .ki-red    { background: #fee2e2; color: #dc2626; }
+    .ki-sky    { background: #e0f2fe; color: #0891b2; }
+    .ki-teal   { background: #ccfbf1; color: #0f766e; }
+    .ki-orange { background: #ffedd5; color: #ea580c; }
+    .kpi-body { flex: 1; min-width: 0; }
+    .kpi-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.3rem; }
+    .kpi-value { font-size: 2.1rem; font-weight: 800; color: var(--text); line-height: 1; letter-spacing: -0.04em; }
+    .kpi-value.warn   { color: #d97706; }
+    .kpi-value.danger { color: #dc2626; }
+    .kpi-value.good   { color: #16a34a; }
+    .kpi-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+    /* ── Section ── */
+    .card-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 0.6rem; }
+    .dash-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+      overflow: hidden;
+      margin-bottom: 1.25rem;
+    }
+    .section-head {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+    .section-title { font-size: 0.82rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text); }
+    .section-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem; }
+    .section-body { padding: 1.25rem; }
+    .dash-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem; }
+
+    /* ── Breakdown rows ── */
+    .breakdown-group { margin-bottom: 1.25rem; }
+    .breakdown-group:last-child { margin-bottom: 0; }
+    .breakdown-label { font-size: 0.75rem; font-weight: 700; color: var(--text); margin-bottom: 0.625rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .breakdown-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
+    .breakdown-row:last-child { border-bottom: none; }
+    .breakdown-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .bd-green  { background: #16a34a; }
+    .bd-amber  { background: #d97706; }
+    .bd-red    { background: #dc2626; }
+    .bd-blue   { background: #2563eb; }
+    .bd-grey   { background: #94a3b8; }
+    .breakdown-name  { font-size: 0.8rem; color: var(--text); flex: 1; }
+    .breakdown-count { font-size: 0.875rem; font-weight: 700; color: var(--text); min-width: 36px; text-align: right; }
+    .breakdown-bar-wrap { width: 80px; height: 6px; background: var(--border); border-radius: 3px; flex-shrink: 0; }
+    .breakdown-bar { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+
+    /* ── Task pipeline ── */
+    .pipeline { display: flex; align-items: stretch; gap: 0; margin: 0.5rem 0; }
+    .pipeline-step {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: center;
+      position: relative;
+    }
+    .pipeline-step + .pipeline-step { margin-left: -1px; border-left-color: transparent; }
+    .pipeline-step:first-child { border-radius: 10px 0 0 10px; }
+    .pipeline-step:last-child  { border-radius: 0 10px 10px 0; }
+    .pipeline-num { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+    .pipeline-lbl { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-top: 0.25rem; font-weight: 600; }
+    .pipeline-arrow { display: flex; align-items: center; padding: 0 0.25rem; color: var(--text-muted); font-size: 1rem; flex-shrink: 0; align-self: center; }
+
+    /* ── Top orgs table ── */
+    .top-orgs { list-style: none; padding: 0; margin: 0; }
+    .top-org-row { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
+    .top-org-row:last-child { border-bottom: none; }
+    .top-org-rank { width: 24px; height: 24px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; color: var(--text-muted); flex-shrink: 0; }
+    .top-org-rank.gold   { background: #fef3c7; color: #92400e; }
+    .top-org-rank.silver { background: #f1f5f9; color: #475569; }
+    .top-org-rank.bronze { background: #ffedd5; color: #9a3412; }
+    .top-org-name { font-size: 0.875rem; font-weight: 600; color: var(--text); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .top-org-hours { font-size: 0.875rem; font-weight: 700; color: #0f766e; min-width: 56px; text-align: right; }
+    .top-org-bar-wrap { width: 100px; height: 6px; background: var(--border); border-radius: 3px; flex-shrink: 0; }
+    .top-org-bar { height: 100%; border-radius: 3px; background: #0d9488; }
+
+    /* ── KPI target bars ── */
+    .target-row { margin-bottom: 1.125rem; }
+    .target-row:last-child { margin-bottom: 0; }
+    .target-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.375rem; }
+    .target-label { font-size: 0.875rem; font-weight: 600; color: var(--text); }
+    .target-stat { font-size: 0.82rem; font-weight: 700; }
+    .target-bar-wrap { height: 8px; background: var(--border); border-radius: 4px; }
+    .target-bar { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+
+    @media (max-width: 1100px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } .kpi-grid-3 { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 900px)  { .dash-row { grid-template-columns: 1fr; } .pipeline { flex-direction: column; } .pipeline-step { border-radius: 10px !important; margin-left: 0; border-left-color: var(--border) !important; } .pipeline-arrow { transform: rotate(90deg); align-self: flex-start; margin-left: 1rem; } }
+    @media (max-width: 600px)  { .kpi-grid { grid-template-columns: 1fr 1fr; } .kpi-grid-3 { grid-template-columns: 1fr 1fr; } }
+  </style>
 </head>
 <body>
 <nav id="navbar"></nav>
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <aside id="sidebar" class="sidebar"></aside>
+
 <div class="page-content">
   <div class="container">
-    <div class="page-header">
-      <div class="page-header-row">
-        <div><h1> Platform Analytics</h1><p class="text-muted">Key performance indicators and platform health metrics</p></div>
-        <div style="display:flex;gap:0.75rem">
-          <a href="/admin/analytics.csv" class="btn btn-secondary">⬇️ Export CSV</a>
-          <a href="/admin" class="btn btn-secondary">← Admin Home</a>
+
+    <!-- Header -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.25rem">
+      <div>
+        <h1 style="font-size:1.5rem;font-weight:800;color:var(--text);margin:0 0 0.25rem">Platform Analytics</h1>
+        <p style="color:var(--text-muted);font-size:0.85rem;margin:0" id="pageSubtitle">Key metrics and operational health — loading…</p>
+      </div>
+      <div style="display:flex;gap:0.625rem;flex-wrap:wrap">
+        <a href="/admin/analytics.csv" class="btn btn-secondary btn-sm">Export CSV</a>
+        <a href="/admin" class="btn btn-secondary btn-sm">← Dashboard</a>
+      </div>
+    </div>
+
+    <!-- KPI Row 1: Platform volume -->
+    <div class="card-label">Platform at a glance</div>
+    <div class="kpi-grid" id="kpiRow1">
+      <div class="kpi-card"><div class="kpi-icon ki-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="kpi-body"><div class="kpi-label">Total Users</div><div class="kpi-value" id="sUsers">—</div><div class="kpi-sub" id="sUsersSub">loading…</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon ki-sky"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="kpi-body"><div class="kpi-label">Community Hours</div><div class="kpi-value" id="sHours">—</div><div class="kpi-sub">All-time verified volunteer hours</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon ki-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="kpi-body"><div class="kpi-label">Active Organizations</div><div class="kpi-value" id="sOrgs">—</div><div class="kpi-sub" id="sOrgsSub">loading…</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon ki-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="kpi-body"><div class="kpi-label">Gig Opportunities</div><div class="kpi-value" id="sGigs">—</div><div class="kpi-sub" id="sGigsSub">loading…</div></div></div>
+    </div>
+
+    <!-- KPI Row 2: Operational signals -->
+    <div class="card-label">Operational signals</div>
+    <div class="kpi-grid kpi-grid-3" style="margin-bottom:1.5rem">
+      <div class="kpi-card"><div class="kpi-icon ki-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><div class="kpi-body"><div class="kpi-label">Pending Verifications</div><div class="kpi-value warn" id="sPending">—</div><div class="kpi-sub">Volunteers &amp; orgs awaiting review</div></div></div>
+      <div class="kpi-card" id="autoCard"><div class="kpi-icon ki-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><div class="kpi-body"><div class="kpi-label">Auto-Approval Rate</div><div class="kpi-value" id="sAutoRate">—</div><div class="kpi-sub">Target: below 10% — orgs responding on time</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon ki-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="kpi-body"><div class="kpi-label">Gig Fill Rate</div><div class="kpi-value" id="sFillRate">—</div><div class="kpi-sub" id="sFillSub">Closed gigs as % of total posted</div></div></div>
+    </div>
+
+    <!-- Middle row: User breakdown + Gig ecosystem -->
+    <div class="dash-row">
+
+      <!-- User Breakdown -->
+      <div class="dash-section">
+        <div class="section-head">
+          <div><div class="section-title">User Breakdown</div><div class="section-sub">Verification status by role</div></div>
+        </div>
+        <div class="section-body" id="userBreakdown">
+          <div style="padding:1.5rem;text-align:center"><div class="spinner"></div></div>
         </div>
       </div>
-    </div>
 
-    <div class="grid grid-4 mb-4">
-      <div class="stat-card"><div class="stat-label">Total Users</div><div class="stat-value" id="sUsers">—</div></div>
-      <div class="stat-card"><div class="stat-label">Verified Volunteers</div><div class="stat-value" id="sVerified">—</div><div class="stat-sub" id="sPending"></div></div>
-      <div class="stat-card"><div class="stat-label">Total Gigs</div><div class="stat-value" id="sGigs">—</div><div class="stat-sub" id="sOpenGigs"></div></div>
-      <div class="stat-card"><div class="stat-label">Total Organizations</div><div class="stat-value" id="sOrgs">—</div></div>
-      <div class="stat-card" style="grid-column:span 2"><div class="stat-label">Total Verified Hours</div><div class="stat-value" id="sHours">—</div><div class="stat-sub">Across all verified tasks</div></div>
-      <div class="stat-card" style="border-top:3px solid var(--warning)" id="autoCard">
-        <div class="stat-label">Auto-Approval Rate</div>
-        <div class="stat-value" id="sAuto">—%</div>
-        <div class="stat-sub">Target: &lt; 10%</div>
+      <!-- Gig Ecosystem -->
+      <div class="dash-section">
+        <div class="section-head">
+          <div><div class="section-title">Gig Ecosystem</div><div class="section-sub">Opportunity status distribution</div></div>
+        </div>
+        <div class="section-body" id="gigEcosystem">
+          <div style="padding:1.5rem;text-align:center"><div class="spinner"></div></div>
+        </div>
       </div>
-      <div class="stat-card"><div class="stat-label">Auto-Approved Tasks</div><div class="stat-value" id="sAutoCount">—</div><div class="stat-sub" id="sTotalApproved"></div></div>
+
     </div>
 
-    <div class="card">
-      <h3 style="margin-bottom:1rem">KPI Status</h3>
-      <div id="kpiStatus"><div class="loading-overlay"><div class="spinner"></div></div></div>
+    <!-- Task Pipeline -->
+    <div class="dash-section">
+      <div class="section-head">
+        <div><div class="section-title">Task Completion Pipeline</div><div class="section-sub">Volunteer task flow from submission to approval</div></div>
+      </div>
+      <div class="section-body" id="taskPipeline">
+        <div style="padding:1.5rem;text-align:center"><div class="spinner"></div></div>
+      </div>
     </div>
+
+    <!-- Top Organizations -->
+    <div class="dash-section">
+      <div class="section-head">
+        <div><div class="section-title">Top Organizations by Impact</div><div class="section-sub">Ranked by volunteer hours facilitated</div></div>
+        <a href="/admin/organizations" class="btn btn-ghost btn-sm" style="font-size:0.75rem">View all →</a>
+      </div>
+      <div class="section-body" id="topOrgsSection">
+        <div style="padding:1.5rem;text-align:center"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- KPI Targets -->
+    <div class="dash-section">
+      <div class="section-head">
+        <div><div class="section-title">KPI Targets</div><div class="section-sub">Progress toward platform health goals</div></div>
+      </div>
+      <div class="section-body" id="kpiTargets">
+        <div style="padding:1.5rem;text-align:center"><div class="spinner"></div></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -48,53 +229,230 @@
 <script src="/js/nav.js"></script>
 <script>
 API.requireAuth('admin');
+
 (async () => {
   try {
-    const { data } = await API.get('/admin/analytics');
-    document.getElementById('sUsers').textContent = data.totalUsers;
-    document.getElementById('sVerified').textContent = data.verifiedVolunteers;
-    document.getElementById('sPending').textContent = `${data.pendingVerifications} pending`;
-    document.getElementById('sGigs').textContent = data.totalGigs;
-    document.getElementById('sOpenGigs').textContent = `${data.openGigs} open`;
-    document.getElementById('sOrgs').textContent = data.totalOrgs;
-    document.getElementById('sHours').textContent = data.totalVerifiedHours.toFixed(1) + 'h';
-    document.getElementById('sAuto').textContent = data.autoApprovalRate + '%';
-    document.getElementById('sAutoCount').textContent = data.autoApprovedTasks;
-    document.getElementById('sTotalApproved').textContent = `of ${data.totalApprovedTasks} total approved`;
+    const { data: d } = await API.get('/admin/analytics');
 
-    if (data.autoApprovalRate >= 10) {
-      document.getElementById('autoCard').style.borderColor = 'var(--danger)';
-      document.getElementById('sAuto').style.color = 'var(--danger)';
+    const now = new Date();
+    document.getElementById('pageSubtitle').textContent =
+      'Platform analytics · ' + now.toLocaleDateString('en-CA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    /* ── KPI Row 1 ── */
+    document.getElementById('sUsers').textContent = d.totalUsers;
+    document.getElementById('sUsersSub').textContent =
+      `${d.volunteers.verified} verified volunteers · ${d.orgs.verified} verified orgs`;
+    document.getElementById('sHours').textContent =
+      (typeof d.totalVerifiedHours === 'number' ? d.totalVerifiedHours.toFixed(1) : '0') + 'h';
+    document.getElementById('sOrgs').textContent = d.orgs.verified;
+    document.getElementById('sOrgsSub').textContent =
+      d.orgs.pending > 0 ? `${d.orgs.pending} pending verification` : 'All verified';
+    document.getElementById('sGigs').textContent = d.totalGigs;
+    document.getElementById('sGigsSub').textContent =
+      `${d.gigs.open} open · ${d.gigs.closed} closed · ${d.gigs.cancelled} cancelled`;
+
+    /* ── KPI Row 2 ── */
+    const pendingTotal = d.volunteers.pending + d.orgs.pending;
+    document.getElementById('sPending').textContent = pendingTotal;
+
+    const autoRate = d.autoApprovalRate ?? 0;
+    const autoEl = document.getElementById('sAutoRate');
+    autoEl.textContent = autoRate + '%';
+    if (autoRate >= 10) autoEl.classList.add('danger');
+    else if (autoRate >= 5) autoEl.classList.add('warn');
+    else autoEl.classList.add('good');
+
+    const fillRate = d.gigs.fillRate ?? 0;
+    document.getElementById('sFillRate').textContent = fillRate + '%';
+    document.getElementById('sFillSub').textContent =
+      `${d.gigs.closed} of ${d.totalGigs} gigs closed/filled`;
+
+    /* ── User Breakdown ── */
+    const volTotal = d.volunteers.total || 1;
+    const orgTotal = d.orgs.total || 1;
+    document.getElementById('userBreakdown').innerHTML = `
+      <div class="breakdown-group">
+        <div class="breakdown-label">Volunteers (${d.volunteers.total})</div>
+        ${[
+          { dot:'bd-green', name:'Verified', val: d.volunteers.verified, max: volTotal, color:'#16a34a' },
+          { dot:'bd-amber', name:'Pending', val: d.volunteers.pending, max: volTotal, color:'#d97706' },
+          { dot:'bd-red',   name:'Rejected', val: d.volunteers.rejected, max: volTotal, color:'#dc2626' },
+        ].map(r => `
+          <div class="breakdown-row">
+            <div class="breakdown-dot ${r.dot}"></div>
+            <div class="breakdown-name">${r.name}</div>
+            <div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:${Math.round((r.val/r.max)*100)}%;background:${r.color}"></div></div>
+            <div class="breakdown-count">${r.val}</div>
+          </div>`).join('')}
+      </div>
+      <div class="breakdown-group">
+        <div class="breakdown-label">Organizations (${d.orgs.total})</div>
+        ${[
+          { dot:'bd-green', name:'Verified', val: d.orgs.verified, max: orgTotal, color:'#16a34a' },
+          { dot:'bd-amber', name:'Pending review', val: d.orgs.pending, max: orgTotal, color:'#d97706' },
+        ].map(r => `
+          <div class="breakdown-row">
+            <div class="breakdown-dot ${r.dot}"></div>
+            <div class="breakdown-name">${r.name}</div>
+            <div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:${Math.round((r.val/r.max)*100)}%;background:${r.color}"></div></div>
+            <div class="breakdown-count">${r.val}</div>
+          </div>`).join('')}
+      </div>
+      <div style="font-size:0.75rem;color:var(--text-muted);padding-top:0.5rem">
+        Platform also has ${d.adminCount} admin account${d.adminCount !== 1 ? 's' : ''}.
+      </div>`;
+
+    /* ── Gig Ecosystem ── */
+    const gigTotal = d.gigs.total || 1;
+    document.getElementById('gigEcosystem').innerHTML = `
+      ${[
+        { dot:'bd-green', name:'Open — accepting applicants', val: d.gigs.open, max: gigTotal, color:'#16a34a' },
+        { dot:'bd-blue',  name:'Closed / Filled', val: d.gigs.closed, max: gigTotal, color:'#2563eb' },
+        { dot:'bd-grey',  name:'Cancelled', val: d.gigs.cancelled, max: gigTotal, color:'#94a3b8' },
+      ].map(r => `
+        <div class="breakdown-row">
+          <div class="breakdown-dot ${r.dot}"></div>
+          <div class="breakdown-name">${r.name}</div>
+          <div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:${Math.round((r.val/gigTotal)*100)}%;background:${r.color}"></div></div>
+          <div class="breakdown-count">${r.val}</div>
+        </div>`).join('')}
+      <div style="margin-top:1.125rem;padding-top:0.875rem;border-top:1px solid var(--border)">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:0.375rem">
+          <span style="font-size:0.82rem;font-weight:600;color:var(--text)">Fill Rate</span>
+          <span style="font-size:0.82rem;font-weight:700;color:${fillRate >= 50 ? '#16a34a' : '#d97706'}">${fillRate}% <span style="font-weight:400;color:var(--text-muted)">/ 75% target</span></span>
+        </div>
+        <div style="height:8px;background:var(--border);border-radius:4px">
+          <div style="width:${Math.min(100, fillRate)}%;height:100%;background:${fillRate >= 50 ? '#16a34a' : '#d97706'};border-radius:4px;transition:width 0.5s"></div>
+        </div>
+        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.375rem">
+          Applications: ${d.applications.total} total · ${d.applications.approved} approved · ${d.applications.rejected} rejected
+        </div>
+      </div>`;
+
+    /* ── Task Pipeline ── */
+    const tasks = d.tasks;
+    const pipeTotal = tasks.approved + tasks.rejected + tasks.pending;
+    document.getElementById('taskPipeline').innerHTML = `
+      <div class="pipeline">
+        <div class="pipeline-step" style="background:#f0fdf4;border-color:#bbf7d0">
+          <div class="pipeline-num" style="color:#16a34a">${tasks.pending}</div>
+          <div class="pipeline-lbl">Submitted &amp; Pending</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step" style="background:#eff6ff;border-color:#bfdbfe">
+          <div class="pipeline-num" style="color:#1e40af">${tasks.approved}</div>
+          <div class="pipeline-lbl">Approved</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step" style="background:#fef3c7;border-color:#fde68a">
+          <div class="pipeline-num" style="color:#92400e">${tasks.autoApproved}</div>
+          <div class="pipeline-lbl">Auto-Approved</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step" style="background:#fff1f2;border-color:#fecdd3">
+          <div class="pipeline-num" style="color:#be123c">${tasks.rejected}</div>
+          <div class="pipeline-lbl">Rejected</div>
+        </div>
+      </div>
+      <div style="margin-top:1rem;padding:0.875rem;background:${autoRate >= 10 ? '#fff1f2' : '#f0fdf4'};border-radius:8px;border:1px solid ${autoRate >= 10 ? '#fecdd3' : '#bbf7d0'}">
+        <div style="font-size:0.82rem;font-weight:600;color:${autoRate >= 10 ? '#be123c' : '#166534'}">
+          ${autoRate >= 10
+            ? `⚠ Auto-approval rate is ${autoRate}% — above the 10% target. Encourage organizations to review task submissions promptly.`
+            : `✓ Auto-approval rate is ${autoRate}% — within the acceptable range (&lt;10%). Organizations are responding to task submissions on time.`}
+        </div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem">Auto-approval is triggered when organizations take more than 30 days to review a task submission.</div>
+      </div>`;
+
+    /* ── Top Organizations ── */
+    const topOrgs = d.topOrgs || [];
+    if (topOrgs.length === 0) {
+      document.getElementById('topOrgsSection').innerHTML = `
+        <div style="padding:1.5rem;text-align:center;color:var(--text-muted)">
+          <div style="font-size:2rem;margin-bottom:0.5rem">🏢</div>
+          <div style="font-size:0.875rem">No organizations have facilitated hours yet.</div>
+          <div style="font-size:0.8rem;margin-top:0.25rem">This will populate as volunteers complete tasks.</div>
+        </div>`;
+    } else {
+      const maxHours = topOrgs[0]?.totalFacilitatedHours || 1;
+      const medals = ['gold', 'silver', 'bronze', '', ''];
+      document.getElementById('topOrgsSection').innerHTML = `
+        <ul class="top-orgs">
+          ${topOrgs.map((o, i) => `
+            <li class="top-org-row">
+              <div class="top-org-rank ${medals[i] || ''}">${i + 1}</div>
+              <div class="top-org-name">${o.orgName}</div>
+              <div class="top-org-bar-wrap"><div class="top-org-bar" style="width:${Math.round((o.totalFacilitatedHours / maxHours) * 100)}%"></div></div>
+              <div class="top-org-hours">${(o.totalFacilitatedHours || 0).toFixed(1)}h</div>
+            </li>`).join('')}
+        </ul>`;
     }
 
-    const kpis = [
-      { label: 'Verified Volunteer Hours', value: data.totalVerifiedHours, target: 5000, unit: 'h', higher: true },
-      { label: 'Active Users', value: data.totalUsers, target: 500, unit: ' users', higher: true },
-      { label: 'Gig Fill Rate', value: data.totalGigs > 0 ? Math.round((data.totalGigs - data.openGigs) / data.totalGigs * 100) : 0, target: 75, unit: '%', higher: true },
-      { label: 'Auto-Approval Rate', value: data.autoApprovalRate, target: 10, unit: '%', higher: false },
-      { label: 'CSR Partner Participation', value: 0, target: 5, unit: ' partners', higher: true },
+    /* ── KPI Targets ── */
+    const hours = d.totalVerifiedHours || 0;
+    const hourTarget = 1000;
+    const verifiedVolCount = d.volunteers.verified;
+    const volTarget = 100;
+
+    const targets = [
+      {
+        label: 'Community Hours',
+        value: hours,
+        display: hours.toFixed(1) + 'h',
+        target: hourTarget,
+        targetDisplay: hourTarget + 'h',
+        pct: Math.min(100, (hours / hourTarget) * 100),
+        higher: true,
+      },
+      {
+        label: 'Gig Fill Rate',
+        value: fillRate,
+        display: fillRate + '%',
+        target: 75,
+        targetDisplay: '75%',
+        pct: Math.min(100, (fillRate / 75) * 100),
+        higher: true,
+      },
+      {
+        label: 'Verified Volunteers',
+        value: verifiedVolCount,
+        display: verifiedVolCount,
+        target: volTarget,
+        targetDisplay: volTarget,
+        pct: Math.min(100, (verifiedVolCount / volTarget) * 100),
+        higher: true,
+      },
+      {
+        label: 'Auto-Approval Rate (lower is better)',
+        value: autoRate,
+        display: autoRate + '%',
+        target: 10,
+        targetDisplay: '<10%',
+        pct: Math.min(100, autoRate >= 10 ? 100 : (autoRate / 10) * 100),
+        higher: false,
+      },
     ];
 
-    document.getElementById('kpiStatus').innerHTML = kpis.map(k => {
-      const ok = k.higher ? k.value >= k.target : k.value <= k.target;
-      const pct = Math.min(100, k.higher ? (k.value / k.target) * 100 : (k.target === 0 ? 100 : Math.max(0, 100 - (k.value / k.target) * 100)));
+    document.getElementById('kpiTargets').innerHTML = targets.map(t => {
+      const ok = t.higher ? t.value >= t.target : t.value < t.target;
+      const color = ok ? '#16a34a' : t.higher ? '#d97706' : '#dc2626';
       return `
-        <div style="margin-bottom:1.25rem">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.375rem">
-            <span style="font-size:0.875rem;font-weight:600">${k.label}</span>
-            <span style="font-size:0.875rem;color:${ok ? 'var(--success)' : 'var(--warning)'};font-weight:700">${k.value}${k.unit} / ${k.target}${k.unit} target ${ok ? '' : '⏳'}</span>
+        <div class="target-row">
+          <div class="target-header">
+            <span class="target-label">${t.label}</span>
+            <span class="target-stat" style="color:${color}">${t.display} <span style="font-weight:400;color:var(--text-muted)">/ ${t.targetDisplay} target</span> ${ok ? '✓' : '⏳'}</span>
           </div>
-          <div style="height:8px;background:var(--border);border-radius:4px">
-            <div style="width:${pct}%;height:100%;background:${ok ? 'var(--success)' : 'var(--warning)'};border-radius:4px;transition:width 0.5s"></div>
+          <div class="target-bar-wrap">
+            <div class="target-bar" style="width:${t.pct.toFixed(1)}%;background:${color}"></div>
           </div>
-        </div>
-      `;
+        </div>`;
     }).join('');
-  } catch (err) { Toast.error(err.message); }
+
+  } catch (err) {
+    Toast.error('Failed to load analytics: ' + err.message);
+    document.getElementById('pageSubtitle').textContent = 'Could not load data — check your connection.';
+  }
 })();
 </script>
-<script src="/js/footer.js"></script></body>
+<script src="/js/footer.js"></script>
+</body>
 </html>
-
-
-
