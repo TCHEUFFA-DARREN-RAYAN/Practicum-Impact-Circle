@@ -102,6 +102,71 @@
         </div>
 
         <div class="divider"></div>
+        <h3 style="margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:1px solid var(--border)">Schedule &amp; Time</h3>
+
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;margin:0">
+            <input type="checkbox" id="isRecurring" style="width:auto;accent-color:var(--primary)" onchange="toggleRecurring()">
+            <div>
+              <span style="font-weight:600">Recurring gig</span>
+              <div class="form-hint" style="margin:0">This gig repeats on a schedule (daily, weekly, or monthly)</div>
+            </div>
+          </label>
+        </div>
+
+        <div id="recurringSection" style="display:none">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="recurrenceType">Frequency <span class="required">*</span></label>
+              <select id="recurrenceType" onchange="toggleDays()">
+                <option value="daily">Daily</option>
+                <option value="weekly" selected>Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="hoursPerOccurrence">Hours per session <span class="required">*</span></label>
+              <input type="number" id="hoursPerOccurrence" min="0.5" step="0.5" placeholder="e.g. 3" oninput="calcTotal()">
+              <span class="field-error"></span>
+            </div>
+          </div>
+
+          <div class="form-group" id="daysGroup">
+            <label>Days of the Week</label>
+            <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.25rem">
+              ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => `
+                <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer;font-size:0.875rem">
+                  <input type="checkbox" class="day-cb" value="${d}" style="width:auto;accent-color:var(--primary)" onchange="calcTotal()"> ${d}
+                </label>`).join('')}
+            </div>
+          </div>
+
+          <div id="totalDisplay" style="display:none;background:var(--primary-light);color:var(--primary);padding:0.75rem 1rem;border-radius:var(--radius-sm);font-size:0.875rem;font-weight:600;margin-bottom:1rem"></div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="timeOfDay">Time of Day</label>
+            <select id="timeOfDay" onchange="toggleCustomTime()">
+              <option value="">Not specified</option>
+              <option value="morning">Morning (6 am – 12 pm)</option>
+              <option value="afternoon">Afternoon (12 pm – 5 pm)</option>
+              <option value="evening">Evening (5 pm – 10 pm)</option>
+              <option value="flexible">Flexible</option>
+              <option value="custom">Custom time range</option>
+            </select>
+          </div>
+          <div class="form-group" id="customTimeGroup" style="display:none">
+            <label>Start / End Time</label>
+            <div style="display:flex;gap:0.5rem;align-items:center">
+              <input type="time" id="startTime" style="flex:1">
+              <span style="color:var(--text-muted)">to</span>
+              <input type="time" id="endTime" style="flex:1">
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
         <div style="display:flex;gap:1rem;justify-content:flex-end">
           <a href="/org-dashboard" class="btn btn-secondary">Cancel</a>
           <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">Post Gig </button>
@@ -163,7 +228,54 @@ document.getElementById('locationType').addEventListener('change', function() {
   document.getElementById('address').disabled = this.value === 'remote';
 });
 
+function toggleRecurring() {
+  const show = document.getElementById('isRecurring').checked;
+  document.getElementById('recurringSection').style.display = show ? 'block' : 'none';
+  if (!show) document.getElementById('totalDisplay').style.display = 'none';
+}
+
+function toggleDays() {
+  const t = document.getElementById('recurrenceType').value;
+  document.getElementById('daysGroup').style.display = t === 'weekly' ? 'block' : 'none';
+  calcTotal();
+}
+
+function toggleCustomTime() {
+  const v = document.getElementById('timeOfDay').value;
+  document.getElementById('customTimeGroup').style.display = v === 'custom' ? 'block' : 'none';
+}
+
+function calcTotal() {
+  if (!document.getElementById('isRecurring').checked) return;
+  const hpo = parseFloat(document.getElementById('hoursPerOccurrence').value) || 0;
+  if (!hpo) { document.getElementById('totalDisplay').style.display = 'none'; return; }
+  const freq = document.getElementById('recurrenceType').value;
+  const startDate = document.getElementById('startDate').value;
+  const endDate = document.getElementById('endDate').value;
+  if (!startDate || !endDate) { document.getElementById('totalDisplay').style.display = 'none'; return; }
+
+  const start = new Date(startDate), end = new Date(endDate);
+  const days = Math.max(0, Math.round((end - start) / 86400000)) + 1;
+  let occurrences = 0;
+  if (freq === 'daily') occurrences = days;
+  else if (freq === 'weekly') {
+    const selected = [...document.querySelectorAll('.day-cb:checked')].map(c => c.value);
+    const dayMap = {Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6,Sun:0};
+    for (let d = 0; d < days; d++) {
+      const dow = new Date(start.getTime() + d * 86400000).getDay();
+      if (selected.some(s => dayMap[s] === dow)) occurrences++;
+    }
+  } else if (freq === 'monthly') occurrences = Math.max(1, Math.round(days / 30));
+
+  const total = (hpo * occurrences).toFixed(1);
+  const el = document.getElementById('totalDisplay');
+  el.style.display = 'block';
+  el.textContent = `Estimated total: ${total} hours (${occurrences} sessions × ${hpo}h each)`;
+}
+
 document.getElementById('startDate').min = new Date().toISOString().split('T')[0];
+['startDate', 'endDate'].forEach(id => document.getElementById(id).addEventListener('change', calcTotal));
+
 document.getElementById('gigForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   Validator.clearAll(e.target);
@@ -176,6 +288,7 @@ document.getElementById('gigForm').addEventListener('submit', async (e) => {
   const estimatedHours = parseFloat(document.getElementById('estimatedHours').value);
   const startDate = document.getElementById('startDate').value;
   const endDate = document.getElementById('endDate').value;
+  const isRec = document.getElementById('isRecurring').checked;
 
   let valid = true;
   if (!title) { Validator.showError(document.getElementById('title'), 'Title is required.'); valid = false; }
@@ -185,6 +298,10 @@ document.getElementById('gigForm').addEventListener('submit', async (e) => {
   if (!startDate) { Validator.showError(document.getElementById('startDate'), 'Start date required.'); valid = false; }
   if (!endDate) { Validator.showError(document.getElementById('endDate'), 'End date required.'); valid = false; }
   if (startDate && endDate && endDate < startDate) { Validator.showError(document.getElementById('endDate'), 'End date must be after start date.'); valid = false; }
+  if (isRec) {
+    const hpo = parseFloat(document.getElementById('hoursPerOccurrence').value);
+    if (!hpo || hpo < 0.5) { Validator.showError(document.getElementById('hoursPerOccurrence'), 'Enter hours per session.'); valid = false; }
+  }
   if (!valid) return;
 
   const btn = document.getElementById('submitBtn');
@@ -192,13 +309,23 @@ document.getElementById('gigForm').addEventListener('submit', async (e) => {
 
   try {
     const locType = document.getElementById('locationType').value;
+    const todVal = document.getElementById('timeOfDay').value;
     const payload = {
       title, description, categoryId, estimatedHours, startDate, endDate,
       location: { type: locType, address: locType === 'remote' ? '' : document.getElementById('address').value.trim() },
       requiredSkills: skillsList,
       verifiedOnly: document.getElementById('verifiedOnly').checked,
+      timeOfDay: (todVal && todVal !== 'custom') ? todVal : undefined,
+      startTime: document.getElementById('startTime').value || undefined,
+      endTime: document.getElementById('endTime').value || undefined,
+      isRecurring: isRec,
+      recurrenceType: isRec ? document.getElementById('recurrenceType').value : undefined,
+      recurrenceDays: isRec && document.getElementById('recurrenceType').value === 'weekly'
+        ? [...document.querySelectorAll('.day-cb:checked')].map(c => c.value)
+        : undefined,
+      hoursPerOccurrence: isRec ? parseFloat(document.getElementById('hoursPerOccurrence').value) : undefined,
     };
-    const { data } = await API.post('/gigs', payload);
+    await API.post('/gigs', payload);
     Toast.success('Gig posted successfully!');
     setTimeout(() => window.location.href = '/org-dashboard', 800);
   } catch (err) {
