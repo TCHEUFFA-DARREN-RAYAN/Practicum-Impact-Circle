@@ -6,58 +6,136 @@
   <title>My Dashboard | ImpactCircle</title>
   <link rel="stylesheet" href="/css/base.css">
   <style>
-    .dash-header { margin-bottom: 2rem; }
-    .dash-header h1 { font-size: 1.625rem; font-weight: 700; color: var(--text); }
-    .dash-header p { color: var(--text-muted); font-size: 0.875rem; margin-top: 0.25rem; }
-    .dash-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-
-    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
-    .stat-card-pro {
+    /* ── KPI cards ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.75rem;
+    }
+    .kpi-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.25rem 1.5rem;
-      box-shadow: var(--shadow);
-      display: flex; align-items: flex-start; gap: 1rem;
+      border-radius: 14px;
+      padding: 1.35rem 1.45rem;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      min-height: 112px;
     }
-    .stat-icon-wrap { width: 44px; height: 44px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .stat-icon-wrap svg { width: 22px; height: 22px; }
-    .si-blue   { background: #dbeafe; color: #1e40af; }
-    .si-green  { background: #dcfce7; color: #16a34a; }
-    .si-purple { background: #ede9fe; color: #7c3aed; }
-    .si-orange { background: #ffedd5; color: #ea580c; }
-    .stat-info { flex: 1; min-width: 0; }
-    .stat-info-label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.375rem; }
-    .stat-info-value { font-size: 1.75rem; font-weight: 800; color: var(--text); line-height: 1; }
-    .stat-info-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
+    .kpi-icon {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .kpi-icon svg { width: 22px; height: 22px; }
+    .ki-blue   { background: #dbeafe; color: #1e40af; }
+    .ki-green  { background: #dcfce7; color: #16a34a; }
+    .ki-purple { background: #ede9fe; color: #7c3aed; }
+    .ki-orange { background: #ffedd5; color: #ea580c; }
+    .ki-amber  { background: #fef3c7; color: #d97706; }
+    .kpi-body { flex: 1; min-width: 0; }
+    .kpi-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.3rem; }
+    .kpi-value { font-size: 2.1rem; font-weight: 800; color: var(--text); line-height: 1; letter-spacing: -0.04em; }
+    .kpi-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.3rem; }
 
-    .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
-    .section-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 1rem; }
+    /* ── Points progress ring ── */
+    .points-ring-wrap {
+      display: flex; align-items: center; gap: 1.25rem;
+      padding: 1.125rem 1.375rem;
+      background: linear-gradient(135deg, #1e3a8a, #1e40af);
+      border-radius: var(--radius);
+      color: white;
+      box-shadow: 0 4px 20px rgba(30,64,175,0.25);
+    }
+    .points-ring {
+      position: relative;
+      width: 64px; height: 64px;
+      flex-shrink: 0;
+    }
+    .points-ring svg { transform: rotate(-90deg); }
+    .points-ring-val {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; font-weight: 800; color: white;
+    }
+    .points-ring-body { flex: 1; min-width: 0; }
+    .points-ring-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.75; margin-bottom: 0.25rem; }
+    .points-ring-big { font-size: 1.75rem; font-weight: 800; line-height: 1; }
+    .points-ring-sub { font-size: 0.76rem; opacity: 0.75; margin-top: 0.3rem; }
 
-    .task-item { padding: 0.875rem 0; border-bottom: 1px solid var(--border); }
-    .task-item:last-child { border-bottom: none; }
-    .task-item-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.375rem; }
-    .task-title { font-weight: 600; font-size: 0.875rem; color: var(--text); }
-    .task-date { font-size: 0.75rem; color: var(--text-muted); }
+    /* ── Content grid ── */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
 
-    .app-item { padding: 0.75rem 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
-    .app-item:last-child { border-bottom: none; }
-    .app-title { font-weight: 600; font-size: 0.85rem; color: var(--text); }
-    .app-meta { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.125rem; }
+    /* ── Task timeline ── */
+    .task-timeline { list-style: none; padding: 0; margin: 0; }
+    .task-row {
+      display: flex; align-items: flex-start; gap: 0.875rem;
+      padding: 0.8rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .task-row:last-child { border-bottom: none; }
+    .task-status-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px;
+    }
+    .dot-accepted  { background: #1e40af; }
+    .dot-inProgress { background: #d97706; }
+    .dot-completed { background: #7c3aed; }
+    .dot-approved  { background: #16a34a; }
+    .dot-rejected  { background: #dc2626; }
+    .task-info { flex: 1; min-width: 0; }
+    .task-name { font-size: 0.875rem; font-weight: 600; color: var(--text); margin-bottom: 0.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .task-meta { font-size: 0.75rem; color: var(--text-muted); }
+    .task-actions { margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
-    .reward-item { padding: 0.75rem 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
-    .reward-item:last-child { border-bottom: none; }
-    .reward-name { font-weight: 600; font-size: 0.85rem; color: var(--text); }
-    .reward-meta { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.125rem; }
+    /* ── Application list ── */
+    .app-row {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .app-row:last-child { border-bottom: none; }
+    .app-org-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--primary-light); color: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 800; flex-shrink: 0;
+    }
+    .app-body { flex: 1; min-width: 0; }
+    .app-title { font-size: 0.85rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .app-meta { font-size: 0.73rem; color: var(--text-muted); }
 
-    .cat-row { display: flex; justify-content: space-between; align-items: center; padding: 0.625rem 0; border-bottom: 1px solid var(--border); }
+    /* ── Category bars ── */
+    .cat-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.55rem 0; border-bottom: 1px solid var(--border); }
     .cat-row:last-child { border-bottom: none; }
-    .cat-bar-wrap { width: 90px; height: 6px; background: var(--border); border-radius: 3px; }
+    .cat-name { font-size: 0.82rem; flex: 1; }
+    .cat-bar-wrap { width: 80px; height: 6px; background: var(--border); border-radius: 3px; }
     .cat-bar { height: 100%; background: var(--primary); border-radius: 3px; }
-    .cat-hrs { font-weight: 700; font-size: 0.825rem; width: 36px; text-align: right; }
+    .cat-hrs { font-size: 0.8rem; font-weight: 700; width: 32px; text-align: right; }
 
-    @media (max-width: 900px) { .stats-row { grid-template-columns: repeat(2, 1fr); } .content-grid { grid-template-columns: 1fr; } }
-    @media (max-width: 480px) { .stats-row { grid-template-columns: 1fr 1fr; } }
+    /* ── Reward row ── */
+    .reward-row {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.75rem 0; border-bottom: 1px solid var(--border);
+    }
+    .reward-row:last-child { border-bottom: none; }
+    .reward-icon { width: 36px; height: 36px; border-radius: 9px; background: #dcfce7; color: #16a34a; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .reward-body { flex: 1; min-width: 0; }
+    .reward-name { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+    .reward-meta { font-size: 0.73rem; color: var(--text-muted); }
+
+    /* ── Card label ── */
+    .card-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 0.5rem; }
+
+    @media (max-width: 1024px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 900px) { .content-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 540px) { .kpi-grid { grid-template-columns: 1fr 1fr; } }
   </style>
 </head>
 <body>
@@ -68,107 +146,136 @@
 <div class="page-content">
   <div class="container">
 
-    <div class="dash-header">
-      <div class="dash-header-row">
-        <div>
-          <h1 id="welcomeMsg">My Dashboard</h1>
-          <p>Track your volunteer contributions and rewards</p>
-        </div>
-        <a href="/gigs" class="btn btn-primary">Browse Gigs</a>
+    <!-- Header -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.75rem">
+      <div>
+        <h1 id="welcomeMsg" style="font-size:1.5rem;font-weight:800;color:var(--text);margin:0 0 0.25rem">My Dashboard</h1>
+        <p style="color:var(--text-muted);font-size:0.85rem;margin:0">Track your contributions, tasks, and rewards</p>
       </div>
+      <a href="/gigs" class="btn btn-primary">Browse Opportunities</a>
     </div>
 
+    <!-- Verification banner -->
     <div id="verifyBanner"></div>
 
-    <!-- Stats -->
-    <div class="stats-row">
-      <div class="stat-card-pro">
-        <div class="stat-icon-wrap si-blue">
+    <!-- KPI row -->
+    <div class="card-label">Your impact at a glance</div>
+    <div class="kpi-grid" style="margin-bottom:1rem">
+      <div class="kpi-card">
+        <div class="kpi-icon ki-blue">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
-        <div class="stat-info">
-          <div class="stat-info-label">Verified Hours</div>
-          <div class="stat-info-value" id="statHours">—</div>
-          <div class="stat-info-sub">All time</div>
+        <div class="kpi-body">
+          <div class="kpi-label">Verified Hours</div>
+          <div class="kpi-value" id="statHours">—</div>
+          <div class="kpi-sub">All-time approved hours</div>
         </div>
       </div>
-      <div class="stat-card-pro">
-        <div class="stat-icon-wrap si-green">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        </div>
-        <div class="stat-info">
-          <div class="stat-info-label">Points Balance</div>
-          <div class="stat-info-value" id="statPoints">—</div>
-          <div class="stat-info-sub">Redeemable</div>
-        </div>
-      </div>
-      <div class="stat-card-pro">
-        <div class="stat-icon-wrap si-purple">
+      <div class="kpi-card kpi-purple">
+        <div class="kpi-icon ki-purple">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </div>
-        <div class="stat-info">
-          <div class="stat-info-label">Gigs Applied</div>
-          <div class="stat-info-value" id="statGigs">—</div>
-          <div class="stat-info-sub">Total</div>
+        <div class="kpi-body">
+          <div class="kpi-label">Gigs Applied</div>
+          <div class="kpi-value" id="statGigs">—</div>
+          <div class="kpi-sub">Total applications</div>
         </div>
       </div>
-      <div class="stat-card-pro">
-        <div class="stat-icon-wrap si-orange">
+      <div class="kpi-card kpi-green">
+        <div class="kpi-icon ki-green">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         </div>
-        <div class="stat-info">
-          <div class="stat-info-label">Gigs Completed</div>
-          <div class="stat-info-value" id="statCompleted">—</div>
-          <div class="stat-info-sub">Approved</div>
+        <div class="kpi-body">
+          <div class="kpi-label">Gigs Completed</div>
+          <div class="kpi-value" id="statCompleted">—</div>
+          <div class="kpi-sub">Approved contributions</div>
+        </div>
+      </div>
+      <div class="kpi-card kpi-orange">
+        <div class="kpi-icon ki-amber">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-label">Active Tasks</div>
+          <div class="kpi-value" id="statActive">—</div>
+          <div class="kpi-sub">In progress right now</div>
         </div>
       </div>
     </div>
 
-    <!-- Main content grid -->
+    <!-- Points banner -->
+    <div class="points-ring-wrap mb-4" id="pointsBanner" style="display:none">
+      <div class="points-ring">
+        <svg width="64" height="64" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="6"/>
+          <circle cx="32" cy="32" r="26" fill="none" stroke="white" stroke-width="6"
+                  stroke-dasharray="163" id="ringDash" stroke-dashoffset="163" stroke-linecap="round"/>
+        </svg>
+        <div class="points-ring-val" id="ringPct">0%</div>
+      </div>
+      <div class="points-ring-body">
+        <div class="points-ring-label">Points balance</div>
+        <div class="points-ring-big" id="statPoints">—</div>
+        <div class="points-ring-sub" id="pointsSub">Redeem for rewards</div>
+      </div>
+      <a href="/rewards" class="btn" style="background:rgba(255,255,255,0.18);color:white;border-color:rgba(255,255,255,0.3);font-size:0.85rem;white-space:nowrap;flex-shrink:0">Redeem →</a>
+    </div>
+
+    <!-- Content grid -->
     <div class="content-grid">
-      <!-- Left -->
-      <div>
-        <div class="card mb-4">
-          <div class="card-header">
-            <div class="card-title">Active Tasks</div>
+      <!-- Left column -->
+      <div style="display:flex;flex-direction:column;gap:1.25rem">
+
+        <!-- Active tasks -->
+        <div class="card" style="padding:1.25rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+            <div class="card-label" style="margin-bottom:0">Active &amp; recent tasks</div>
           </div>
-          <div id="activeTasks"><div class="loading-overlay"><div class="spinner"></div></div></div>
+          <div id="activeTasks"><div style="padding:2rem;text-align:center"><div class="spinner"></div></div></div>
         </div>
 
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">Hours by Category</div>
-          </div>
-          <div id="categoryBreakdown"><div class="loading-overlay"><div class="spinner"></div></div></div>
+        <!-- Hours by category -->
+        <div class="card" style="padding:1.25rem">
+          <div class="card-label">Hours by cause area</div>
+          <div id="categoryBreakdown"><div style="padding:2rem;text-align:center"><div class="spinner"></div></div></div>
         </div>
+
       </div>
 
-      <!-- Right -->
-      <div>
-        <div class="card mb-4">
-          <div class="card-header">
-            <div class="card-title">My Applications</div>
+      <!-- Right column -->
+      <div style="display:flex;flex-direction:column;gap:1.25rem">
+
+        <!-- My applications -->
+        <div class="card" style="padding:1.25rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+            <div class="card-label" style="margin-bottom:0">My applications</div>
+            <a href="/gigs" class="btn btn-ghost btn-sm" style="font-size:0.75rem">Browse more →</a>
           </div>
-          <div id="applications"><div class="loading-overlay"><div class="spinner"></div></div></div>
+          <div id="applications"><div style="padding:2rem;text-align:center"><div class="spinner"></div></div></div>
         </div>
 
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">Available Rewards</div>
-            <a href="/rewards" class="btn btn-ghost btn-sm">View all</a>
+        <!-- Available rewards -->
+        <div class="card" style="padding:1.25rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+            <div class="card-label" style="margin-bottom:0">Rewards you can redeem</div>
+            <a href="/rewards" class="btn btn-ghost btn-sm" style="font-size:0.75rem">View all →</a>
           </div>
-          <div id="rewardsPreview"><div class="loading-overlay"><div class="spinner"></div></div></div>
+          <div id="rewardsPreview"><div style="padding:2rem;text-align:center"><div class="spinner"></div></div></div>
         </div>
+
       </div>
     </div>
 
   </div>
 </div>
 
-<!-- Task Modal -->
+<!-- Task submit modal -->
 <div class="modal-backdrop" id="taskModal">
   <div class="modal">
-    <div class="modal-header"><h3 id="taskModalTitle">Task Action</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-header">
+      <h3 id="taskModalTitle">Task Action</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
     <div class="modal-body" id="taskModalBody"></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
@@ -182,111 +289,174 @@
 <script>
 API.requireAuth('volunteer');
 
-const STATUS_LABEL = { accepted: 'Accepted', inProgress: 'In Progress', completed: 'Pending Approval', approved: 'Approved', rejected: 'Rejected' };
-const STATUS_CLASS = { accepted: 'badge-primary', inProgress: 'badge-info', completed: 'badge-pending', approved: 'badge-verified', rejected: 'badge-rejected' };
+const STATUS_LABEL = {
+  accepted: 'Accepted', inProgress: 'In Progress',
+  completed: 'Pending Approval', approved: 'Approved', rejected: 'Rejected',
+};
+const STATUS_CLASS = {
+  accepted: 'badge-primary', inProgress: 'badge-info',
+  completed: 'badge-pending', approved: 'badge-verified', rejected: 'badge-rejected',
+};
+const DOT_CLASS = {
+  accepted: 'dot-accepted', inProgress: 'dot-inProgress',
+  completed: 'dot-completed', approved: 'dot-approved', rejected: 'dot-rejected',
+};
 
 async function load() {
   try {
     const { data } = await API.get('/volunteers/me/dashboard');
     const { profile, stats, applications, tasks, eligibleRewards } = data;
 
-    document.getElementById('welcomeMsg').textContent = `Welcome back, ${profile?.firstName || 'Volunteer'}`;
-    document.getElementById('statHours').textContent = stats.totalVerifiedHours.toFixed(1);
-    document.getElementById('statPoints').textContent = stats.totalPoints.toLocaleString();
-    document.getElementById('statGigs').textContent = stats.gigCount;
-    document.getElementById('statCompleted').textContent = stats.approvedCount;
+    /* ── Header ── */
+    const firstName = profile?.firstName || 'Volunteer';
+    document.getElementById('welcomeMsg').textContent = `Welcome back, ${firstName} 👋`;
 
-    const user = await API.get('/auth/me');
-    const vs = user.data.user.verificationStatus;
+    /* ── KPIs ── */
+    document.getElementById('statHours').textContent    = typeof stats.totalVerifiedHours === 'number' ? stats.totalVerifiedHours.toFixed(1) : '0';
+    document.getElementById('statGigs').textContent     = stats.gigCount ?? 0;
+    document.getElementById('statCompleted').textContent = stats.approvedCount ?? 0;
+
+    const activeTasks = (tasks || []).filter(t => ['accepted','inProgress','completed'].includes(t.status));
+    document.getElementById('statActive').textContent = activeTasks.length;
+
+    /* ── Points ring ── */
+    const pts = stats.totalPoints ?? 0;
+    if (pts > 0 || eligibleRewards.length > 0) {
+      document.getElementById('pointsBanner').style.display = 'flex';
+      document.getElementById('statPoints').textContent = pts.toLocaleString() + ' pts';
+      const minReward = eligibleRewards.length
+        ? Math.min(...eligibleRewards.map(r => r.pointsRequired || 9999))
+        : 500;
+      const pct = Math.min(100, Math.round((pts / minReward) * 100));
+      document.getElementById('ringPct').textContent = pct + '%';
+      document.getElementById('ringDash').style.strokeDashoffset = 163 - (163 * pct / 100);
+      document.getElementById('pointsSub').textContent = eligibleRewards.length
+        ? `${eligibleRewards.length} reward${eligibleRewards.length !== 1 ? 's' : ''} available to redeem`
+        : 'Keep volunteering to unlock rewards';
+    }
+
+    /* ── Verification banner ── */
+    const userFull = await API.get('/auth/me');
+    const vs = userFull.data.user.verificationStatus;
     if (vs !== 'verified') {
       document.getElementById('verifyBanner').innerHTML = `
-        <div class="alert alert-${vs === 'pending' ? 'warning' : 'danger'} mb-4" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem">
-          <span>${vs === 'pending' ? 'Your account is pending admin verification. Upload documents to speed up the process.' : 'Verification rejected. Please visit your profile to resubmit documents.'}</span>
+        <div class="alert alert-${vs === 'pending' ? 'warning' : 'danger'} mb-4"
+             style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem">
+          <span>${vs === 'pending'
+            ? '⏳ Your account is pending admin verification. Upload your documents to speed up the process.'
+            : '❌ Verification was rejected. Visit your profile to resubmit documents.'}</span>
           <a href="/volunteer-profile" class="btn btn-sm btn-secondary">Go to Profile</a>
         </div>`;
     }
 
-    // Active tasks
-    const activeTasks = tasks.filter(t => ['accepted','inProgress','completed'].includes(t.status));
+    /* ── Active tasks ── */
     document.getElementById('activeTasks').innerHTML = activeTasks.length
-      ? activeTasks.map(t => `
-        <div class="task-item">
-          <div class="task-item-top">
-            <div>
-              <div class="task-title">${t.gigId?.title || 'Gig'}</div>
-              <div class="task-date">${fmt.date(t.createdAt)}</div>
+      ? `<ul class="task-timeline">${activeTasks.map(t => `
+          <li class="task-row">
+            <div class="task-status-dot ${DOT_CLASS[t.status] || 'dot-accepted'}"></div>
+            <div class="task-info">
+              <div class="task-name">${t.gigId?.title || 'Gig'}</div>
+              <div class="task-meta">${fmt.date(t.createdAt)} · <span class="badge ${STATUS_CLASS[t.status]}" style="font-size:0.68rem">${STATUS_LABEL[t.status]}</span></div>
+              <div class="task-actions">
+                ${t.status === 'accepted' ? `<button class="btn btn-sm btn-primary" onclick="startTask('${t.id || t._id}')">Start Task</button>` : ''}
+                ${t.status === 'inProgress' ? `<button class="btn btn-sm btn-success" onclick="completeTask('${t.id || t._id}','${(t.gigId?.title || '').replace(/'/g,"\\'")}')">Claim Hours</button>` : ''}
+                ${t.status === 'completed' ? `<div style="font-size:0.75rem;color:#d97706">⏳ Awaiting org approval — auto-approved after 30 days</div>` : ''}
+              </div>
             </div>
-            <span class="badge ${STATUS_CLASS[t.status]}">${STATUS_LABEL[t.status]}</span>
-          </div>
-          ${t.status === 'accepted' ? `<button class="btn btn-sm btn-primary mt-2" onclick="startTask('${t._id}')">Mark In Progress</button>` : ''}
-          ${t.status === 'inProgress' ? `<button class="btn btn-sm btn-success mt-2" onclick="completeTask('${t._id}','${t.gigId?.title}')">Submit Completion</button>` : ''}
-          ${t.status === 'completed' ? `<div class="alert alert-warning mt-2" style="padding:0.5rem 0.75rem;font-size:0.775rem">Awaiting organization approval (auto-approved after 30 days)</div>` : ''}
-        </div>`).join('')
-      : '<div class="text-center text-muted" style="padding:1.5rem;font-size:0.875rem">No active tasks. <a href="/gigs">Browse gigs</a> to get started.</div>';
+          </li>`).join('')}</ul>`
+      : `<div style="padding:1.5rem;text-align:center;color:var(--text-muted);font-size:0.875rem">
+           No active tasks. <a href="/gigs">Browse gigs →</a>
+         </div>`;
 
-    // Category breakdown
+    /* ── Category hours ── */
     const catHours = stats.categoryHours || {};
-    const catKeys = Object.keys(catHours);
-    const maxHrs = catKeys.length ? Math.max(...Object.values(catHours)) : 1;
+    const catKeys  = Object.keys(catHours);
+    const maxHrs   = catKeys.length ? Math.max(...Object.values(catHours), 1) : 1;
     document.getElementById('categoryBreakdown').innerHTML = catKeys.length
       ? catKeys.map(k => `
-        <div class="cat-row">
-          <span style="font-size:0.825rem">${k.substring(0,22)}</span>
-          <div style="display:flex;align-items:center;gap:0.625rem">
+          <div class="cat-row">
+            <span class="cat-name">${k.substring(0, 26)}</span>
             <div class="cat-bar-wrap"><div class="cat-bar" style="width:${Math.min(100,(catHours[k]/maxHrs)*100)}%"></div></div>
             <span class="cat-hrs">${catHours[k]}h</span>
-          </div>
-        </div>`).join('')
-      : '<div class="text-center text-muted" style="padding:1rem;font-size:0.875rem">Complete approved gigs to see your breakdown.</div>';
+          </div>`).join('')
+      : `<div style="padding:1.25rem;text-align:center;color:var(--text-muted);font-size:0.875rem">
+           Complete approved gigs to see your hours breakdown.
+         </div>`;
 
-    // Applications
-    document.getElementById('applications').innerHTML = applications.slice(0,6).length
-      ? applications.slice(0,6).map(a => `
-        <div class="app-item">
-          <div>
-            <div class="app-title">${a.gigId?.title || 'Gig'}</div>
-            <div class="app-meta">${a.gigId?.orgId?.orgName || ''} · ${fmt.date(a.createdAt)}</div>
-          </div>
-          <span class="badge ${a.status === 'approved' ? 'badge-verified' : a.status === 'rejected' ? 'badge-rejected' : 'badge-pending'}">${a.status}</span>
-        </div>`).join('')
-      : '<div class="text-center text-muted" style="padding:1.5rem;font-size:0.875rem">No applications yet. <a href="/gigs">Browse gigs →</a></div>';
+    /* ── Applications ── */
+    document.getElementById('applications').innerHTML = (applications || []).slice(0, 7).length
+      ? applications.slice(0, 7).map(a => {
+          const orgInitials = (a.gigId?.orgId?.orgName || 'IC').substring(0, 2).toUpperCase();
+          return `
+          <div class="app-row">
+            <div class="app-org-icon">${orgInitials}</div>
+            <div class="app-body">
+              <div class="app-title">${a.gigId?.title || 'Gig'}</div>
+              <div class="app-meta">${a.gigId?.orgId?.orgName || ''} · ${fmt.date(a.createdAt)}</div>
+            </div>
+            <span class="badge ${a.status === 'approved' ? 'badge-verified' : a.status === 'rejected' ? 'badge-rejected' : 'badge-pending'}" style="font-size:0.68rem">${a.status}</span>
+          </div>`;
+        }).join('')
+      : `<div style="padding:1.5rem;text-align:center;color:var(--text-muted);font-size:0.875rem">
+           No applications yet. <a href="/gigs">Browse gigs →</a>
+         </div>`;
 
-    // Rewards
-    document.getElementById('rewardsPreview').innerHTML = eligibleRewards.slice(0,3).length
-      ? eligibleRewards.slice(0,3).map(r => `
-        <div class="reward-item">
-          <div>
-            <div class="reward-name">${r.name}</div>
-            <div class="reward-meta">${r.pointsRequired} pts · ${r.sponsorName || 'Platform'}</div>
-          </div>
-          <a href="/rewards" class="btn btn-sm btn-primary">Redeem</a>
-        </div>`).join('')
-        + (eligibleRewards.length > 3 ? `<div style="padding:0.75rem 0;text-align:center"><a href="/rewards" class="btn btn-ghost btn-sm">View all ${eligibleRewards.length} rewards</a></div>` : '')
-      : '<div class="text-center text-muted" style="padding:1.5rem;font-size:0.875rem">Keep volunteering to unlock rewards!</div>';
+    /* ── Rewards ── */
+    document.getElementById('rewardsPreview').innerHTML = (eligibleRewards || []).slice(0, 4).length
+      ? eligibleRewards.slice(0, 4).map(r => `
+          <div class="reward-row">
+            <div class="reward-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+            </div>
+            <div class="reward-body">
+              <div class="reward-name">${r.name}</div>
+              <div class="reward-meta">${r.pointsRequired} pts · ${r.sponsorName || 'Platform'}</div>
+            </div>
+            <a href="/rewards" class="btn btn-sm btn-primary">Redeem</a>
+          </div>`).join('')
+        + (eligibleRewards.length > 4 ? `<div style="padding:0.75rem 0;text-align:center"><a href="/rewards" class="btn btn-ghost btn-sm">+${eligibleRewards.length - 4} more rewards</a></div>` : '')
+      : `<div style="padding:1.5rem;text-align:center;color:var(--text-muted);font-size:0.875rem">
+           Keep volunteering to unlock rewards!
+         </div>`;
 
-  } catch (err) { Toast.error('Failed to load dashboard: ' + err.message); }
+  } catch (err) {
+    Toast.error('Failed to load dashboard: ' + err.message);
+  }
 }
 
 let pendingTaskId = null;
+
 async function startTask(taskId) {
   try { await API.patch(`/tasks/${taskId}/start`, {}); Toast.success('Task started!'); load(); }
   catch (err) { Toast.error(err.message); }
 }
+
 function completeTask(taskId, title) {
   pendingTaskId = taskId;
-  document.getElementById('taskModalTitle').textContent = 'Submit Task Completion';
-  document.getElementById('taskModalBody').innerHTML = `<p>Confirm that you have completed <strong>"${title}"</strong>.</p><p class="text-muted" style="font-size:0.875rem">The organization will receive a notification to verify your completion within 30 days.</p>`;
+  document.getElementById('taskModalTitle').textContent = 'Claim Hours';
+  document.getElementById('taskModalBody').innerHTML = `
+    <p>Confirm you have completed <strong>"${title}"</strong> and want to claim your hours.</p>
+    <p style="color:var(--text-muted);font-size:0.875rem">The organization will receive a notification to approve your hours within 30 days. They will be added to your record once approved.</p>`;
   document.getElementById('taskModal').classList.add('open');
 }
+
 document.getElementById('taskModalConfirm').addEventListener('click', async () => {
   if (!pendingTaskId) return;
-  try { await API.patch(`/tasks/${pendingTaskId}/complete`, {}); Toast.success('Task submitted for approval!'); closeModal(); load(); }
-  catch (err) { Toast.error(err.message); }
+  try {
+    await API.patch(`/tasks/${pendingTaskId}/complete`, {});
+    Toast.success('Hours claimed! Awaiting org approval.');
+    closeModal();
+    load();
+  } catch (err) { Toast.error(err.message); }
 });
-function closeModal() { document.getElementById('taskModal').classList.remove('open'); pendingTaskId = null; }
+
+function closeModal() {
+  document.getElementById('taskModal').classList.remove('open');
+  pendingTaskId = null;
+}
+
 load();
 </script>
-<script src="/js/footer.js"></script></body>
+<script src="/js/footer.js"></script>
+</body>
 </html>
-
-
