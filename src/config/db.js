@@ -1,6 +1,7 @@
 const { Sequelize } = require('sequelize');
 const fs = require('fs');
 const path = require('path');
+const { assertUserResetColumns } = require('./schemaGuard');
 
 const dbPassword = process.env.DB_PASS || process.env.DB_PASSWORD || '';
 const sslEnabled = String(process.env.DB_SSL_ENABLED || 'false').toLowerCase() === 'true';
@@ -38,6 +39,11 @@ const connectDB = async () => {
   try {
     await sequelize.authenticate();
     console.log('  MySQL connected');
+    try {
+      await assertUserResetColumns(sequelize);
+    } catch (e) {
+      console.warn('  Schema guard skipped:', e.message);
+    }
     if (syncAlterEnabled && (forceSyncAlter || (isDevEnv && isLocalDbHost))) {
       await sequelize.sync();
       console.log('  Tables synced (create if not exists)');

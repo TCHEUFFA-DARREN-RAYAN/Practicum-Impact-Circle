@@ -96,7 +96,7 @@
 
           <div class="gn-auth">
             <a href="/login"    class="gn-btn-outline">Sign In</a>
-            <a href="/register" class="gn-btn-cta">Register</a>
+            <a href="/register-volunteer" class="gn-btn-cta">Register</a>
           </div>
 
           <button class="gn-hamburger" id="gnHamburger" aria-label="Open menu" aria-expanded="false">
@@ -114,7 +114,7 @@
         ${mobileHTML}
         <div class="gm-auth">
           <a href="/login"    class="gn-btn-outline">Sign In</a>
-          <a href="/register" class="gn-btn-cta">Register</a>
+          <a href="/register-volunteer" class="gn-btn-cta">Register</a>
         </div>
       </div>`;
 

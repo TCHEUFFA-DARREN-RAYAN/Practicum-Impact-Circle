@@ -10,6 +10,9 @@ const User = sequelize.define('User', {
   role:               { type: DataTypes.ENUM('volunteer', 'org', 'admin', 'csr'), allowNull: false },
   verificationStatus: { type: DataTypes.ENUM('pending', 'verified', 'rejected'), defaultValue: 'pending' },
   rejectionReason:    { type: DataTypes.TEXT, allowNull: true },
+  /* Password reset — columns must exist in MySQL; run doc/mysql-add-password-reset.sql if missing */
+  resetPasswordToken:   { type: DataTypes.STRING(255), allowNull: true },
+  resetPasswordExpires: { type: DataTypes.DATE, allowNull: true },
 });
 
 User.beforeCreate(async (u) => { u.passwordHash = await bcrypt.hash(u.passwordHash, 12); });

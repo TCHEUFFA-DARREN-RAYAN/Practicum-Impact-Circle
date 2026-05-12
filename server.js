@@ -49,6 +49,11 @@ app.use('/api/uploads', uploadRoutes);
 
 app.use('/api', auditLog);
 
+/** Legacy role-picker removed; keep bookmarks working */
+app.get('/register', (req, res) => {
+  res.redirect(302, '/register-volunteer');
+});
+
 const pages = [
   // ── Public pages (no login required) ──
   ['/', 'index.html'],
@@ -64,7 +69,8 @@ const pages = [
   ['/terms', 'pages/terms.html'],
   ['/accessibility', 'pages/accessibility.html'],
   ['/login', 'pages/login.html'],
-  ['/register', 'pages/register.html'],
+  ['/forgot-password', 'pages/forgot-password.html'],
+  ['/reset-password', 'pages/reset-password.html'],
   ['/register-volunteer', 'pages/register-volunteer.html'],
   ['/register-org', 'pages/register-org.html'],
 

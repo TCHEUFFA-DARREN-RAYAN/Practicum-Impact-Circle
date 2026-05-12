@@ -1,8 +1,11 @@
 const router = require('express').Router();
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const { Op } = require('sequelize');
 const { body } = require('express-validator');
 const { User, VolunteerProfile, Organization, CsrPartner } = require('../models/index');
 const validate = require('../middleware/validate');
+const { sendEmail, templates, publicAppUrl } = require('../services/email');
 
 const issueToken = (user) =>
   jwt.sign({ id: user.id, role: user.role, email: user.email }, process.env.JWT_SECRET, {
@@ -62,6 +65,90 @@ router.get('/check-email', async (req, res, next) => {
     if (!email) return res.json({ success: true, data: { exists: false } });
     const user = await User.findOne({ where: { email } });
     res.json({ success: true, data: { exists: !!user } });
+  } catch (err) { next(err); }
+});
+
+/** True if token matches a non-expired reset row (for reset-password page UX) */
+router.get('/password-reset-status', async (req, res, next) => {
+  try {
+    const token = (req.query.token || '').trim();
+    if (!token) return res.json({ success: true, data: { valid: false } });
+    const user = await User.findOne({
+      where: {
+        resetPasswordToken: token,
+        resetPasswordExpires: { [Op.gt]: new Date() },
+      },
+    });
+    res.json({ success: true, data: { valid: !!user } });
+  } catch (err) { next(err); }
+});
+
+router.post('/forgot-password', [
+  body('email').isEmail().normalizeEmail().withMessage('Valid email required.'),
+], validate, async (req, res, next) => {
+  try {
+    const email = req.body.email.toLowerCase().trim();
+    const generic = {
+      success: true,
+      message: 'If an account exists for that email, a reset link has been sent.',
+    };
+
+    const user = await User.findOne({ where: { email } });
+    if (!user) return res.json(generic);
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 60 * 60 * 1000);
+    await user.update({ resetPasswordToken: token, resetPasswordExpires: expires });
+
+    const resetUrl = `${publicAppUrl()}/reset-password?token=${encodeURIComponent(token)}`;
+    const { subject, html } = templates.passwordReset(resetUrl);
+
+    try {
+      await sendEmail(user.email, subject, html);
+    } catch (mailErr) {
+      console.error('[AUTH] forgot-password email failed:', mailErr.message);
+      await user.update({ resetPasswordToken: null, resetPasswordExpires: null });
+      if (process.env.NODE_ENV !== 'production') {
+        return res.status(503).json({
+          success: false,
+          message: 'Email could not be sent. For local testing set EMAIL_USE_ETHEREAL=true in .env, restart the server, and try again.',
+          details: mailErr.message,
+        });
+      }
+    }
+
+    return res.json(generic);
+  } catch (err) { next(err); }
+});
+
+router.post('/reset-password', [
+  body('token').notEmpty().withMessage('Reset token is required.'),
+  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters.')
+    .matches(/[A-Z]/).withMessage('Password must contain an uppercase letter.')
+    .matches(/[0-9]/).withMessage('Password must contain a number.'),
+], validate, async (req, res, next) => {
+  try {
+    const { token, password } = req.body;
+    const user = await User.findOne({
+      where: {
+        resetPasswordToken: token,
+        resetPasswordExpires: { [Op.gt]: new Date() },
+      },
+    });
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'This reset link is invalid or has expired. Please request a new password reset.',
+      });
+    }
+
+    await user.update({
+      passwordHash: password,
+      resetPasswordToken: null,
+      resetPasswordExpires: null,
+    });
+
+    res.json({ success: true, message: 'Your password has been updated. You can sign in now.' });
   } catch (err) { next(err); }
 });
 

@@ -71,7 +71,7 @@
         </div>
         <div class="gf-col">
           <h4>Platform</h4>
-          <a href="/register">Join as Volunteer</a>
+          <a href="/register-volunteer">Join as Volunteer</a>
           <a href="/register-org">Register Organization</a>
           <a href="/upcoming-shifts">Browse Shifts</a>
           <a href="/categories">Categories</a>
