@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Manage Events | Admin | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside id="sidebar" class="sidebar"></aside>
+<div class="page-content">
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><h1>Upcoming shifts &amp; dates</h1><p class="text-muted">Opportunities with a start date on or after today</p></div>
+        <div style="display:flex;gap:0.75rem">
+          <a href="/admin/opportunities" class="btn btn-secondary">All opportunities</a>
+          <a href="/admin" class="btn btn-secondary">← Admin Home</a>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Start date</th><th>Title</th><th>Organization</th><th>Status</th><th></th></tr></thead>
+          <tbody id="tbl"><tr><td colspan="5" class="text-center" style="padding:2rem"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+      <div class="card-footer" style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;border-top:1px solid var(--border)">
+        <span class="text-muted" style="font-size:0.85rem" id="pageInfo"></span>
+        <div style="display:flex;gap:0.5rem">
+          <button class="btn btn-sm btn-secondary" type="button" id="prevBtn" onclick="changePage(-1)">Previous</button>
+          <button class="btn btn-sm btn-secondary" type="button" id="nextBtn" onclick="changePage(1)">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/footer.js"></script>
+<script>
+API.requireAuth('admin');
+let page = 1;
+const limit = 30;
+
+async function load(p) {
+  if (p) page = p;
+  const q = new URLSearchParams({ page: String(page), limit: String(limit), upcoming: 'true' });
+  document.getElementById('tbl').innerHTML = '<tr><td colspan="5" class="text-center" style="padding:2rem"><div class="spinner"></div></td></tr>';
+  try {
+    const { data } = await API.get(`/admin/gigs?${q}`);
+    document.getElementById('pageInfo').textContent = `Page ${data.page} of ${data.pages || 1} · ${data.total} upcoming`;
+    document.getElementById('prevBtn').disabled = data.page <= 1;
+    document.getElementById('nextBtn').disabled = data.page >= (data.pages || 1);
+    document.getElementById('tbl').innerHTML = (data.gigs || []).length ? data.gigs.map(g => {
+      const org = g.org || {};
+      return `<tr>
+        <td style="font-weight:600">${g.startDate}</td>
+        <td>${g.title}</td>
+        <td>${org.orgName || '—'}</td>
+        <td><span class="badge badge-primary">${g.status}</span></td>
+        <td><a class="btn btn-sm btn-secondary" href="/gigs/${g.id}">View</a></td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="5" class="text-center text-muted" style="padding:2rem">No upcoming shifts in this range.</td></tr>';
+  } catch (e) { Toast.error(e.message); }
+}
+
+function changePage(delta) {
+  page = Math.max(1, page + delta);
+  load();
+}
+
+load(1);
+</script>
+</body>
+</html>
