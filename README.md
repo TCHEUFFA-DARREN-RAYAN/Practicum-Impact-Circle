@@ -1,45 +1,47 @@
-# ImpactCircle
+# ImpactCircle — Volunteer Management Platform
 
-> **Verified Impact. Real Contribution.**
+ImpactCircle connects volunteers with nonprofit organizations in the Greater Moncton area. Volunteers browse opportunities, track hours, and earn rewards. Organizations post gigs, manage applicants, and track volunteer attendance. Admins oversee verification, users, and platform health.
 
-A gig-based volunteer management platform connecting volunteers, non-profit organizations, and CSR partners in Greater Moncton, NB.
+## Tech Stack
 
-## Stack
+- **Backend**: Node.js + Express
+- **Database**: MySQL + Sequelize ORM
+- **Auth**: JWT (JSON Web Tokens)
+- **Email**: Nodemailer
+- **Frontend**: Vanilla HTML/CSS/JS (no framework)
 
-- **Backend:** Node.js + Express + Sequelize (MySQL)
-- **Frontend:** HTML + CSS + Vanilla JS
-- **Auth:** JWT (7-day tokens, role-based)
-- **File Uploads:** Multer (PDF, JPG, PNG — 5 MB max)
-- **Email:** Nodemailer
-
-## User Roles
-
-| Role | What they do |
-|------|-------------|
-| Volunteer | Register, apply for gigs, earn points & rewards |
-| Organization | Post gigs, approve volunteers, verify task completion |
-| CSR Partner | Sponsor rewards, track employee volunteering |
-| Admin | Verify users, manage categories & rewards, resolve disputes |
-
-## Core Business Rule
-
-**Volunteer hours are NEVER self-reported.** Every hour requires explicit organizational approval before points are credited.
-
-## Getting Started
+## Quick Start
 
 ```bash
-cp .env.example .env   # fill in your values
 npm install
-npm run seed           # seed categories + admin user
-npm run dev            # dev server → http://localhost:3000
+cp .env.example .env   # fill in your values
+npm run dev
 ```
 
-## Scripts
+## Roles
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start with nodemon (auto-reload) |
-| `npm start` | Production start |
-| `npm run seed` | Seed database with categories and admin user |
-| `npm test` | Run test suite |
+| Role | Description |
+|------|-------------|
+| `volunteer` | Browse gigs, apply, track hours, earn rewards |
+| `org` | Post gigs, review applicants, approve hours, rate volunteers |
+| `admin` | Verify accounts, manage users/orgs, view platform analytics |
+| `csr` | Corporate social responsibility partner — sponsor rewards |
 
+## Project Structure
+
+```
+src/
+  config/      Database connection
+  middleware/  Auth, validation, audit log, error handler
+  models/      Sequelize models (User, Gig, Task, Application, …)
+  routes/      Express route handlers
+  services/    Email, notifications, points, auto-approval
+public/
+  css/         Global styles
+  js/          Shared scripts (api.js, nav.js, footer.js)
+  pages/       HTML pages for every view
+```
+
+## Environment Variables
+
+See `.env.example` for all required variables.
