@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
+const { User } = require('../models/index');
 
-const requireAuth = (req, res, next) => {
+const requireAuth = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ success: false, message: 'Authentication required. Please log in.' });
@@ -8,6 +9,10 @@ const requireAuth = (req, res, next) => {
   const token = authHeader.split(' ')[1];
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const fresh = await User.findByPk(decoded.id, { attributes: ['id', 'isBlocked', 'verificationStatus'] });
+    if (!fresh || fresh.isBlocked) {
+      return res.status(401).json({ success: false, message: 'Account suspended. Please contact support.' });
+    }
     req.user = decoded;
     next();
   } catch {
