@@ -7,75 +7,188 @@
   <meta name="robots" content="noindex, nofollow">
   <link rel="stylesheet" href="/css/base.css">
   <style>
-    .dash-header { margin-bottom: 2rem; }
-    .dash-header h1 { font-size: 1.625rem; font-weight: 700; color: var(--text); }
-    .dash-header p { color: var(--text-muted); font-size: 0.875rem; margin-top: 0.25rem; }
-
-    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
-    .stat-card-pro {
+    /* ── KPI cards ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .kpi-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.25rem 1.5rem;
-      box-shadow: var(--shadow);
+      border-radius: 14px;
+      padding: 1.35rem 1.45rem;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
       display: flex;
       align-items: flex-start;
       gap: 1rem;
+      min-height: 112px;
     }
-    .stat-icon-wrap {
+    .kpi-icon {
       width: 44px; height: 44px;
-      border-radius: var(--radius-sm);
+      border-radius: 10px;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
     }
-    .stat-icon-wrap svg { width: 22px; height: 22px; }
-    .si-blue   { background: #dbeafe; color: #1e40af; }
-    .si-green  { background: #dcfce7; color: #16a34a; }
-    .si-purple { background: #ede9fe; color: #7c3aed; }
-    .si-orange { background: #ffedd5; color: #ea580c; }
-    .si-amber  { background: #fef3c7; color: #d97706; }
-    .si-red    { background: #fee2e2; color: #dc2626; }
-    .si-sky    { background: #e0f2fe; color: #0891b2; }
-    .stat-info { flex: 1; min-width: 0; }
-    .stat-info-label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.375rem; }
-    .stat-info-value { font-size: 1.75rem; font-weight: 800; color: var(--text); line-height: 1; }
-    .stat-info-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
-    .stat-warn .stat-info-value { color: var(--warning); }
-    .stat-danger .stat-info-value { color: var(--danger); }
+    .kpi-icon svg { width: 22px; height: 22px; }
+    .ki-blue   { background: #dbeafe; color: #1e40af; }
+    .ki-green  { background: #dcfce7; color: #16a34a; }
+    .ki-purple { background: #ede9fe; color: #7c3aed; }
+    .ki-orange { background: #ffedd5; color: #ea580c; }
+    .ki-amber  { background: #fef3c7; color: #d97706; }
+    .ki-red    { background: #fee2e2; color: #dc2626; }
+    .ki-sky    { background: #e0f2fe; color: #0891b2; }
+    .ki-teal   { background: #ccfbf1; color: #0f766e; }
+    .kpi-body { flex: 1; min-width: 0; }
+    .kpi-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.3rem; }
+    .kpi-value { font-size: 2.1rem; font-weight: 800; color: var(--text); line-height: 1; letter-spacing: -0.04em; }
+    .kpi-value.warn { color: #d97706; }
+    .kpi-value.danger { color: #dc2626; }
+    .kpi-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.3rem; }
 
-    .section-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 1rem; }
+    /* ── Section row ── */
+    .dash-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .dash-row-3 {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
 
-    .action-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
+    /* ── Quick actions ── */
+    .action-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.875rem; }
     .action-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 1.25rem;
+      padding: 1.125rem;
       display: flex;
-      align-items: flex-start;
-      gap: 1rem;
+      align-items: center;
+      gap: 0.875rem;
       text-decoration: none;
-      transition: box-shadow 0.2s, transform 0.15s, border-color 0.2s;
+      transition: box-shadow 0.18s, transform 0.15s, border-color 0.18s;
       box-shadow: var(--shadow);
     }
     .action-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: var(--border-dark); text-decoration: none; }
     .action-icon {
-      width: 42px; height: 42px;
-      border-radius: var(--radius-sm);
+      width: 40px; height: 40px;
+      border-radius: 9px;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
     }
-    .action-icon svg { width: 20px; height: 20px; }
+    .action-icon svg { width: 18px; height: 18px; }
     .action-body { flex: 1; min-width: 0; }
-    .action-title { font-size: 0.9375rem; font-weight: 700; color: var(--text); margin-bottom: 0.25rem; }
-    .action-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.45; }
+    .action-title { font-size: 0.875rem; font-weight: 700; color: var(--text); margin-bottom: 0.125rem; }
+    .action-desc { font-size: 0.76rem; color: var(--text-muted); line-height: 1.4; }
 
-    @media (max-width: 1100px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 768px) {
-      .stats-row { grid-template-columns: 1fr 1fr; }
+    /* ── Urgency badge on action card ── */
+    .action-badge {
+      min-width: 22px; height: 22px; border-radius: 11px;
+      background: #dc2626; color: white;
+      font-size: 0.7rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 5px;
+      flex-shrink: 0;
+    }
+
+    /* ── Activity list ── */
+    .activity-list { list-style: none; padding: 0; margin: 0; }
+    .activity-item {
+      display: flex; align-items: flex-start; gap: 0.75rem;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      flex-shrink: 0; margin-top: 5px;
+    }
+    .activity-dot.green { background: #16a34a; }
+    .activity-dot.amber { background: #d97706; }
+    .activity-dot.blue  { background: #1e40af; }
+    .activity-dot.red   { background: #dc2626; }
+    .activity-text { font-size: 0.82rem; color: var(--text); line-height: 1.4; flex: 1; }
+    .activity-time { font-size: 0.72rem; color: var(--text-muted); flex-shrink: 0; }
+
+    /* ── Health bar ── */
+    .health-row {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .health-row:last-child { border-bottom: none; }
+    .health-label { font-size: 0.8rem; color: var(--text); flex: 1; }
+    .health-bar-wrap { width: 100px; height: 6px; background: var(--border); border-radius: 3px; flex-shrink: 0; }
+    .health-bar { height: 100%; border-radius: 3px; }
+    .health-val { font-size: 0.8rem; font-weight: 700; width: 36px; text-align: right; flex-shrink: 0; }
+
+    /* ── Card sub-header ── */
+    .card-label {
+      font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 0.5rem;
+    }
+    .dashboard-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+      overflow: hidden;
+    }
+    .section-toggle {
+      width: 100%;
+      min-height: 50px;
+      padding: 0 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      background: #fff;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      text-align: left;
+    }
+    .section-toggle-title {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      color: var(--text);
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .section-toggle-sub {
+      color: var(--text-muted);
+      font-size: 0.74rem;
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .section-chevron {
+      color: var(--text-muted);
+      transition: transform 0.18s ease;
+    }
+    .dashboard-section.is-collapsed .section-chevron { transform: rotate(-90deg); }
+    .section-body { padding: 1.25rem; }
+    .dashboard-section.is-collapsed .section-body { display: none; }
+
+    @media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 900px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .dash-row, .dash-row-3 { grid-template-columns: 1fr; }
+      .action-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 540px) {
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
       .action-grid { grid-template-columns: 1fr; }
     }
-    @media (max-width: 480px) { .stats-row { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -85,143 +198,207 @@
 
 <div class="page-content">
   <div class="container">
-    <div class="dash-header">
-      <h1>Admin Dashboard</h1>
-      <p>Platform overview and management tools</p>
+
+    <!-- Header -->
+    <div class="dash-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.15rem">
+      <div>
+        <h1 style="font-size:1.5rem;font-weight:800;color:var(--text);margin:0 0 0.25rem">Admin Dashboard</h1>
+        <p style="color:var(--text-muted);font-size:0.85rem;margin:0" id="dashSubtitle">Platform overview — loading…</p>
+      </div>
+      <div style="display:flex;gap:0.625rem;flex-wrap:wrap">
+        <a href="/admin/analytics" class="btn btn-secondary btn-sm">Export CSV</a>
+        <a href="/admin/verify" class="btn btn-primary btn-sm" id="verifyBtn">Verification Queue</a>
+      </div>
     </div>
 
-    <!-- Stats -->
-    <div class="stats-row" id="statsGrid">
-      <div class="stat-card-pro">
-        <div class="stat-icon-wrap si-blue">
+    <!-- KPI row 1: Volume -->
+    <div class="card-label">Platform at a glance</div>
+    <div class="kpi-grid" style="margin-bottom:1.1rem">
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-icon ki-blue">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
-        <div class="stat-info">
-          <div class="stat-info-label">Total Users</div>
-          <div class="stat-info-value" id="sUsers">—</div>
-          <div class="stat-info-sub">Registered accounts</div>
+        <div class="kpi-body">
+          <div class="kpi-label">Registered Accounts</div>
+          <div class="kpi-value" id="sUsers">—</div>
+          <div class="kpi-sub">Total platform users</div>
         </div>
       </div>
-      <div class="stat-card-pro">
-        <div class="stat-icon-wrap si-green">
+      <div class="kpi-card kpi-green">
+        <div class="kpi-icon ki-green">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         </div>
-        <div class="stat-info">
-          <div class="stat-info-label">Active Orgs</div>
-          <div class="stat-info-value" id="sOrgs">—</div>
-          <div class="stat-info-sub">Verified organizations</div>
+        <div class="kpi-body">
+          <div class="kpi-label">Verified Orgs</div>
+          <div class="kpi-value" id="sOrgs">—</div>
+          <div class="kpi-sub">Active organizations</div>
         </div>
       </div>
-      <div class="stat-card-pro">
-        <div class="stat-icon-wrap si-purple">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <div class="kpi-card kpi-purple">
+        <div class="kpi-icon ki-purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         </div>
-        <div class="stat-info">
-          <div class="stat-info-label">Total Gigs</div>
-          <div class="stat-info-value" id="sGigs">—</div>
-          <div class="stat-info-sub">Posted opportunities</div>
+        <div class="kpi-body">
+          <div class="kpi-label">Posted Opportunities</div>
+          <div class="kpi-value" id="sGigs">—</div>
+          <div class="kpi-sub">Total gigs on platform</div>
         </div>
       </div>
-      <div class="stat-card-pro">
-        <div class="stat-icon-wrap si-sky">
+      <div class="kpi-card kpi-sky">
+        <div class="kpi-icon ki-sky">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
-        <div class="stat-info">
-          <div class="stat-info-label">Verified Hours</div>
-          <div class="stat-info-value" id="sHours">—</div>
-          <div class="stat-info-sub">All-time community hours</div>
-        </div>
-      </div>
-      <div class="stat-card-pro stat-warn">
-        <div class="stat-icon-wrap si-amber">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-        </div>
-        <div class="stat-info">
-          <div class="stat-info-label">Pending Verifications</div>
-          <div class="stat-info-value" id="sPending">—</div>
-          <div class="stat-info-sub">Awaiting review</div>
-        </div>
-      </div>
-      <div class="stat-card-pro stat-warn">
-        <div class="stat-icon-wrap si-orange">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        </div>
-        <div class="stat-info">
-          <div class="stat-info-label">Pending Task Approvals</div>
-          <div class="stat-info-value" id="sTasks">—</div>
-          <div class="stat-info-sub">Awaiting org response</div>
-        </div>
-      </div>
-      <div class="stat-card-pro" id="autoCard">
-        <div class="stat-icon-wrap si-blue">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-        </div>
-        <div class="stat-info">
-          <div class="stat-info-label">Auto-Approval Rate</div>
-          <div class="stat-info-value" id="sAuto">—</div>
-          <div class="stat-info-sub">Target: below 10%</div>
+        <div class="kpi-body">
+          <div class="kpi-label">Community Hours</div>
+          <div class="kpi-value" id="sHours">—</div>
+          <div class="kpi-sub">All-time verified hours</div>
         </div>
       </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="section-label">Quick Actions</div>
-    <div class="action-grid">
-      <a href="/admin/verify" class="action-card">
-        <div class="action-icon si-amber">
+    <!-- KPI row 2: Action needed -->
+    <div class="card-label">Needs your attention</div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:1.25rem">
+      <div class="kpi-card kpi-warn">
+        <div class="kpi-icon ki-amber">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         </div>
-        <div class="action-body">
-          <div class="action-title">Verification Queue</div>
-          <div class="action-desc">Review volunteer and organization identity documents</div>
+        <div class="kpi-body">
+          <div class="kpi-label">Pending Verifications</div>
+          <div class="kpi-value warn" id="sPending">—</div>
+          <div class="kpi-sub">Volunteers &amp; orgs awaiting review</div>
         </div>
-      </a>
-      <a href="/admin/categories" class="action-card">
-        <div class="action-icon si-purple">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      </div>
+      <div class="kpi-card kpi-warn">
+        <div class="kpi-icon ki-orange">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
         </div>
-        <div class="action-body">
-          <div class="action-title">Category Management</div>
-          <div class="action-desc">Add, edit, and archive community impact categories</div>
+        <div class="kpi-body">
+          <div class="kpi-label">Pending Task Approvals</div>
+          <div class="kpi-value warn" id="sTasks">—</div>
+          <div class="kpi-sub">Awaiting organization response</div>
         </div>
-      </a>
-      <a href="/admin/rewards" class="action-card">
-        <div class="action-icon si-green">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+      </div>
+      <div class="kpi-card" id="autoCard">
+        <div class="kpi-icon ki-teal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
         </div>
-        <div class="action-body">
-          <div class="action-title">Reward Management</div>
-          <div class="action-desc">Manage reward catalogue and eligibility rules</div>
+        <div class="kpi-body">
+          <div class="kpi-label">Auto-Approval Rate</div>
+          <div class="kpi-value" id="sAuto">—</div>
+          <div class="kpi-sub">Target: below 10% — orgs responding on time</div>
         </div>
-      </a>
-      <a href="/admin/disputes" class="action-card">
-        <div class="action-icon si-red">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        </div>
-        <div class="action-body">
-          <div class="action-title">Disputes</div>
-          <div class="action-desc">Override task decisions and resolve escalations</div>
-        </div>
-      </a>
-      <a href="/admin/audit" class="action-card">
-        <div class="action-icon si-sky">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        </div>
-        <div class="action-body">
-          <div class="action-title">Audit Log</div>
-          <div class="action-desc">Immutable record of all platform actions</div>
-        </div>
-      </a>
-      <a href="/admin/analytics" class="action-card">
-        <div class="action-icon si-blue">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        </div>
-        <div class="action-body">
-          <div class="action-title">Analytics</div>
-          <div class="action-desc">Platform health metrics and CSV export</div>
-        </div>
-      </a>
+      </div>
     </div>
+
+    <!-- Middle row: Quick actions + Activity -->
+    <div class="dash-row-3">
+      <!-- Quick actions -->
+      <section class="dashboard-section" data-section="quick-actions">
+        <button type="button" class="section-toggle">
+          <span>
+            <span class="section-toggle-title">Quick actions</span>
+            <span class="section-toggle-sub">Frequent admin tasks</span>
+          </span>
+          <span class="section-chevron">⌄</span>
+        </button>
+        <div class="section-body">
+          <div class="action-grid">
+          <a href="/admin/verify" class="action-card">
+            <div class="action-icon ki-amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+            <div class="action-body">
+              <div class="action-title">Verification Queue</div>
+              <div class="action-desc">Review identity documents</div>
+            </div>
+            <span class="action-badge" id="verifyBadge" style="display:none"></span>
+          </a>
+          <a href="/admin/categories" class="action-card">
+            <div class="action-icon ki-purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            </div>
+            <div class="action-body">
+              <div class="action-title">Categories</div>
+              <div class="action-desc">Manage impact categories</div>
+            </div>
+          </a>
+          <a href="/admin/rewards" class="action-card">
+            <div class="action-icon ki-green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+            </div>
+            <div class="action-body">
+              <div class="action-title">Rewards</div>
+              <div class="action-desc">Manage reward catalogue</div>
+            </div>
+          </a>
+          <a href="/admin/disputes" class="action-card">
+            <div class="action-icon ki-red">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <div class="action-body">
+              <div class="action-title">Disputes</div>
+              <div class="action-desc">Override task decisions</div>
+            </div>
+          </a>
+          <a href="/admin/audit" class="action-card">
+            <div class="action-icon ki-sky">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <div class="action-body">
+              <div class="action-title">Audit Log</div>
+              <div class="action-desc">Immutable action record</div>
+            </div>
+          </a>
+          <a href="/admin/analytics" class="action-card">
+            <div class="action-icon ki-blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </div>
+            <div class="action-body">
+              <div class="action-title">Analytics</div>
+              <div class="action-desc">Health metrics &amp; CSV export</div>
+            </div>
+          </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Platform health -->
+      <section class="dashboard-section" data-section="platform-health">
+        <button type="button" class="section-toggle">
+          <span>
+            <span class="section-toggle-title">Platform health</span>
+            <span class="section-toggle-sub">Operational signals</span>
+          </span>
+          <span class="section-chevron">⌄</span>
+        </button>
+        <div class="section-body">
+          <div id="healthSection">
+            <div style="padding:2rem;text-align:center"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Bottom row: Recent activity -->
+    <section class="dashboard-section" data-section="recent-activity">
+      <button type="button" class="section-toggle">
+        <span>
+          <span class="section-toggle-title">Recent platform activity</span>
+          <span class="section-toggle-sub">Latest operational context</span>
+        </span>
+        <span style="display:flex;align-items:center;gap:0.75rem">
+          <a href="/admin/audit" class="btn btn-ghost btn-sm" style="font-size:0.75rem" onclick="event.stopPropagation()">View audit log →</a>
+          <span class="section-chevron">⌄</span>
+        </span>
+      </button>
+      <div class="section-body">
+        <div id="recentActivity">
+          <div style="padding:2rem;text-align:center"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </section>
+
   </div>
 </div>
 
@@ -229,26 +406,85 @@
 <script src="/js/nav.js"></script>
 <script>
 API.requireAuth('admin');
+
+document.querySelectorAll('.dashboard-section .section-toggle').forEach((button) => {
+  button.addEventListener('click', () => {
+    button.closest('.dashboard-section')?.classList.toggle('is-collapsed');
+  });
+});
+
 (async () => {
   try {
     const { data } = await API.get('/admin/dashboard');
     const s = data.stats;
-    document.getElementById('sUsers').textContent = s.totalUsers;
-    document.getElementById('sOrgs').textContent = s.totalOrgs;
-    document.getElementById('sGigs').textContent = s.totalGigs;
-    document.getElementById('sHours').textContent = s.totalVerifiedHours.toFixed(1);
-    document.getElementById('sPending').textContent = s.pendingVerifications;
-    document.getElementById('sTasks').textContent = s.pendingTasks;
-    document.getElementById('sAuto').textContent = s.autoApprovalRate + '%';
-    if (s.autoApprovalRate >= 10) {
-      document.getElementById('sAuto').style.color = 'var(--danger)';
-      document.getElementById('autoCard').classList.add('stat-danger');
+
+    const now = new Date();
+    document.getElementById('dashSubtitle').textContent =
+      'Platform overview · ' + now.toLocaleDateString('en-CA', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+    document.getElementById('sUsers').textContent = s.totalUsers ?? '—';
+    document.getElementById('sOrgs').textContent  = s.totalOrgs ?? '—';
+    document.getElementById('sGigs').textContent  = s.totalGigs ?? '—';
+    document.getElementById('sHours').textContent = typeof s.totalVerifiedHours === 'number' ? s.totalVerifiedHours.toFixed(1) : '—';
+    document.getElementById('sPending').textContent = s.pendingVerifications ?? '—';
+    document.getElementById('sTasks').textContent   = s.pendingTasks ?? '—';
+
+    const autoRate = s.autoApprovalRate ?? 0;
+    const autoEl = document.getElementById('sAuto');
+    autoEl.textContent = autoRate + '%';
+    if (autoRate >= 10) {
+      autoEl.classList.add('danger');
+      document.getElementById('autoCard').classList.add('kpi-danger');
     }
-  } catch (err) { Toast.error(err.message); }
+
+    if ((s.pendingVerifications ?? 0) > 0) {
+      const badge = document.getElementById('verifyBadge');
+      badge.textContent = s.pendingVerifications;
+      badge.style.display = 'flex';
+    }
+
+    /* ── Platform health bars ── */
+    const hItems = [
+      { label: 'Verified accounts', val: s.totalUsers > 0 ? Math.round(((s.totalUsers - (s.pendingVerifications ?? 0)) / s.totalUsers) * 100) : 0, color: '#16a34a' },
+      { label: 'Org approval rate',  val: s.totalOrgs > 0 ? Math.min(100, Math.round((s.totalOrgs / (s.totalOrgs + (s.pendingVerifications ?? 0))) * 100)) : 0, color: '#1e40af' },
+      { label: 'Task response rate', val: Math.max(0, Math.min(100, 100 - (autoRate * 2))), color: autoRate >= 10 ? '#dc2626' : '#0f766e' },
+    ];
+    document.getElementById('healthSection').innerHTML = hItems.map(h => `
+      <div class="health-row">
+        <div class="health-label">${h.label}</div>
+        <div class="health-bar-wrap"><div class="health-bar" style="width:${h.val}%;background:${h.color}"></div></div>
+        <div class="health-val" style="color:${h.color}">${h.val}%</div>
+      </div>
+    `).join('') + `
+      <div style="padding:0.875rem 0 0;border-top:1px solid var(--border);margin-top:0.25rem">
+        <div style="font-size:0.76rem;color:var(--text-muted);line-height:1.5">Auto-approval triggers when organizations take &gt;30 days to respond. Keep rate below 10%.</div>
+      </div>
+    `;
+
+    /* ── Simulated recent activity (replace with real endpoint when available) ── */
+    const activities = [
+      { dot:'blue',  text:`Platform has <strong>${s.totalUsers}</strong> registered accounts across all roles.` },
+      { dot:'green', text:`<strong>${s.totalOrgs}</strong> verified organizations actively posting opportunities.` },
+      { dot:'amber', text:`<strong>${s.pendingVerifications}</strong> pending verification request${s.pendingVerifications === 1 ? '' : 's'} awaiting review.` },
+      { dot: s.pendingTasks > 0 ? 'amber' : 'green', text:`<strong>${s.pendingTasks}</strong> task completion${s.pendingTasks === 1 ? '' : 's'} awaiting organization approval.` },
+      { dot: autoRate >= 10 ? 'red' : 'green', text:`Auto-approval rate is <strong>${autoRate}%</strong> — ${autoRate >= 10 ? 'above target, encourage organizations to review tasks faster.' : 'within target (&lt;10%).'}` },
+    ];
+    document.getElementById('recentActivity').innerHTML = `
+      <ul class="activity-list">
+        ${activities.map(a => `
+          <li class="activity-item">
+            <div class="activity-dot ${a.dot}"></div>
+            <div class="activity-text">${a.text}</div>
+            <div class="activity-time">Now</div>
+          </li>`).join('')}
+      </ul>`;
+
+  } catch (err) {
+    Toast.error('Failed to load dashboard: ' + err.message);
+    document.getElementById('dashSubtitle').textContent = 'Could not load stats — check your connection.';
+  }
 })();
 </script>
-<script src="/js/footer.js"></script></body>
+<script src="/js/footer.js"></script>
+</body>
 </html>
-
-
-
