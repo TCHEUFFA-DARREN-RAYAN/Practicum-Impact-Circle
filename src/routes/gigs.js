@@ -9,21 +9,33 @@ const { sendEmail, templates } = require('../services/email');
 
 router.get('/', optionalAuth, async (req, res, next) => {
   try {
-    const { category, location, dateFrom, dateTo, org, search, page = 1, limit = Math.min(parseInt(req.query.limit) || 12, 50) } = req.query;
+    const {
+      category, location, timeOfDay, dateFrom, dateTo,
+      org, search, minHours, maxHours, sortBy = 'createdAt',
+      page = 1, limit = Math.min(parseInt(req.query.limit) || 12, 50),
+    } = req.query;
     const where = { status: 'open' };
     if (category) where.categoryId = parseInt(category);
     if (location) where.locationType = location;
+    if (timeOfDay) where.timeOfDay = timeOfDay;
     if (org) where.orgId = parseInt(org);
     if (dateFrom || dateTo) {
       where.startDate = {};
       if (dateFrom) where.startDate[Op.gte] = dateFrom;
       if (dateTo) where.startDate[Op.lte] = dateTo;
     }
+    if (minHours || maxHours) {
+      where.estimatedHours = {};
+      if (minHours) where.estimatedHours[Op.gte] = parseFloat(minHours);
+      if (maxHours) where.estimatedHours[Op.lte] = parseFloat(maxHours);
+    }
     if (search) where[Op.or] = [
       { title: { [Op.like]: `%${search}%` } },
       { description: { [Op.like]: `%${search}%` } },
     ];
 
+    const orderMap = { hours: [['estimatedHours', 'ASC']], hoursDesc: [['estimatedHours', 'DESC']], date: [['startDate', 'ASC']] };
+    const order = orderMap[sortBy] || [['createdAt', 'DESC']];
     const offset = (parseInt(page) - 1) * parseInt(limit);
     const { count: total, rows: gigs } = await Gig.findAndCountAll({
       where,
@@ -31,12 +43,20 @@ router.get('/', optionalAuth, async (req, res, next) => {
         { model: Category, as: 'category', attributes: ['id', 'name', 'colorHex', 'icon'] },
         { model: Organization, as: 'org', attributes: ['orgName', 'address'] },
       ],
-      order: [['createdAt', 'DESC']],
+      order,
       offset,
       limit: parseInt(limit),
     });
 
     res.json({ success: true, data: { gigs, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) } });
+  } catch (err) { next(err); }
+});
+
+router.get('/:id/my-application', requireAuth, requireRole('volunteer'), async (req, res, next) => {
+  try {
+    const app = await Application.findOne({ where: { gigId: req.params.id, volunteerId: req.user.id } });
+    if (!app) return res.json({ success: true, data: { applied: false } });
+    res.json({ success: true, data: { applied: true, status: app.status, applicationId: app.id } });
   } catch (err) { next(err); }
 });
 
@@ -69,7 +89,12 @@ router.post('/', requireAuth, requireRole('org'), [
     if (orgUser.verificationStatus !== 'verified')
       return res.status(403).json({ success: false, message: 'Your organization must be verified to post gigs.' });
 
-    const { title, description, categoryId, startDate, endDate, estimatedHours, location, requiredSkills, verifiedOnly } = req.body;
+    const {
+      title, description, categoryId, startDate, endDate, estimatedHours,
+      location, requiredSkills, verifiedOnly,
+      timeOfDay, startTime, endTime,
+      isRecurring, recurrenceType, recurrenceDays, hoursPerOccurrence,
+    } = req.body;
     const gig = await Gig.create({
       orgId: org.id, title, description, categoryId: parseInt(categoryId),
       startDate, endDate, estimatedHours,
@@ -77,6 +102,13 @@ router.post('/', requireAuth, requireRole('org'), [
       locationAddress: location?.address || '',
       requiredSkills: requiredSkills || [],
       verifiedOnly: !!verifiedOnly,
+      timeOfDay: timeOfDay || null,
+      startTime: startTime || null,
+      endTime: endTime || null,
+      isRecurring: !!isRecurring,
+      recurrenceType: recurrenceType || null,
+      recurrenceDays: recurrenceDays || [],
+      hoursPerOccurrence: hoursPerOccurrence || null,
     });
 
     const populated = await Gig.findByPk(gig.id, {
@@ -92,7 +124,8 @@ router.put('/:id', requireAuth, requireRole('org'), async (req, res, next) => {
     const gig = await Gig.findOne({ where: { id: req.params.id, orgId: org.id } });
     if (!gig) return res.status(404).json({ success: false, message: 'Gig not found.' });
 
-    const allowed = ['title', 'description', 'startDate', 'endDate', 'estimatedHours', 'requiredSkills', 'verifiedOnly', 'status'];
+    const allowed = ['title', 'description', 'startDate', 'endDate', 'estimatedHours', 'requiredSkills', 'verifiedOnly', 'status',
+      'timeOfDay', 'startTime', 'endTime', 'isRecurring', 'recurrenceType', 'recurrenceDays', 'hoursPerOccurrence'];
     const updates = {};
     allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
     if (req.body.location) {
@@ -161,10 +194,32 @@ router.get('/:id/applications', requireAuth, requireRole('org'), async (req, res
 
     const applications = await Application.findAll({
       where: { gigId: gig.id },
-      include: [{ model: User, as: 'volunteer', attributes: ['id', 'email', 'verificationStatus'] }],
+      include: [{
+        model: User, as: 'volunteer', attributes: ['id', 'email', 'verificationStatus'],
+        include: [{ model: VolunteerProfile, as: 'volunteerProfile' }],
+      }],
       order: [['createdAt', 'DESC']],
     });
     res.json({ success: true, data: { applications, gig } });
+  } catch (err) { next(err); }
+});
+
+router.get('/applications/:appId', requireAuth, requireRole('org'), async (req, res, next) => {
+  try {
+    const org = await Organization.findOne({ where: { userId: req.user.id } });
+    if (!org) return res.status(403).json({ success: false, message: 'Organization not found.' });
+
+    const app = await Application.findByPk(req.params.appId, {
+      include: [
+        { model: Gig, as: 'gig', where: { orgId: org.id } },
+        {
+          model: User, as: 'volunteer', attributes: ['id', 'email', 'verificationStatus'],
+          include: [{ model: VolunteerProfile, as: 'volunteerProfile' }],
+        },
+      ],
+    });
+    if (!app) return res.status(404).json({ success: false, message: 'Application not found.' });
+    res.json({ success: true, data: { application: app } });
   } catch (err) { next(err); }
 });
 
