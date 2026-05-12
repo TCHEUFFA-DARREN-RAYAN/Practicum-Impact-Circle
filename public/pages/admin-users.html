@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Manage Users | Admin | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    .detail-row { display:flex; gap:0.5rem; margin-bottom:0.5rem; font-size:0.875rem; }
+    .detail-label { font-weight:700; min-width:130px; color:var(--text-muted); }
+    .pill-list { display:flex; flex-wrap:wrap; gap:0.375rem; }
+  </style>
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside id="sidebar" class="sidebar"></aside>
+<div class="page-content">
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><h1>Manage Users</h1><p class="text-muted">All accounts by role and verification status</p></div>
+        <a href="/admin" class="btn btn-secondary">← Admin Home</a>
+      </div>
+    </div>
+    <div class="filters mb-4">
+      <div class="filters-row">
+        <div class="filter-group"><label>Role</label><select id="roleFilter"><option value="">All</option><option value="volunteer">Volunteer</option><option value="org">Organization</option><option value="admin">Admin</option><option value="csr">CSR</option></select></div>
+        <div class="filter-group"><label>Verification</label><select id="statusFilter"><option value="">All</option><option value="pending">Pending</option><option value="verified">Verified</option><option value="rejected">Rejected</option></select></div>
+        <div class="filter-group" style="flex:1"></div>
+        <button class="btn btn-primary" type="button" onclick="load(1)">Refresh</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Email</th><th>Role</th><th>Status</th><th>Blocked</th><th>Joined</th><th>Actions</th></tr></thead>
+          <tbody id="tbl"><tr><td colspan="6" class="text-center" style="padding:2rem"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+      <div class="card-footer" style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;border-top:1px solid var(--border)">
+        <span class="text-muted" style="font-size:0.85rem" id="pageInfo"></span>
+        <div style="display:flex;gap:0.5rem">
+          <button class="btn btn-sm btn-secondary" type="button" id="prevBtn" onclick="changePage(-1)">Previous</button>
+          <button class="btn btn-sm btn-secondary" type="button" id="nextBtn" onclick="changePage(1)">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- User detail modal -->
+<div class="modal-backdrop" id="userModal">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header"><h3 id="userModalTitle">User Details</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body" id="userModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+      <button class="btn btn-warning" id="blockBtn" onclick="blockUser()"></button>
+      <button class="btn btn-danger" id="deleteBtn" onclick="deleteUser()">Deactivate Account</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/footer.js"></script>
+<script>
+API.requireAuth('admin');
+let page = 1;
+const limit = 25;
+let currentUserId = null;
+let currentIsBlocked = false;
+
+async function load(p) {
+  if (p) page = p;
+  const role = document.getElementById('roleFilter').value;
+  const status = document.getElementById('statusFilter').value;
+  const q = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (role) q.set('role', role);
+  if (status) q.set('status', status);
+  document.getElementById('tbl').innerHTML = '<tr><td colspan="6" class="text-center" style="padding:2rem"><div class="spinner"></div></td></tr>';
+  try {
+    const { data } = await API.get(`/admin/users?${q}`);
+    document.getElementById('pageInfo').textContent = `Page ${data.page} of ${data.pages || 1} · ${data.total} users`;
+    document.getElementById('prevBtn').disabled = data.page <= 1;
+    document.getElementById('nextBtn').disabled = data.page >= (data.pages || 1);
+    document.getElementById('tbl').innerHTML = data.users.length ? data.users.map(u => `
+      <tr>
+        <td style="font-weight:600">${u.email}</td>
+        <td><span class="badge badge-primary">${u.role}</span></td>
+        <td><span class="badge ${u.verificationStatus === 'verified' ? 'badge-verified' : u.verificationStatus === 'rejected' ? 'badge-rejected' : 'badge-pending'}">${u.verificationStatus}</span></td>
+        <td>${u.isBlocked ? '<span class="badge badge-rejected">Blocked</span>' : '<span style="color:var(--text-muted);font-size:0.8rem">—</span>'}</td>
+        <td style="font-size:0.85rem;color:var(--text-muted)">${fmt.date(u.createdAt)}</td>
+        <td>
+          <div style="display:flex;gap:0.375rem;flex-wrap:wrap">
+            <button class="btn btn-sm btn-secondary" onclick="viewUser('${u.id}')">View</button>
+            <button class="btn btn-sm ${u.isBlocked ? 'btn-success' : 'btn-warning'}" onclick="quickBlock('${u.id}',${u.isBlocked})">${u.isBlocked ? 'Unblock' : 'Block'}</button>
+          </div>
+        </td>
+      </tr>
+    `).join('') : '<tr><td colspan="6" class="text-center text-muted" style="padding:2rem">No users match these filters.</td></tr>';
+  } catch (e) { Toast.error(e.message); }
+}
+
+async function viewUser(id) {
+  currentUserId = id;
+  document.getElementById('userModalBody').innerHTML = '<div style="padding:2rem;text-align:center"><div class="spinner"></div></div>';
+  document.getElementById('userModal').classList.add('open');
+  try {
+    const { data } = await API.get(`/admin/users/${id}`);
+    const u = data.user;
+    currentIsBlocked = u.isBlocked;
+    document.getElementById('userModalTitle').textContent = u.email;
+    document.getElementById('blockBtn').textContent = u.isBlocked ? 'Unblock' : 'Block';
+    document.getElementById('blockBtn').className = `btn ${u.isBlocked ? 'btn-success' : 'btn-warning'}`;
+    document.getElementById('blockBtn').style.display = u.role === 'admin' ? 'none' : '';
+    document.getElementById('deleteBtn').style.display = u.role === 'admin' ? 'none' : '';
+
+    const vp = u.volunteerProfile;
+    const org = u.organization;
+    let profileHTML = '';
+    if (vp) {
+      profileHTML = `
+        <div class="detail-row"><span class="detail-label">Name</span><span>${vp.firstName || ''} ${vp.lastName || ''}</span></div>
+        <div class="detail-row"><span class="detail-label">Phone</span><span>${vp.phone || '—'}</span></div>
+        <div class="detail-row"><span class="detail-label">Address</span><span>${vp.address || '—'}</span></div>
+        <div class="detail-row"><span class="detail-label">Verified hours</span><span>${vp.totalVerifiedHours || 0}h</span></div>
+        <div class="detail-row"><span class="detail-label">Points</span><span>${vp.totalPoints || 0}</span></div>
+        ${vp.skills?.length ? `<div class="detail-row"><span class="detail-label">Skills</span><div class="pill-list">${vp.skills.map(s=>`<span class="badge badge-primary">${s}</span>`).join('')}</div></div>` : ''}
+        ${vp.interests?.length ? `<div class="detail-row"><span class="detail-label">Interests</span><div class="pill-list">${vp.interests.map(s=>`<span class="badge badge-info">${s}</span>`).join('')}</div></div>` : ''}
+        ${vp.previousVolunteeringHistory ? `<div class="detail-row"><span class="detail-label">History</span><span>${vp.previousVolunteeringHistory}</span></div>` : ''}`;
+    } else if (org) {
+      profileHTML = `
+        <div class="detail-row"><span class="detail-label">Organization</span><span>${org.orgName}</span></div>
+        <div class="detail-row"><span class="detail-label">Address</span><span>${org.address || '—'}</span></div>
+        <div class="detail-row"><span class="detail-label">Contact</span><span>${org.contactName || '—'} · ${org.contactEmail || '—'}</span></div>
+        <div class="detail-row"><span class="detail-label">Phone</span><span>${org.contactPhone || '—'}</span></div>
+        <div class="detail-row"><span class="detail-label">Website</span><span>${org.website || '—'}</span></div>
+        <div class="detail-row"><span class="detail-label">Total hours</span><span>${org.totalFacilitatedHours || 0}h</span></div>`;
+    }
+
+    document.getElementById('userModalBody').innerHTML = `
+      <div class="detail-row"><span class="detail-label">Email</span><span>${u.email}</span></div>
+      <div class="detail-row"><span class="detail-label">Role</span><span class="badge badge-primary">${u.role}</span></div>
+      <div class="detail-row"><span class="detail-label">Verification</span><span class="badge ${u.verificationStatus === 'verified' ? 'badge-verified' : u.verificationStatus === 'rejected' ? 'badge-rejected' : 'badge-pending'}">${u.verificationStatus}</span></div>
+      <div class="detail-row"><span class="detail-label">Blocked</span><span>${u.isBlocked ? '<strong style="color:#dc2626">Yes</strong>' : 'No'}</span></div>
+      <div class="detail-row"><span class="detail-label">Joined</span><span>${fmt.date(u.createdAt)}</span></div>
+      ${profileHTML ? `<hr style="margin:1rem 0"><div>${profileHTML}</div>` : ''}`;
+  } catch (e) {
+    document.getElementById('userModalBody').innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+  }
+}
+
+async function blockUser() {
+  if (!currentUserId) return;
+  try {
+    const { data } = await API.patch(`/admin/users/${currentUserId}/block`, {});
+    Toast.success(data.isBlocked ? 'User blocked.' : 'User unblocked.');
+    closeModal();
+    load();
+  } catch (e) { Toast.error(e.message); }
+}
+
+async function quickBlock(id, isBlocked) {
+  try {
+    const { data } = await API.patch(`/admin/users/${id}/block`, {});
+    Toast.success(data.isBlocked ? 'User blocked.' : 'User unblocked.');
+    load();
+  } catch (e) { Toast.error(e.message); }
+}
+
+async function deleteUser() {
+  if (!currentUserId) return;
+  if (!confirm('Deactivate this user? They will be blocked and their verification status set to rejected. The account is preserved in the database.')) return;
+  try {
+    await API.delete(`/admin/users/${currentUserId}`);
+    Toast.success('Account deactivated.');
+    closeModal();
+    load();
+  } catch (e) { Toast.error(e.message); }
+}
+
+function closeModal() { document.getElementById('userModal').classList.remove('open'); currentUserId = null; }
+function changePage(delta) { page = Math.max(1, page + delta); load(); }
+document.getElementById('roleFilter').addEventListener('change', () => { page = 1; load(); });
+document.getElementById('statusFilter').addEventListener('change', () => { page = 1; load(); });
+load(1);
+</script>
+</body>
+</html>
