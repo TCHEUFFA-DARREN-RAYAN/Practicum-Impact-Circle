@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Volunteer Tracker | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    .filter-tabs { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .filter-tab { padding:0.4rem 1rem; border-radius:999px; font-size:0.85rem; font-weight:600;
+      border:2px solid var(--border); background:white; cursor:pointer; transition:all 0.15s; color:var(--text); }
+    .filter-tab.active { border-color:var(--primary); background:var(--primary-light); color:var(--primary); }
+    .vol-card { display:flex; align-items:center; gap:1rem; padding:0.875rem; border:1px solid var(--border);
+      border-radius:var(--radius-sm); margin-bottom:0.75rem; background:white; }
+    .vol-avatar { width:42px; height:42px; border-radius:50%; background:var(--primary-light);
+      color:var(--primary); display:flex; align-items:center; justify-content:center;
+      font-size:0.85rem; font-weight:800; flex-shrink:0; }
+    .vol-info { flex:1; min-width:0; }
+    .vol-name { font-weight:700; font-size:0.9rem; }
+    .vol-meta { font-size:0.78rem; color:var(--text-muted); margin-top:0.15rem; }
+    .vol-stats { display:flex; gap:1.25rem; font-size:0.8rem; }
+    .vol-stat { display:flex; flex-direction:column; align-items:center; }
+    .vol-stat-val { font-weight:800; font-size:1.05rem; color:var(--text); }
+    .vol-stat-lbl { font-size:0.7rem; color:var(--text-muted); white-space:nowrap; }
+    @media (max-width:640px) { .vol-stats { display:none; } }
+  </style>
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside id="sidebar" class="sidebar"></aside>
+<div class="page-content">
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div>
+          <h1>Volunteer Tracker</h1>
+          <p class="text-muted">Track volunteers who have worked with your organization</p>
+        </div>
+        <a href="/org-dashboard" class="btn btn-secondary">← Dashboard</a>
+      </div>
+    </div>
+
+    <div class="filter-tabs" id="filterTabs">
+      <button class="filter-tab active" onclick="setFilter('all', this)">All Volunteers</button>
+      <button class="filter-tab" onclick="setFilter('active', this)">Active Now</button>
+      <button class="filter-tab" onclick="setFilter('recurring', this)">Recurring (2+ sessions)</button>
+    </div>
+
+    <div id="volList"><div style="padding:3rem;text-align:center"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/footer.js"></script>
+<script>
+API.requireAuth('org');
+let allVolunteers = [];
+let currentFilter = 'all';
+
+async function load() {
+  try {
+    const { data } = await API.get('/orgs/me/volunteers');
+    allVolunteers = data.volunteers || [];
+    render();
+  } catch (e) {
+    document.getElementById('volList').innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+  }
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function render() {
+  let list = allVolunteers;
+  if (currentFilter === 'active') list = list.filter(v => v.isActive);
+  else if (currentFilter === 'recurring') list = list.filter(v => v.isRecurring);
+
+  if (!list.length) {
+    document.getElementById('volList').innerHTML = `
+      <div style="padding:4rem;text-align:center;color:var(--text-muted)">
+        No volunteers match this filter.
+      </div>`;
+    return;
+  }
+
+  document.getElementById('volList').innerHTML = list.map(v => {
+    const vp = v.volunteer?.volunteerProfile;
+    const name = vp ? `${vp.firstName || ''} ${vp.lastName || ''}`.trim() || v.volunteer.email : v.volunteer.email;
+    const initials = name.substring(0, 2).toUpperCase();
+    const hrs = typeof v.totalHours === 'number' ? v.totalHours.toFixed(1) : '0';
+    const lastDate = v.lastActive ? fmt.date(v.lastActive) : '—';
+
+    return `
+    <div class="vol-card">
+      <div class="vol-avatar">${initials}</div>
+      <div class="vol-info">
+        <div class="vol-name">${name}
+          ${v.isActive ? '<span class="badge" style="background:#dcfce7;color:#16a34a;font-size:0.68rem;margin-left:0.375rem">Active now</span>' : ''}
+          ${v.isRecurring ? '<span class="badge" style="background:#eff6ff;color:#2563eb;font-size:0.68rem;margin-left:0.375rem">Recurring</span>' : ''}
+        </div>
+        <div class="vol-meta">${v.volunteer.email} · Last active: ${lastDate}</div>
+        ${vp?.skills?.length ? `<div class="vol-meta" style="margin-top:0.1rem">Skills: ${vp.skills.slice(0,3).join(', ')}${vp.skills.length > 3 ? ' +' + (vp.skills.length - 3) : ''}</div>` : ''}
+      </div>
+      <div class="vol-stats">
+        <div class="vol-stat"><span class="vol-stat-val">${v.sessionCount}</span><span class="vol-stat-lbl">sessions</span></div>
+        <div class="vol-stat"><span class="vol-stat-val">${hrs}h</span><span class="vol-stat-lbl">total hrs</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+load();
+</script>
+</body>
+</html>
