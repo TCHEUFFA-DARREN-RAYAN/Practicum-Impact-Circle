@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const { fn, col, literal } = require('sequelize');
 const { requireAuth, requireRole } = require('../middleware/auth');
-const { User, VolunteerProfile, Organization, Category, Gig, Reward, Task, HourRecord, AuditLog, Notification } = require('../models/index');
+const { User, VolunteerProfile, Organization, Category, Gig, Application, Reward, Task, HourRecord, AuditLog, Notification } = require('../models/index');
 const { createNotification } = require('../services/notifications');
 const { sendEmail, templates } = require('../services/email');
 
@@ -48,8 +48,7 @@ router.patch('/verify/:userId', ...adminAuth, async (req, res, next) => {
     const { status, reason } = req.body;
     if (!['verified', 'rejected'].includes(status))
       return res.status(400).json({ success: false, message: 'Status must be verified or rejected.' });
-    if (status === 'rejected' && (!reason || reason.trim().length < 5))
-      return res.status(400).json({ success: false, message: 'A reason is required for rejection.' });
+    /* rejection reason is optional */
 
     await User.update(
       { verificationStatus: status, rejectionReason: status === 'rejected' ? reason : null },
@@ -60,10 +59,16 @@ router.patch('/verify/:userId', ...adminAuth, async (req, res, next) => {
 
     const name = updated.email.split('@')[0];
     const tpl = status === 'verified' ? templates.verificationApproved(name) : templates.verificationRejected(name, reason);
-    await sendEmail(updated.email, tpl.subject, tpl.html);
+    let emailSent = true;
+    try {
+      await sendEmail(updated.email, tpl.subject, tpl.html);
+    } catch (e) {
+      emailSent = false;
+      console.error('[ADMIN] verify email failed:', e.message);
+    }
     await createNotification(updated.id, `Your account verification status: ${status}`, 'verification');
 
-    res.json({ success: true, message: `User ${status}.`, data: { user: updated.toSafeObject() } });
+    res.json({ success: true, message: `User ${status}.`, data: { user: updated.toSafeObject(), emailSent } });
   } catch (err) { next(err); }
 });
 
@@ -76,6 +81,107 @@ router.get('/users', ...adminAuth, async (req, res, next) => {
     const offset = (parseInt(page) - 1) * parseInt(limit);
     const { count: total, rows: users } = await User.findAndCountAll({ where, attributes: { exclude: ['passwordHash'] }, order: [['createdAt', 'DESC']], offset, limit: parseInt(limit) });
     res.json({ success: true, data: { users, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) } });
+  } catch (err) { next(err); }
+});
+
+router.get('/users/:id', ...adminAuth, async (req, res, next) => {
+  try {
+    const user = await User.findByPk(req.params.id, {
+      attributes: { exclude: ['passwordHash'] },
+      include: [
+        { model: VolunteerProfile, as: 'volunteerProfile' },
+        { model: Organization, as: 'organization' },
+      ],
+    });
+    if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+    res.json({ success: true, data: { user: user.toJSON() } });
+  } catch (err) { next(err); }
+});
+
+router.patch('/users/:id/block', ...adminAuth, async (req, res, next) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+    if (user.role === 'admin') return res.status(403).json({ success: false, message: 'Cannot block an admin account.' });
+    const newState = !user.isBlocked;
+    await user.update({ isBlocked: newState });
+    res.json({ success: true, message: `User ${newState ? 'blocked' : 'unblocked'}.`, data: { isBlocked: newState } });
+  } catch (err) { next(err); }
+});
+
+router.delete('/users/:id', ...adminAuth, async (req, res, next) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+    if (user.role === 'admin') return res.status(403).json({ success: false, message: 'Cannot delete an admin account.' });
+    await user.update({ isBlocked: true, verificationStatus: 'rejected' });
+    res.json({ success: true, message: 'User account has been deactivated.' });
+  } catch (err) { next(err); }
+});
+
+router.get('/organizations', ...adminAuth, async (req, res, next) => {
+  try {
+    const orgs = await Organization.findAll({
+      include: [{ model: User, attributes: ['id', 'email', 'verificationStatus', 'role', 'createdAt', 'isBlocked'] }],
+      order: [['createdAt', 'DESC']],
+    });
+    res.json({ success: true, data: { organizations: orgs } });
+  } catch (err) { next(err); }
+});
+
+router.get('/organizations/:id', ...adminAuth, async (req, res, next) => {
+  try {
+    const org = await Organization.findByPk(req.params.id, {
+      include: [{ model: User, attributes: ['id', 'email', 'verificationStatus', 'isBlocked', 'createdAt'] }],
+    });
+    if (!org) return res.status(404).json({ success: false, message: 'Organization not found.' });
+    res.json({ success: true, data: { organization: org } });
+  } catch (err) { next(err); }
+});
+
+router.put('/organizations/:id', ...adminAuth, async (req, res, next) => {
+  try {
+    const allowed = ['orgName', 'missionStatement', 'contactName', 'contactEmail', 'contactPhone', 'address', 'website'];
+    const updates = {};
+    allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
+    await Organization.update(updates, { where: { id: req.params.id } });
+    const org = await Organization.findByPk(req.params.id);
+    res.json({ success: true, message: 'Organization updated.', data: { organization: org } });
+  } catch (err) { next(err); }
+});
+
+router.delete('/organizations/:id', ...adminAuth, async (req, res, next) => {
+  try {
+    const org = await Organization.findByPk(req.params.id);
+    if (!org) return res.status(404).json({ success: false, message: 'Organization not found.' });
+    await User.update({ isBlocked: true, verificationStatus: 'rejected' }, { where: { id: org.userId } });
+    res.json({ success: true, message: 'Organization account has been deactivated.' });
+  } catch (err) { next(err); }
+});
+
+router.get('/gigs', ...adminAuth, async (req, res, next) => {
+  try {
+    const { Op } = require('sequelize');
+    const { status, upcoming, page = 1, limit = 30 } = req.query;
+    const where = {};
+    if (status && ['open', 'closed', 'cancelled'].includes(status)) where.status = status;
+    if (String(upcoming).toLowerCase() === 'true') {
+      where.startDate = { [Op.gte]: new Date().toISOString().slice(0, 10) };
+    }
+    const lim = Math.min(parseInt(limit, 10) || 30, 100);
+    const pg = parseInt(page, 10) || 1;
+    const offset = (pg - 1) * lim;
+    const { count: total, rows: gigs } = await Gig.findAndCountAll({
+      where,
+      include: [
+        { model: Organization, as: 'org', attributes: ['id', 'orgName', 'address', 'contactEmail'] },
+        { model: Category, as: 'category', attributes: ['name'] },
+      ],
+      order: [['startDate', String(upcoming).toLowerCase() === 'true' ? 'ASC' : 'DESC']],
+      offset,
+      limit: lim,
+    });
+    res.json({ success: true, data: { gigs, total, page: pg, pages: Math.ceil(total / lim) } });
   } catch (err) { next(err); }
 });
 
@@ -194,19 +300,79 @@ router.get('/audit', ...adminAuth, async (req, res, next) => {
 router.get('/analytics', ...adminAuth, async (req, res, next) => {
   try {
     const { Op } = require('sequelize');
-    const [[{ total: totalHours }], totalUsers, verifiedVolunteers, pendingVerifications, totalGigs, openGigs, totalOrgs, autoApproved, totalApproved] = await Promise.all([
+    const [
+      [{ total: totalHours }],
+      totalUsers,
+      volunteerVerified,
+      volunteerPending,
+      volunteerRejected,
+      orgVerified,
+      orgPending,
+      adminCount,
+      totalGigs,
+      openGigs,
+      closedGigs,
+      cancelledGigs,
+      totalApplications,
+      approvedApplications,
+      rejectedApplications,
+      approvedTasks,
+      autoApproved,
+      pendingTasksCount,
+      rejectedTasks,
+      totalOrgs,
+      topOrgs,
+    ] = await Promise.all([
       HourRecord.findAll({ attributes: [[fn('SUM', col('hours')), 'total']], raw: true }),
       User.count(),
       User.count({ where: { role: 'volunteer', verificationStatus: 'verified' } }),
-      User.count({ where: { verificationStatus: 'pending' } }),
+      User.count({ where: { role: 'volunteer', verificationStatus: 'pending' } }),
+      User.count({ where: { role: 'volunteer', verificationStatus: 'rejected' } }),
+      User.count({ where: { role: 'org', verificationStatus: 'verified' } }),
+      User.count({ where: { role: 'org', verificationStatus: 'pending' } }),
+      User.count({ where: { role: 'admin' } }),
       Gig.count(),
       Gig.count({ where: { status: 'open' } }),
-      Organization.count(),
-      Task.count({ where: { autoApprovedAt: { [Op.ne]: null } } }),
+      Gig.count({ where: { status: 'closed' } }),
+      Gig.count({ where: { status: 'cancelled' } }),
+      Application.count(),
+      Application.count({ where: { status: 'approved' } }),
+      Application.count({ where: { status: 'rejected' } }),
       Task.count({ where: { status: 'approved' } }),
+      Task.count({ where: { autoApprovedAt: { [Op.ne]: null } } }),
+      Task.count({ where: { status: 'completed' } }),
+      Task.count({ where: { status: 'rejected' } }),
+      Organization.count(),
+      Organization.findAll({
+        attributes: ['orgName', 'totalFacilitatedHours'],
+        where: { totalFacilitatedHours: { [Op.gt]: 0 } },
+        order: [['totalFacilitatedHours', 'DESC']],
+        limit: 5,
+        raw: true,
+      }),
     ]);
-    const autoApprovalRate = totalApproved > 0 ? parseFloat(((autoApproved / totalApproved) * 100).toFixed(1)) : 0;
-    res.json({ success: true, data: { totalUsers, verifiedVolunteers, pendingVerifications, totalGigs, openGigs, totalVerifiedHours: totalHours || 0, totalOrgs, autoApprovalRate, autoApprovedTasks: autoApproved, totalApprovedTasks: totalApproved } });
+
+    const autoApprovalRate = approvedTasks > 0 ? parseFloat(((autoApproved / approvedTasks) * 100).toFixed(1)) : 0;
+    const fillRate = totalGigs > 0 ? parseFloat(((closedGigs / totalGigs) * 100).toFixed(1)) : 0;
+
+    res.json({
+      success: true,
+      data: {
+        totalUsers,
+        totalVerifiedHours: totalHours || 0,
+        totalOrgs,
+        totalGigs,
+        openGigs,
+        autoApprovalRate,
+        volunteers: { verified: volunteerVerified, pending: volunteerPending, rejected: volunteerRejected, total: volunteerVerified + volunteerPending + volunteerRejected },
+        orgs: { verified: orgVerified, pending: orgPending, total: orgVerified + orgPending },
+        gigs: { open: openGigs, closed: closedGigs, cancelled: cancelledGigs, total: totalGigs, fillRate },
+        applications: { total: totalApplications, approved: approvedApplications, rejected: rejectedApplications, pending: totalApplications - approvedApplications - rejectedApplications },
+        tasks: { approved: approvedTasks, rejected: rejectedTasks, pending: pendingTasksCount, autoApproved, autoApprovalRate },
+        adminCount,
+        topOrgs,
+      },
+    });
   } catch (err) { next(err); }
 });
 
