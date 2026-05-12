@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Manage Organizations | Admin | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    .detail-row { display:flex; gap:0.5rem; margin-bottom:0.5rem; font-size:0.875rem; }
+    .detail-label { font-weight:700; min-width:130px; color:var(--text-muted); }
+  </style>
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside id="sidebar" class="sidebar"></aside>
+<div class="page-content">
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><h1>Manage Organizations</h1><p class="text-muted">Registered nonprofits and community partners</p></div>
+        <div style="display:flex;gap:0.75rem">
+          <a href="/admin/verify" class="btn btn-primary">Approvals queue</a>
+          <a href="/admin" class="btn btn-secondary">← Admin Home</a>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Organization</th><th>Account email</th><th>Verification</th><th>Location</th><th>Actions</th></tr></thead>
+          <tbody id="tbl"><tr><td colspan="5" class="text-center" style="padding:2rem"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View modal -->
+<div class="modal-backdrop" id="viewModal">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header"><h3 id="viewTitle">Organization Details</h3><button class="modal-close" onclick="closeModal('viewModal')">×</button></div>
+    <div class="modal-body" id="viewBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('viewModal')">Close</button>
+      <button class="btn btn-warning" onclick="openEdit(currentOrgId)">Edit</button>
+      <button class="btn btn-danger" onclick="deleteOrg()">Deactivate</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit modal -->
+<div class="modal-backdrop" id="editModal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header"><h3>Edit Organization</h3><button class="modal-close" onclick="closeModal('editModal')">×</button></div>
+    <div class="modal-body">
+      <div id="editAlert"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Organization Name</label><input type="text" id="eOrgName"><span class="field-error"></span></div>
+        <div class="form-group"><label>Address</label><input type="text" id="eAddress"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Contact Name</label><input type="text" id="eContactName"></div>
+        <div class="form-group"><label>Contact Email</label><input type="email" id="eContactEmail"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Contact Phone</label><input type="text" id="eContactPhone"></div>
+        <div class="form-group"><label>Website</label><input type="url" id="eWebsite"></div>
+      </div>
+      <div class="form-group"><label>Mission Statement</label><textarea id="eMission" rows="3"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('editModal')">Cancel</button>
+      <button class="btn btn-primary" id="saveEditBtn" onclick="saveEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/footer.js"></script>
+<script>
+API.requireAuth('admin');
+let currentOrgId = null;
+
+async function load() {
+  try {
+    const { data } = await API.get('/admin/organizations');
+    const rows = data.organizations || [];
+    document.getElementById('tbl').innerHTML = rows.length ? rows.map(o => {
+      const u = o.User || o.user;
+      const st = u ? u.verificationStatus : '—';
+      return `<tr>
+        <td style="font-weight:600">${o.orgName || '—'}${u?.isBlocked ? ' <span class="badge badge-rejected" style="font-size:0.68rem">Blocked</span>' : ''}</td>
+        <td>${u ? u.email : '—'}</td>
+        <td><span class="badge ${st === 'verified' ? 'badge-verified' : st === 'rejected' ? 'badge-rejected' : 'badge-pending'}">${st}</span></td>
+        <td style="font-size:0.85rem;color:var(--text-muted)">${o.address || '—'}</td>
+        <td>
+          <div style="display:flex;gap:0.375rem;flex-wrap:wrap">
+            <button class="btn btn-sm btn-secondary" onclick="viewOrg('${o.id}')">View</button>
+            <button class="btn btn-sm btn-warning" onclick="openEdit('${o.id}')">Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="confirmDelete('${o.id}')">Deactivate</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="5" class="text-center text-muted" style="padding:2rem">No organizations yet.</td></tr>';
+  } catch (e) { Toast.error(e.message); }
+}
+
+async function viewOrg(id) {
+  currentOrgId = id;
+  document.getElementById('viewBody').innerHTML = '<div style="padding:2rem;text-align:center"><div class="spinner"></div></div>';
+  document.getElementById('viewModal').classList.add('open');
+  try {
+    const { data } = await API.get(`/admin/organizations/${id}`);
+    const o = data.organization;
+    const u = o.User || o.user;
+    document.getElementById('viewTitle').textContent = o.orgName;
+    document.getElementById('viewBody').innerHTML = `
+      <div class="detail-row"><span class="detail-label">Organization</span><span>${o.orgName}</span></div>
+      <div class="detail-row"><span class="detail-label">Account Email</span><span>${u?.email || '—'}</span></div>
+      <div class="detail-row"><span class="detail-label">Verification</span><span class="badge ${u?.verificationStatus === 'verified' ? 'badge-verified' : u?.verificationStatus === 'rejected' ? 'badge-rejected' : 'badge-pending'}">${u?.verificationStatus || '—'}</span></div>
+      <div class="detail-row"><span class="detail-label">Blocked</span><span>${u?.isBlocked ? '<strong style="color:#dc2626">Yes</strong>' : 'No'}</span></div>
+      <div class="detail-row"><span class="detail-label">Address</span><span>${o.address || '—'}</span></div>
+      <div class="detail-row"><span class="detail-label">Contact</span><span>${o.contactName || '—'} · ${o.contactEmail || '—'}</span></div>
+      <div class="detail-row"><span class="detail-label">Phone</span><span>${o.contactPhone || '—'}</span></div>
+      <div class="detail-row"><span class="detail-label">Website</span><span>${o.website || '—'}</span></div>
+      <div class="detail-row"><span class="detail-label">Total hours</span><span>${o.totalFacilitatedHours || 0}h</span></div>
+      ${o.missionStatement ? `<div class="detail-row"><span class="detail-label">Mission</span><span>${o.missionStatement}</span></div>` : ''}`;
+  } catch (e) {
+    document.getElementById('viewBody').innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+  }
+}
+
+async function openEdit(id) {
+  currentOrgId = id;
+  closeModal('viewModal');
+  document.getElementById('editAlert').innerHTML = '';
+  document.getElementById('editModal').classList.add('open');
+  try {
+    const { data } = await API.get(`/admin/organizations/${id}`);
+    const o = data.organization;
+    document.getElementById('eOrgName').value     = o.orgName || '';
+    document.getElementById('eAddress').value     = o.address || '';
+    document.getElementById('eContactName').value = o.contactName || '';
+    document.getElementById('eContactEmail').value= o.contactEmail || '';
+    document.getElementById('eContactPhone').value= o.contactPhone || '';
+    document.getElementById('eWebsite').value     = o.website || '';
+    document.getElementById('eMission').value     = o.missionStatement || '';
+  } catch (e) { document.getElementById('editAlert').innerHTML = `<div class="alert alert-danger">${e.message}</div>`; }
+}
+
+async function saveEdit() {
+  if (!currentOrgId) return;
+  const btn = document.getElementById('saveEditBtn');
+  btn.disabled = true;
+  try {
+    await API.put(`/admin/organizations/${currentOrgId}`, {
+      orgName: document.getElementById('eOrgName').value.trim(),
+      address: document.getElementById('eAddress').value.trim(),
+      contactName: document.getElementById('eContactName').value.trim(),
+      contactEmail: document.getElementById('eContactEmail').value.trim(),
+      contactPhone: document.getElementById('eContactPhone').value.trim(),
+      website: document.getElementById('eWebsite').value.trim(),
+      missionStatement: document.getElementById('eMission').value.trim(),
+    });
+    Toast.success('Organization updated.');
+    closeModal('editModal');
+    load();
+  } catch (e) { document.getElementById('editAlert').innerHTML = `<div class="alert alert-danger">${e.message}</div>`; }
+  finally { btn.disabled = false; }
+}
+
+async function deleteOrg() {
+  if (!currentOrgId || !confirm('Deactivate this organization? Their account will be blocked. Data is preserved.')) return;
+  try {
+    await API.delete(`/admin/organizations/${currentOrgId}`);
+    Toast.success('Organization deactivated.');
+    closeModal('viewModal');
+    load();
+  } catch (e) { Toast.error(e.message); }
+}
+
+async function confirmDelete(id) {
+  currentOrgId = id;
+  deleteOrg();
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+load();
+</script>
+</body>
+</html>
