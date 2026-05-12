@@ -188,7 +188,16 @@ router.get('/me/dashboard', requireAuth, requireRole('volunteer'), async (req, r
 
     const tasks = await Task.findAll({
       where: { volunteerId: req.user.id },
-      include: [{ model: require('../models/index').Gig, as: 'gig', attributes: ['id', 'title', 'estimatedHours'] }],
+      include: [{
+        model: require('../models/index').Gig, as: 'gig',
+        attributes: ['id', 'title', 'estimatedHours', 'hoursPerOccurrence', 'startDate', 'endDate',
+          'locationType', 'locationAddress', 'timeOfDay', 'startTime', 'endTime',
+          'isRecurring', 'recurrenceType', 'recurrenceDays'],
+        include: [
+          { model: Organization, as: 'org', attributes: ['orgName'] },
+          { model: Category, as: 'category', attributes: ['id', 'name', 'colorHex'] },
+        ],
+      }],
       order: [['createdAt', 'DESC']],
     });
 

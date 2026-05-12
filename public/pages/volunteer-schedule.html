@@ -6,16 +6,16 @@
   <title>My Schedule | ImpactCircle</title>
   <link rel="stylesheet" href="/css/base.css">
   <style>
-    .shift-card { border:1px solid var(--border); border-radius:12px; padding:1.25rem; background:#fff; margin-bottom:1rem; display:flex; gap:1.25rem; align-items:flex-start; }
-    .date-badge { flex-shrink:0; text-align:center; background:var(--primary); color:#fff; border-radius:10px; padding:0.5rem 0.75rem; min-width:52px; }
-    .date-badge .mon { font-size:0.7rem; font-weight:700; text-transform:uppercase; opacity:0.85; }
-    .date-badge .day { font-size:1.4rem; font-weight:800; line-height:1; }
-    .shift-title { font-weight:700; font-size:0.95rem; margin-bottom:0.25rem; }
-    .shift-org { font-size:0.82rem; color:var(--text-muted); margin-bottom:0.4rem; }
-    .shift-meta { display:flex; flex-wrap:wrap; gap:0.5rem; font-size:0.78rem; color:var(--text-muted); }
-    .status-pill { display:inline-flex; align-items:center; gap:0.2rem; padding:0.2rem 0.625rem; border-radius:20px; font-size:0.75rem; font-weight:600; }
+    .shift-card { border:1px solid var(--border); border-radius:12px; padding:1.25rem 1.375rem; background:#fff; margin-bottom:0.875rem; }
+    .shift-top { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap; margin-bottom:0.75rem; }
+    .shift-title { font-weight:700; font-size:0.95rem; margin-bottom:0.2rem; }
+    .shift-org { font-size:0.82rem; color:var(--text-muted); }
+    .shift-details { display:flex; flex-direction:column; gap:0.3rem; font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem; }
+    .shift-detail-row { display:flex; align-items:center; gap:0.4rem; }
+    .cat-tag { display:inline-block; padding:0.15rem 0.55rem; border-radius:20px; font-size:0.72rem; font-weight:600; }
+    .status-pill { display:inline-flex; align-items:center; padding:0.25rem 0.75rem; border-radius:20px; font-size:0.75rem; font-weight:600; white-space:nowrap; }
+    .section-head { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin:1.5rem 0 0.75rem; padding-bottom:0.5rem; border-bottom:1px solid var(--border); }
     .empty-state { text-align:center; padding:4rem 1rem; color:var(--text-muted); }
-    .section-head { font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin:1.5rem 0 0.75rem; }
   </style>
 </head>
 <body>
@@ -26,11 +26,10 @@
   <div class="container">
     <div class="page-header">
       <div class="page-header-row">
-        <div><h1>My Schedule</h1><p class="text-muted">Upcoming and past volunteer shifts</p></div>
+        <div><h1>My Schedule</h1><p class="text-muted">Your assigned and completed volunteer gigs</p></div>
         <a href="/gigs" class="btn btn-primary">Find More Gigs</a>
       </div>
     </div>
-
     <div id="content"><div style="text-align:center;padding:3rem"><div class="spinner"></div></div></div>
   </div>
 </div>
@@ -41,45 +40,69 @@
 <script>
 API.requireAuth('volunteer');
 
-const STATUS_COLORS = {
-  accepted:   { bg:'#dcfce7', color:'#166534' },
-  inProgress: { bg:'#dbeafe', color:'#1e40af' },
-  completed:  { bg:'#f3f4f6', color:'#374151' },
-  approved:   { bg:'#d1fae5', color:'#065f46' },
+const STATUS_STYLE = {
+  accepted:   { bg:'#dbeafe', color:'#1e40af', label:'Assigned' },
+  inProgress: { bg:'#e0f2fe', color:'#0369a1', label:'In Progress' },
+  completed:  { bg:'#fef3c7', color:'#92400e', label:'Pending Org Approval' },
+  approved:   { bg:'#dcfce7', color:'#166534', label:'Approved' },
+  rejected:   { bg:'#fee2e2', color:'#991b1b', label:'Rejected' },
 };
 
-function calBadge(d) {
-  if (!d) return { mon: '—', day: '' };
-  const dt = new Date(d);
-  return { mon: dt.toLocaleString('default',{month:'short'}), day: dt.getDate() };
-}
+const TIME_LABELS = { morning:'Morning', afternoon:'Afternoon', evening:'Evening', flexible:'Flexible' };
 
-function fmtFull(d) {
-  return d ? new Date(d).toLocaleDateString('en-CA', { month:'short', day:'numeric', year:'numeric' }) : '—';
+const SVG = {
+  cal: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+  clk: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+  pin: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+  rec: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`,
+};
+
+function formatDays(days) {
+  if (!days || !days.length) return '';
+  if (days.length === 1) return days[0];
+  return days.slice(0, -1).join(', ') + ' & ' + days[days.length - 1];
 }
 
 function shiftCard(t) {
-  const g = t.gig || {};
-  const df = calBadge(g.startDate);
-  const sc = STATUS_COLORS[t.status] || { bg:'#f3f4f6', color:'#374151' };
+  const g  = t.gig || {};
+  const st = STATUS_STYLE[t.status] || { bg:'#f3f4f6', color:'#374151', label: t.status };
+  const cat = g.category || {};
+  const org = g.org?.orgName || '';
+
+  const dateStr = g.startDate
+    ? fmt.date(g.startDate) + (g.endDate && g.endDate !== g.startDate ? ' – ' + fmt.date(g.endDate) : '')
+    : null;
+
+  const timeLabel = g.timeOfDay && g.timeOfDay !== 'flexible'
+    ? (g.startTime ? `${g.startTime}${g.endTime ? ' – ' + g.endTime : ''}` : TIME_LABELS[g.timeOfDay] || g.timeOfDay)
+    : null;
+
+  const locStr = g.locationType === 'remote' ? 'Remote'
+    : (g.locationAddress || (g.locationType === 'in-person' ? 'In-Person' : null));
+
+  const recStr = g.isRecurring && g.recurrenceType
+    ? (g.recurrenceDays?.length ? formatDays(g.recurrenceDays) : g.recurrenceType.charAt(0).toUpperCase() + g.recurrenceType.slice(1))
+    : null;
+
+  const hours = g.hoursPerOccurrence || g.estimatedHours;
+
   return `<div class="shift-card">
-    <div class="date-badge">
-      <div class="mon">${df.mon||'?'}</div>
-      <div class="day">${df.day||'?'}</div>
-    </div>
-    <div style="flex:1;min-width:0">
-      <div class="shift-title">${g.title||'—'}</div>
-      <div class="shift-org">${(g.org && g.org.orgName)||'—'}</div>
-      <div class="shift-meta">
-        <span>📅 ${fmtFull(g.startDate)} – ${fmtFull(g.endDate)}</span>
-        ${g.startTime&&g.endTime?`<span>🕐 ${g.startTime}–${g.endTime}</span>`:''}
-        <span>⏱ ${g.estimatedHours||'?'}h</span>
-        ${g.locationType?`<span>📍 ${g.locationType}</span>`:''}
+    <div class="shift-top">
+      <div>
+        <div class="shift-title">${g.title || '—'}</div>
+        <div class="shift-org">${org}${cat.name ? ` · <span class="cat-tag" style="background:${cat.colorHex||'#2563eb'}22;color:${cat.colorHex||'#2563eb'}">${cat.name}</span>` : ''}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.4rem;flex-shrink:0">
+        <span class="status-pill" style="background:${st.bg};color:${st.color}">${st.label}</span>
+        <a href="/gigs/${g.id}" class="btn btn-sm btn-secondary">View Gig</a>
       </div>
     </div>
-    <div style="flex-shrink:0">
-      <span class="status-pill" style="background:${sc.bg};color:${sc.color}">${t.status}</span>
-      <div style="margin-top:0.5rem"><a href="/gigs/${g.id}" class="btn btn-sm btn-secondary">View Gig</a></div>
+    <div class="shift-details">
+      ${dateStr  ? `<div class="shift-detail-row">${SVG.cal} ${dateStr}</div>` : ''}
+      ${timeLabel ? `<div class="shift-detail-row">${SVG.clk} ${timeLabel}</div>` : ''}
+      ${recStr   ? `<div class="shift-detail-row" style="color:#16a34a;font-weight:500">${SVG.rec} ${recStr}</div>` : ''}
+      ${locStr   ? `<div class="shift-detail-row">${SVG.pin} ${locStr}</div>` : ''}
+      ${hours    ? `<div class="shift-detail-row">${SVG.clk} ${hours} hr${hours !== 1 ? 's' : ''}/session</div>` : ''}
     </div>
   </div>`;
 }
@@ -88,28 +111,38 @@ async function load() {
   try {
     const { data } = await API.get('/volunteers/me/dashboard');
     const tasks = (data.tasks || []).filter(t => ['accepted','inProgress','completed','approved'].includes(t.status));
+
     if (!tasks.length) {
       document.getElementById('content').innerHTML = `<div class="empty-state">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:block;margin:0 auto 1rem;opacity:0.35"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <p>No upcoming shifts yet.</p>
+        <p>No assigned gigs yet.</p>
         <a href="/gigs" class="btn btn-primary" style="margin-top:0.75rem">Find Volunteer Gigs</a>
       </div>`;
       return;
     }
-    const now = new Date();
-    const upcoming = tasks.filter(t => t.gig && new Date(t.gig.endDate) >= now && t.status !== 'completed' && t.status !== 'approved');
-    const past = tasks.filter(t => !upcoming.includes(t));
+
+    const active    = tasks.filter(t => t.status === 'accepted' || t.status === 'inProgress');
+    const pending   = tasks.filter(t => t.status === 'completed');
+    const done      = tasks.filter(t => t.status === 'approved');
+
     let html = '';
-    if (upcoming.length) {
-      html += `<div class="section-head">Upcoming (${upcoming.length})</div>`;
-      html += upcoming.map(shiftCard).join('');
+    if (active.length) {
+      html += `<div class="section-head">Upcoming / Active (${active.length})</div>`;
+      html += active.map(shiftCard).join('');
     }
-    if (past.length) {
-      html += `<div class="section-head">Completed / Past (${past.length})</div>`;
-      html += past.map(shiftCard).join('');
+    if (pending.length) {
+      html += `<div class="section-head">Pending Org Approval (${pending.length})</div>`;
+      html += pending.map(shiftCard).join('');
     }
+    if (done.length) {
+      html += `<div class="section-head">Completed (${done.length})</div>`;
+      html += done.map(shiftCard).join('');
+    }
+
     document.getElementById('content').innerHTML = html;
-  } catch(e) { document.getElementById('content').innerHTML=`<div class="empty-state">${e.message}</div>`; }
+  } catch(e) {
+    document.getElementById('content').innerHTML = `<div class="empty-state">${e.message}</div>`;
+  }
 }
 
 load();
