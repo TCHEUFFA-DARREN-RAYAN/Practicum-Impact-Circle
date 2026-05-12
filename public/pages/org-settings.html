@@ -157,44 +157,64 @@ async function uploadLogo() {
 
 async function updateEmail() {
   const email = document.getElementById('newEmail').value.trim();
-  const pwd = document.getElementById('emailPassword').value;
-  document.getElementById('emailAlert').innerHTML='';
-  if (!email||!pwd) return Toast.error('Please fill in all fields.');
+  const pwd   = document.getElementById('emailPassword').value;
+  const alertEl = document.getElementById('emailAlert');
+  alertEl.innerHTML = '';
+  if (!email) return alertEl.innerHTML = '<div class="alert alert-danger">Email address is required.</div>';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return alertEl.innerHTML = '<div class="alert alert-danger">Please enter a valid email address.</div>';
+  if (!pwd) return alertEl.innerHTML = '<div class="alert alert-danger">Current password is required to change email.</div>';
   try {
     const res = await API.put('/auth/update-email', { email, password: pwd });
     if (res.data && res.data.token) API.setSession(res.data.token, res.data.user || API.getUser());
-    document.getElementById('emailAlert').innerHTML='<div class="alert alert-success">Email updated.</div>';
+    alertEl.innerHTML = '<div class="alert alert-success">Email updated successfully.</div>';
     document.getElementById('newEmail').value=''; document.getElementById('emailPassword').value='';
-  } catch(e) { document.getElementById('emailAlert').innerHTML=`<div class="alert alert-danger">${e.message}</div>`; }
+  } catch(e) { alertEl.innerHTML=`<div class="alert alert-danger">${e.message}</div>`; }
 }
 
 async function changePassword() {
   const cur = document.getElementById('currentPwd').value;
-  const nw = document.getElementById('newPwd').value;
-  const cf = document.getElementById('confirmPwd').value;
-  document.getElementById('passwordAlert').innerHTML='';
-  if (!cur||!nw||!cf) return Toast.error('Please fill in all fields.');
-  if (nw!==cf) return Toast.error('New passwords do not match.');
+  const nw  = document.getElementById('newPwd').value;
+  const cf  = document.getElementById('confirmPwd').value;
+  const alertEl = document.getElementById('passwordAlert');
+  alertEl.innerHTML = '';
+  if (!cur) return alertEl.innerHTML = '<div class="alert alert-danger">Current password is required.</div>';
+  if (!nw)  return alertEl.innerHTML = '<div class="alert alert-danger">New password is required.</div>';
+  if (nw.length < 8) return alertEl.innerHTML = '<div class="alert alert-danger">Password must be at least 8 characters.</div>';
+  if (!/[A-Z]/.test(nw)) return alertEl.innerHTML = '<div class="alert alert-danger">Password must contain at least one uppercase letter.</div>';
+  if (!/[0-9]/.test(nw)) return alertEl.innerHTML = '<div class="alert alert-danger">Password must contain at least one number.</div>';
+  if (nw !== cf) return alertEl.innerHTML = '<div class="alert alert-danger">Passwords do not match.</div>';
   try {
     await API.post('/auth/change-password', { currentPassword:cur, newPassword:nw });
-    document.getElementById('passwordAlert').innerHTML='<div class="alert alert-success">Password updated.</div>';
+    alertEl.innerHTML = '<div class="alert alert-success">Password updated successfully.</div>';
     document.getElementById('currentPwd').value=''; document.getElementById('newPwd').value=''; document.getElementById('confirmPwd').value='';
-  } catch(e) { document.getElementById('passwordAlert').innerHTML=`<div class="alert alert-danger">${e.message}</div>`; }
+  } catch(e) { alertEl.innerHTML=`<div class="alert alert-danger">${e.message}</div>`; }
 }
 
 async function saveOrgInfo() {
-  document.getElementById('orgAlert').innerHTML='';
-  const orgName = document.getElementById('oName').value.trim();
-  if (!orgName) { document.getElementById('nameErr').textContent='Required.'; return; }
-  document.getElementById('nameErr').textContent='';
+  const alertEl = document.getElementById('orgAlert');
+  alertEl.innerHTML = '';
+  document.getElementById('nameErr').textContent = '';
+  const orgName      = document.getElementById('oName').value.trim();
+  const contactEmail = document.getElementById('oContactEmail').value.trim();
+  const phone        = document.getElementById('oPhone').value.trim();
+  const website      = document.getElementById('oWebsite').value.trim();
+
+  if (!orgName) { document.getElementById('nameErr').textContent = 'Organization name is required.'; return; }
+  if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail))
+    return alertEl.innerHTML = '<div class="alert alert-danger">Contact email is not a valid email address.</div>';
+  if (phone && (phone.replace(/\D/g,'').length < 7 || phone.replace(/\D/g,'').length > 15))
+    return alertEl.innerHTML = '<div class="alert alert-danger">Phone number must be 7–15 digits.</div>';
+  if (website && !/^https?:\/\/.+/.test(website))
+    return alertEl.innerHTML = '<div class="alert alert-danger">Website must start with http:// or https://</div>';
+
   try {
     await API.put('/orgs/me', {
       orgName,
       address: document.getElementById('oAddress').value.trim(),
       contactName: document.getElementById('oContactName').value.trim(),
-      contactEmail: document.getElementById('oContactEmail').value.trim(),
-      contactPhone: document.getElementById('oPhone').value.trim(),
-      website: document.getElementById('oWebsite').value.trim(),
+      contactEmail,
+      contactPhone: phone,
+      website,
       missionStatement: document.getElementById('oMission').value.trim(),
     });
     document.getElementById('orgAlert').innerHTML='<div class="alert alert-success">Organization info saved.</div>';

@@ -9,7 +9,7 @@ const awardPoints = async (volunteerId, task, gig, autoApproved = false) => {
   const category = await Category.findByPk(gig.categoryId);
   if (!category) throw new Error('Category not found');
 
-  const hours = gig.estimatedHours;
+  const hours = (task.hoursLogged && task.hoursLogged > 0) ? task.hoursLogged : gig.estimatedHours;
   const points = Math.round(hours * category.pointsPerHour);
 
   const profile = await VolunteerProfile.findOne({ where: { userId: volunteerId } });

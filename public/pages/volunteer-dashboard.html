@@ -203,23 +203,6 @@
       </div>
     </div>
 
-    <!-- Points banner -->
-    <div class="points-ring-wrap mb-4" id="pointsBanner" style="display:none">
-      <div class="points-ring">
-        <svg width="64" height="64" viewBox="0 0 64 64">
-          <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="6"/>
-          <circle cx="32" cy="32" r="26" fill="none" stroke="white" stroke-width="6"
-                  stroke-dasharray="163" id="ringDash" stroke-dashoffset="163" stroke-linecap="round"/>
-        </svg>
-        <div class="points-ring-val" id="ringPct">0%</div>
-      </div>
-      <div class="points-ring-body">
-        <div class="points-ring-label">Points balance</div>
-        <div class="points-ring-big" id="statPoints">—</div>
-        <div class="points-ring-sub" id="pointsSub">Redeem for rewards</div>
-      </div>
-      <a href="/rewards" class="btn" style="background:rgba(255,255,255,0.18);color:white;border-color:rgba(255,255,255,0.3);font-size:0.85rem;white-space:nowrap;flex-shrink:0">Redeem →</a>
-    </div>
 
     <!-- Content grid -->
     <div class="content-grid">
@@ -230,6 +213,7 @@
         <div class="card" style="padding:1.25rem">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
             <div class="card-label" style="margin-bottom:0">Active &amp; recent tasks</div>
+            <button class="btn btn-sm btn-primary" id="claimHoursBtn" style="display:none" onclick="openClaimPickerModal()">+ Claim Hours</button>
           </div>
           <div id="activeTasks"><div style="padding:2rem;text-align:center"><div class="spinner"></div></div></div>
         </div>
@@ -271,7 +255,7 @@
     <div class="modal-body" id="taskModalBody"></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" id="taskModalConfirm">Confirm</button>
+      <button class="btn btn-primary" id="taskModalConfirm">Submit</button>
     </div>
   </div>
 </div>
@@ -315,21 +299,6 @@ async function load() {
       document.getElementById('statActiveSub').textContent = `${pendingApproval} pending org approval`;
     }
 
-    /* ── Points ring ── */
-    const pts = stats.totalPoints ?? 0;
-    if (pts > 0 || eligibleRewards.length > 0) {
-      document.getElementById('pointsBanner').style.display = 'flex';
-      document.getElementById('statPoints').textContent = pts.toLocaleString() + ' pts';
-      const minReward = eligibleRewards.length
-        ? Math.min(...eligibleRewards.map(r => r.pointsRequired || 9999))
-        : 500;
-      const pct = Math.min(100, Math.round((pts / minReward) * 100));
-      document.getElementById('ringPct').textContent = pct + '%';
-      document.getElementById('ringDash').style.strokeDashoffset = 163 - (163 * pct / 100);
-      document.getElementById('pointsSub').textContent = eligibleRewards.length
-        ? `${eligibleRewards.length} reward${eligibleRewards.length !== 1 ? 's' : ''} available to redeem`
-        : 'Keep volunteering to unlock rewards';
-    }
 
     /* ── Verification banner ── */
     const userFull = await API.get('/auth/me');
@@ -346,20 +315,28 @@ async function load() {
     }
 
     /* ── Active tasks ── */
-    document.getElementById('activeTasks').innerHTML = activeTasks.length
-      ? `<ul class="task-timeline">${activeTasks.map(t => `
+    const allTasksForClaim = (tasks || []).filter(t => ['accepted','inProgress','completed'].includes(t.status));
+    const claimableTasks   = (tasks || []).filter(t => t.status === 'accepted' || t.status === 'inProgress');
+    window._claimableTasks = claimableTasks;
+    document.getElementById('claimHoursBtn').style.display = claimableTasks.length ? 'inline-flex' : 'none';
+    document.getElementById('activeTasks').innerHTML = allTasksForClaim.length
+      ? `<ul class="task-timeline">${allTasksForClaim.map(t => {
+          const title = t.gig?.title || 'Gig';
+          const safeTitle = title.replace(/'/g,"\\'");
+          const canClaim = t.status === 'accepted' || t.status === 'inProgress';
+          return `
           <li class="task-row">
             <div class="task-status-dot ${DOT_CLASS[t.status] || 'dot-accepted'}"></div>
             <div class="task-info">
-              <div class="task-name">${t.gigId?.title || 'Gig'}</div>
+              <div class="task-name">${title}</div>
               <div class="task-meta">${fmt.date(t.createdAt)} · <span class="badge ${STATUS_CLASS[t.status]}" style="font-size:0.68rem">${STATUS_LABEL[t.status]}</span></div>
               <div class="task-actions">
-                ${t.status === 'accepted' ? `<button class="btn btn-sm btn-primary" onclick="startTask('${t.id || t._id}')">Start Task</button>` : ''}
-                ${t.status === 'inProgress' ? `<button class="btn btn-sm btn-success" onclick="completeTask('${t.id || t._id}','${(t.gigId?.title || '').replace(/'/g,"\\'")}')">Claim Hours</button>` : ''}
-                ${t.status === 'completed' ? `<div style="font-size:0.75rem;color:#d97706">⏳ Awaiting org approval — auto-approved after 30 days</div>` : ''}
+                ${canClaim ? `<button class="btn btn-sm btn-primary" onclick="openClaimModal('${t.id}','${safeTitle}')">Claim Hours</button>` : ''}
+                ${t.status === 'completed' ? `<div style="font-size:0.75rem;color:#d97706;font-weight:500">Pending org approval</div>` : ''}
               </div>
             </div>
-          </li>`).join('')}</ul>`
+          </li>`;
+        }).join('')}</ul>`
       : `<div style="padding:1.5rem;text-align:center;color:var(--text-muted);font-size:0.875rem">
            No active tasks. <a href="/gigs">Browse gigs →</a>
          </div>`;
@@ -406,33 +383,74 @@ async function load() {
 
 let pendingTaskId = null;
 
-async function startTask(taskId) {
-  try { await API.patch(`/tasks/${taskId}/start`, {}); Toast.success('Task started!'); load(); }
-  catch (err) { Toast.error(err.message); }
+function openClaimPickerModal() {
+  const tasks = window._claimableTasks || [];
+  if (tasks.length === 1) { openClaimModal(tasks[0].id, tasks[0].gig?.title || 'Gig'); return; }
+  document.getElementById('taskModalTitle').textContent = 'Claim Hours';
+  document.getElementById('taskModalBody').innerHTML = `
+    <p style="margin-bottom:0.875rem">Which gig are you claiming hours for?</p>
+    <div style="display:flex;flex-direction:column;gap:0.5rem">
+      ${tasks.map(t => `
+        <button class="btn btn-secondary" style="text-align:left;justify-content:flex-start"
+          onclick="closeModal();openClaimModal('${t.id}','${(t.gig?.title||'Gig').replace(/'/g,"\\'")}')">
+          <strong>${t.gig?.title || 'Gig'}</strong>
+          <span style="font-size:0.75rem;color:var(--text-muted);margin-left:0.5rem">${t.gig?.org?.orgName || ''}</span>
+        </button>`).join('')}
+    </div>`;
+  document.getElementById('taskModalConfirm').style.display = 'none';
+  document.getElementById('taskModal').classList.add('open');
 }
 
-function completeTask(taskId, title) {
+function openClaimModal(taskId, title) {
+  document.getElementById('taskModalConfirm').style.display = '';
   pendingTaskId = taskId;
   document.getElementById('taskModalTitle').textContent = 'Claim Hours';
   document.getElementById('taskModalBody').innerHTML = `
-    <p>Confirm you have completed <strong>"${title}"</strong> and want to claim your hours.</p>
-    <p style="color:var(--text-muted);font-size:0.875rem">The organization will receive a notification to approve your hours within 30 days. They will be added to your record once approved.</p>`;
+    <p style="margin-bottom:1rem">Recording hours for <strong>${title}</strong>.</p>
+    <div id="claimAlert"></div>
+    <div class="form-group" style="margin-bottom:0.5rem">
+      <label style="font-weight:600;font-size:0.875rem">Hours Worked <span style="color:#dc2626">*</span></label>
+      <input type="number" id="claimHours" min="0.5" max="24" step="0.5" placeholder="e.g. 3" style="margin-top:0.375rem"
+             oninput="document.getElementById('claimAlert').innerHTML=''">
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.25rem">Enter the actual hours you worked. Max 24h per submission.</div>
+    </div>
+    <p style="font-size:0.82rem;color:var(--text-muted);margin-top:0.75rem">The organization will be notified and must approve your hours. Once approved, they will be added to your verified total.</p>`;
   document.getElementById('taskModal').classList.add('open');
+  setTimeout(() => document.getElementById('claimHours')?.focus(), 50);
 }
 
 document.getElementById('taskModalConfirm').addEventListener('click', async () => {
   if (!pendingTaskId) return;
+  const hoursInput = document.getElementById('claimHours');
+  const hours = parseFloat(hoursInput?.value);
+  const alertEl = document.getElementById('claimAlert');
+  if (!hours || hours <= 0) {
+    if (alertEl) alertEl.innerHTML = '<div class="alert alert-danger" style="margin-bottom:0.75rem">Please enter the number of hours worked.</div>';
+    hoursInput?.focus();
+    return;
+  }
+  if (hours > 24) {
+    if (alertEl) alertEl.innerHTML = '<div class="alert alert-danger" style="margin-bottom:0.75rem">Maximum 24 hours per submission.</div>';
+    return;
+  }
+  const btn = document.getElementById('taskModalConfirm');
+  btn.disabled = true; btn.textContent = 'Submitting…';
   try {
-    await API.patch(`/tasks/${pendingTaskId}/complete`, {});
-    Toast.success('Hours claimed! Awaiting org approval.');
+    await API.patch(`/tasks/${pendingTaskId}/complete`, { hoursLogged: hours });
+    Toast.success(`${hours}h submitted — awaiting org approval.`);
     closeModal();
     load();
-  } catch (err) { Toast.error(err.message); }
+  } catch (err) {
+    if (alertEl) alertEl.innerHTML = `<div class="alert alert-danger" style="margin-bottom:0.75rem">${err.message}</div>`;
+    btn.disabled = false; btn.textContent = 'Submit';
+  }
 });
 
 function closeModal() {
   document.getElementById('taskModal').classList.remove('open');
   pendingTaskId = null;
+  const btn = document.getElementById('taskModalConfirm');
+  btn.disabled = false; btn.textContent = 'Submit'; btn.style.display = '';
 }
 
 load();

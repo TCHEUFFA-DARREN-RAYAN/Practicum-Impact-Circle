@@ -23,14 +23,20 @@ router.patch('/:id/complete', requireAuth, requireRole('volunteer'), async (req,
     const task = await Task.findOne({ where: { id: req.params.id, volunteerId: req.user.id } });
     if (!task) return res.status(404).json({ success: false, message: 'Task not found.' });
     if (!task.canTransitionTo('completed'))
-      return res.status(400).json({ success: false, message: `Cannot mark as completed from "${task.status}".` });
+      return res.status(400).json({ success: false, message: `Cannot submit hours from "${task.status}" status.` });
 
-    await task.update({ status: 'completed', submittedAt: new Date() });
+    const hoursLogged = parseFloat(req.body.hoursLogged);
+    if (!hoursLogged || isNaN(hoursLogged) || hoursLogged <= 0)
+      return res.status(400).json({ success: false, message: 'Please enter a valid number of hours greater than 0.' });
+    if (hoursLogged > 24)
+      return res.status(400).json({ success: false, message: 'Cannot claim more than 24 hours in a single submission.' });
+
+    await task.update({ status: 'completed', submittedAt: new Date(), hoursLogged });
 
     const [gig, org] = await Promise.all([Gig.findByPk(task.gigId), Organization.findByPk(task.orgId)]);
-    if (org) await createNotification(org.userId, `Task completion submitted for "${gig?.title}" — please verify within 30 days.`, 'task', '/org-dashboard');
+    if (org) await createNotification(org.userId, `${hoursLogged}h claimed for "${gig?.title}" — please approve within 30 days.`, 'task', '/org-dashboard');
 
-    res.json({ success: true, message: 'Task marked as completed. Awaiting organization approval.', data: { task } });
+    res.json({ success: true, message: `${hoursLogged} hours submitted. Awaiting organization approval.`, data: { task } });
   } catch (err) { next(err); }
 });
 
