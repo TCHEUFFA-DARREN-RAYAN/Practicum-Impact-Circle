@@ -54,19 +54,57 @@
 <script>
 const gigId = window.location.pathname.split('/').pop();
 
+const TIME_LABELS = { morning: 'Morning', afternoon: 'Afternoon', evening: 'Evening', flexible: 'Flexible' };
+
 async function load() {
   try {
-    const { data } = await API.get(`/gigs/${gigId}`);
-    const { gig } = data;
+    const user = API.getUser();
+    const isVolunteer = user && user.role === 'volunteer';
+
+    const [gigRes, appRes] = await Promise.all([
+      API.get(`/gigs/${gigId}`),
+      isVolunteer ? API.get(`/gigs/${gigId}/my-application`).catch(() => null) : Promise.resolve(null),
+    ]);
+    const { gig } = gigRes.data;
+    const appData = appRes?.data?.data;
+
     document.getElementById('breadcrumbTitle').textContent = gig.title || 'Gig Detail';
     document.title = `${gig.title} | ImpactCircle`;
 
-    document.title = `${gig.title} | ImpactCircle`;
-
-    const user = API.getUser();
-    const isVolunteer = user && user.role === 'volunteer';
     const isVerifiedVolunteer = isVolunteer && user.verificationStatus === 'verified';
-    const isPendingVolunteer = isVolunteer && user.verificationStatus !== 'verified';
+
+    /* Build time-commitment text */
+    const hours = gig.hoursPerOccurrence || gig.estimatedHours;
+    let timeCommitText = `${hours} hour${hours !== 1 ? 's' : ''}`;
+    if (gig.isRecurring && gig.recurrenceType) {
+      const days = gig.recurrenceDays?.length ? gig.recurrenceDays.join(' & ') : '';
+      const freq = days ? `Every ${days}` : gig.recurrenceType.charAt(0).toUpperCase() + gig.recurrenceType.slice(1);
+      timeCommitText = `${hours} hr/session · ${freq}`;
+    }
+    if (gig.startTime) timeCommitText += ` · ${gig.startTime}${gig.endTime ? ' – ' + gig.endTime : ''}`;
+
+    /* Build apply-section HTML based on application state */
+    let applyHtml = '';
+    if (!user || !isVolunteer) {
+      applyHtml = '';
+    } else if (gig.status !== 'open') {
+      applyHtml = `<div class="alert alert-warning">This gig is no longer accepting applications.</div>`;
+    } else if (appData?.applied) {
+      if (appData.status === 'approved') {
+        applyHtml = `<div class="alert alert-success" style="text-align:center"><strong>Your application was approved!</strong><br>Check your tasks dashboard.</div>`;
+      } else if (appData.status === 'rejected') {
+        applyHtml = `<div class="alert alert-danger" style="text-align:center">Your application was not accepted for this gig.</div>`;
+      } else {
+        applyHtml = `<button class="btn btn-block btn-lg" disabled style="background:#94a3b8;color:#fff;cursor:not-allowed;border:none;opacity:0.85">Waiting for Approval</button>
+          <div class="form-hint" style="text-align:center;margin-top:0.5rem">Your application is being reviewed.</div>`;
+      }
+    } else if (isVerifiedVolunteer) {
+      applyHtml = `<button class="btn btn-primary btn-block btn-lg" onclick="openApply()">Apply Now</button>`;
+    } else {
+      applyHtml = `<button class="btn btn-block btn-lg" disabled style="background:#94a3b8;color:#fff;cursor:not-allowed;border:none">Apply Now</button>
+        <div class="form-hint" style="text-align:center;margin-top:0.5rem;color:var(--warning)">Your account is pending verification.</div>`;
+    }
+    if (isVolunteer && gig.verifiedOnly) applyHtml += `<div class="form-hint" style="text-align:center;margin-top:0.5rem">Requires Verified Volunteer badge</div>`;
 
     document.getElementById('gigContent').innerHTML = `
       <div style="margin-bottom:1.5rem">
@@ -78,10 +116,20 @@ async function load() {
             <div style="margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center">
               <span class="cat-pill" style="background:${gig.category?.colorHex || '#2563eb'}22;color:${gig.category?.colorHex || '#2563eb'}">${gig.category?.icon || ''} ${gig.category?.name || 'General'}</span>
               <span class="badge ${gig.status === 'open' ? 'badge-open' : 'badge-closed'}">${gig.status}</span>
+              ${gig.isRecurring ? '<span class="badge" style="background:#f0fdf4;color:#16a34a">Recurring</span>' : ''}
+              ${gig.timeOfDay ? `<span class="badge" style="background:#fef9c3;color:#854d0e">${TIME_LABELS[gig.timeOfDay] || gig.timeOfDay}</span>` : ''}
               ${gig.verifiedOnly ? '<span class="verified-lock"> Verified volunteers only</span>' : ''}
             </div>
             <h1 style="font-size:1.5rem;margin-bottom:0.5rem">${gig.title}</h1>
-            <div style="color:var(--text-muted);font-size:0.875rem;margin-bottom:1.25rem">${gig.org?.orgName || ''}</div>
+            <div style="color:var(--text-muted);font-size:0.875rem;margin-bottom:0.5rem">${gig.org?.orgName || ''}</div>
+            ${gig.isRecurring && gig.recurrenceType ? `
+              <div style="font-size:0.85rem;color:#16a34a;margin-bottom:1rem;font-weight:600">
+                🔄 ${gig.recurrenceType === 'weekly' && gig.recurrenceDays?.length
+                  ? `Every ${gig.recurrenceDays.join(' & ')}`
+                  : gig.recurrenceType.charAt(0).toUpperCase() + gig.recurrenceType.slice(1)}
+                ${gig.timeOfDay ? ' · ' + TIME_LABELS[gig.timeOfDay] : ''}
+                ${gig.startTime ? ' · ' + gig.startTime + (gig.endTime ? '–' + gig.endTime : '') : ''}
+              </div>` : ''}
             <div class="divider"></div>
             <h3 style="margin-bottom:0.75rem">About This Opportunity</h3>
             <p style="font-size:0.9rem;line-height:1.7;color:var(--text-muted)">${gig.description.replace(/\n/g, '<br>')}</p>
@@ -98,40 +146,31 @@ async function load() {
             <h3 style="margin-bottom:1rem">Gig Details</h3>
             <div style="display:flex;flex-direction:column;gap:0.875rem">
               <div style="display:flex;gap:0.75rem;align-items:flex-start">
-                <span style="font-size:1.25rem"></span>
+                <span style="font-size:1.25rem">📅</span>
                 <div><div style="font-size:0.775rem;font-weight:700;text-transform:uppercase;color:var(--text-muted)">Dates</div><div style="font-size:0.875rem;margin-top:0.125rem">${fmt.date(gig.startDate)} — ${fmt.date(gig.endDate)}</div></div>
               </div>
               <div style="display:flex;gap:0.75rem;align-items:flex-start">
                 <span style="font-size:1.25rem">⏱️</span>
-                <div><div style="font-size:0.775rem;font-weight:700;text-transform:uppercase;color:var(--text-muted)">Time Commitment</div><div style="font-size:0.875rem;margin-top:0.125rem">${gig.estimatedHours} hours</div></div>
+                <div><div style="font-size:0.775rem;font-weight:700;text-transform:uppercase;color:var(--text-muted)">Time Commitment</div><div style="font-size:0.875rem;margin-top:0.125rem">${timeCommitText}</div></div>
               </div>
               <div style="display:flex;gap:0.75rem;align-items:flex-start">
-                <span style="font-size:1.25rem"></span>
-                <div><div style="font-size:0.775rem;font-weight:700;text-transform:uppercase;color:var(--text-muted)">Location</div><div style="font-size:0.875rem;margin-top:0.125rem">${gig.locationType === 'remote' ? ' Remote' : gig.locationAddress || 'In-Person'}</div></div>
+                <span style="font-size:1.25rem">📍</span>
+                <div><div style="font-size:0.775rem;font-weight:700;text-transform:uppercase;color:var(--text-muted)">Location</div><div style="font-size:0.875rem;margin-top:0.125rem">${gig.locationType === 'remote' ? '🌐 Remote' : gig.locationAddress || 'In-Person'}</div></div>
               </div>
               <div style="display:flex;gap:0.75rem;align-items:flex-start">
-                <span style="font-size:1.25rem"></span>
+                <span style="font-size:1.25rem">👥</span>
                 <div><div style="font-size:0.775rem;font-weight:700;text-transform:uppercase;color:var(--text-muted)">Applicants</div><div style="font-size:0.875rem;margin-top:0.125rem">${gig.applicantCount || 0} applied</div></div>
               </div>
             </div>
             <div class="divider"></div>
-            <div id="applySection">
-              ${!user || (!isVolunteer)
-                ? ''
-                : gig.status !== 'open'
-                  ? `<div class="alert alert-warning">This gig is no longer accepting applications.</div>`
-                  : isVerifiedVolunteer
-                    ? `<button class="btn btn-primary btn-block btn-lg" onclick="openApply()">Apply Now</button>`
-                    : `<button class="btn btn-block btn-lg" disabled style="background:#94a3b8;color:#fff;cursor:not-allowed;border:none">Apply Now</button><div class="form-hint" style="text-align:center;margin-top:0.5rem;color:var(--warning)">Your account is pending verification. You'll be able to apply once approved.</div>`}
-              ${isVolunteer && gig.verifiedOnly ? `<div class="form-hint" style="text-align:center;margin-top:0.5rem"> Requires Verified Volunteer badge</div>` : ''}
-            </div>
+            <div id="applySection">${applyHtml}</div>
           </div>
           <div class="card">
             <h4 style="margin-bottom:0.75rem">About ${gig.org?.orgName || 'the Organization'}</h4>
             ${gig.org?.missionStatement ? `<p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem">${gig.org.missionStatement}</p>` : ''}
-            ${gig.org?.address ? `<div class="gig-meta-item" style="font-size:0.8rem"> ${gig.org.address}</div>` : ''}
-            ${gig.org?.contactEmail ? `<div class="gig-meta-item" style="font-size:0.8rem">️ ${gig.org.contactEmail}</div>` : ''}
-            ${gig.org?.website ? `<div class="gig-meta-item" style="font-size:0.8rem"> <a href="${gig.org.website}" target="_blank">${gig.org.website}</a></div>` : ''}
+            ${gig.org?.address ? `<div class="gig-meta-item" style="font-size:0.8rem">📍 ${gig.org.address}</div>` : ''}
+            ${gig.org?.contactEmail ? `<div class="gig-meta-item" style="font-size:0.8rem">✉️ ${gig.org.contactEmail}</div>` : ''}
+            ${gig.org?.website ? `<div class="gig-meta-item" style="font-size:0.8rem">🌐 <a href="${gig.org.website}" target="_blank">${gig.org.website}</a></div>` : ''}
           </div>
         </div>
       </div>
