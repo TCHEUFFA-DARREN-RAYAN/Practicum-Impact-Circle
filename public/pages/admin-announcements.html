@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Announcements | Admin | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside id="sidebar" class="sidebar"></aside>
+<div class="page-content">
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div><h1>Announcements</h1><p class="text-muted">Broadcast updates to volunteers and organizations</p></div>
+        <a href="/admin" class="btn btn-secondary">← Admin Home</a>
+      </div>
+    </div>
+    <div class="card" style="padding:2rem;max-width:640px">
+      <p style="margin-bottom:1rem">A built-in announcement center is not wired up yet. For now, use <a href="/admin/verify">verification emails</a> and your normal email for urgent notices.</p>
+      <p class="text-muted" style="font-size:0.9rem;margin:0">If you need this feature for launch, we can add stored announcements and optional email digests in a follow-up.</p>
+    </div>
+  </div>
+</div>
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/footer.js"></script>
+<script>API.requireAuth('admin');</script>
+</body>
+</html>
