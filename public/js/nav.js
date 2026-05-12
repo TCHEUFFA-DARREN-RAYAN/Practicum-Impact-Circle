@@ -228,10 +228,10 @@
       { href: '/org-gig-create',        label: 'Post an Opportunity',      icon: 'plus'        },
       { href: '/org/opportunities',     label: 'Manage Opportunities',     icon: 'briefcase'   },
       { href: '/org/applications',      label: 'Volunteer Applications',   icon: 'clipboard'   },
-      { href: '/org/approved',          label: 'Approved Volunteers',      icon: 'checkCircle' },
+      { href: '/org/volunteers',         label: 'Volunteer Tracker',        icon: 'checkCircle' },
       { href: '/org/schedule',          label: 'Schedule & Shifts',        icon: 'calendar'    },
       { href: '/messages',              label: 'Messages',                 icon: 'message'     },
-      { href: '/org/impact',            label: 'Impact Report',            icon: 'star'        },
+      { href: '/org/analytics',          label: 'Analytics',                icon: 'chart'       },
       { href: '/org/settings',          label: 'Settings',                 icon: 'settings'    },
     ],
   };
@@ -276,11 +276,14 @@
     <div class="nav-user">
       <div class="nav-avatar">${(user.email?.[0] || '?').toUpperCase()}</div>
       <div>
-        <div style="color:#0f172a;font-size:0.8rem;font-weight:600">${user.email?.split('@')[0]}</div>
-        <div style="color:#0f172a;font-size:0.7rem;text-transform:capitalize">${user.role}</div>
+        <div style="color:#0f172a;font-size:0.8rem;font-weight:700;line-height:1.2">${user.email?.split('@')[0]}</div>
+        <div style="color:#64748b;font-size:0.68rem;text-transform:capitalize;line-height:1.2">${user.role}</div>
       </div>
     </div>
-    <button class="btn btn-ghost btn-sm" onclick="logout()" style="color:#0f172a">Logout</button>`;
+    <button class="btn btn-sm" onclick="logout()"
+      style="background:#ffffff;color:#334155;border:1px solid #e2e8f0;font-size:0.8rem;padding:0.3rem 0.75rem;box-shadow:0 1px 2px rgba(15,23,42,0.04)">
+      Logout
+    </button>`;
 
   const mobileLinks = [
     ...links,
@@ -311,12 +314,23 @@
     document.body.classList.add('has-sidebar');
     const roleLinks = SIDEBAR_LINKS[user.role] || [];
     const sidebarLinksHTML = roleLinks.map(l => {
-      const isActive = currentPath === l.href || (l.href !== '/' && currentPath.startsWith(l.href));
-      return `<a href="${l.href}" class="sidebar-link${isActive ? ' active' : ''}">${IC[l.icon] || ''}${l.label}</a>`;
+      const exactDash = ['/admin', '/volunteer-dashboard', '/org-dashboard'];
+      const isActive =
+        currentPath === l.href ||
+        (!exactDash.includes(l.href) && l.href !== '/' && (currentPath === l.href || currentPath.startsWith(`${l.href}/`)));
+      const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+      return `<a href="${l.href}" class="sidebar-link${isActive ? ' active' : ''}" title="${esc(l.label)}" aria-label="${esc(l.label)}">${IC[l.icon] || ''}<span class="sidebar-link-text">${l.label}</span></a>`;
     }).join('');
 
     const roleLabels = { admin: 'Administration', volunteer: 'Volunteer', org: 'Organization' };
     sidebarEl.innerHTML = `
+      <a href="/" class="sidebar-brand" aria-label="ImpactCircle Home">
+        <img src="/images/logo.png" alt="" class="sidebar-brand-logo" width="120" height="32" decoding="async">
+        <span class="sidebar-brand-text">
+          <span class="sidebar-brand-name">ImpactCircle</span>
+          <span class="sidebar-brand-sub">${roleLabels[user.role] || user.role}</span>
+        </span>
+      </a>
       <nav class="sidebar-nav">
         <div class="sidebar-section">
           <div class="sidebar-section-label">${roleLabels[user.role] || user.role}</div>
@@ -326,7 +340,7 @@
       <div class="sidebar-footer">
         <div class="sidebar-user">
           <div class="sidebar-user-avatar">${(user.email?.[0] || '?').toUpperCase()}</div>
-          <div>
+          <div class="sidebar-user-meta">
             <div class="sidebar-user-name">${user.email?.split('@')[0]}</div>
             <div class="sidebar-user-role">${user.role}</div>
           </div>
@@ -339,13 +353,14 @@
     toggleBtn.type = 'button';
     toggleBtn.id = 'sidebarToggleDesktop';
     toggleBtn.className = 'sidebar-toggle-desktop';
-    toggleBtn.setAttribute('aria-label', 'Toggle sidebar');
+    toggleBtn.setAttribute('aria-label', 'Toggle sidebar width');
     document.body.appendChild(toggleBtn);
 
     const applySidebarCollapsedState = collapsed => {
       document.body.classList.toggle('sidebar-collapsed', collapsed);
       toggleBtn.textContent = collapsed ? '›' : '‹';
-      toggleBtn.title = collapsed ? 'Show sidebar' : 'Hide sidebar';
+      toggleBtn.title = collapsed ? 'Expand sidebar (show labels)' : 'Collapse to icons';
+      toggleBtn.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar to icon rail');
     };
 
     applySidebarCollapsedState(localStorage.getItem('sidebarCollapsed') === '1');
