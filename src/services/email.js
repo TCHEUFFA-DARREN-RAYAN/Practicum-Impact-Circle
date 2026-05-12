@@ -3,6 +3,12 @@ const nodemailer = require('nodemailer');
 let cachedTransporter = null;
 let etherealSetupPromise = null;
 
+/** When false, TLS accepts self-signed / MITM proxies (dev only — never in production). */
+function emailTlsOptions() {
+  const insecure = String(process.env.EMAIL_TLS_REJECT_UNAUTHORIZED || '').toLowerCase() === 'false';
+  return { rejectUnauthorized: !insecure };
+}
+
 function publicAppUrl() {
   return (
     process.env.PUBLIC_APP_URL ||
@@ -25,6 +31,7 @@ async function buildTransporter() {
           port: 587,
           secure: false,
           auth: { user: testAccount.user, pass: testAccount.pass },
+          tls: emailTlsOptions(),
         });
       })();
     }
@@ -42,6 +49,7 @@ async function buildTransporter() {
     port: parseInt(process.env.EMAIL_PORT, 10) || 587,
     secure: String(process.env.EMAIL_SECURE || '').toLowerCase() === 'true',
     auth: user ? { user, pass: process.env.EMAIL_PASS || '' } : undefined,
+    tls: emailTlsOptions(),
   });
 }
 
