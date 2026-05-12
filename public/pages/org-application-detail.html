@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Application Detail | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    .info-item { display:flex; flex-direction:column; gap:0.2rem; }
+    .info-label { font-size:0.75rem; font-weight:700; text-transform:uppercase; color:var(--text-muted); }
+    .info-value { font-size:0.9rem; color:var(--text); }
+    .pill-list { display:flex; flex-wrap:wrap; gap:0.375rem; margin-top:0.25rem; }
+    @media (max-width:640px) { .info-grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside id="sidebar" class="sidebar"></aside>
+<div class="page-content">
+  <div class="container" style="max-width:760px">
+    <a href="/org-dashboard" class="btn btn-ghost btn-sm" style="padding-left:0;margin-bottom:1.25rem">← Back to Dashboard</a>
+    <div id="content"><div class="loading-overlay"><div class="spinner spinner-lg"></div></div></div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/footer.js"></script>
+<script>
+API.requireAuth('org');
+const appId = window.location.pathname.split('/').pop();
+
+async function load() {
+  try {
+    const { data } = await API.get(`/gigs/applications/${appId}`);
+    const { application: a } = data;
+    const vp = a.volunteer?.volunteerProfile;
+    const u = a.volunteer;
+    const g = a.gig;
+
+    const displayName = vp
+      ? `${vp.firstName || ''} ${vp.lastName || ''}`.trim() || u.email
+      : u.email;
+
+    const statusBadge = {
+      pending:  '<span class="badge badge-pending">Pending Review</span>',
+      approved: '<span class="badge badge-verified">Approved</span>',
+      rejected: '<span class="badge badge-rejected">Rejected</span>',
+    };
+
+    document.title = `Application by ${displayName} | ImpactCircle`;
+
+    const skillsHtml = vp?.skills?.length
+      ? vp.skills.map(s => `<span class="badge badge-primary">${s}</span>`).join('')
+      : '—';
+    const interestsHtml = vp?.interests?.length
+      ? vp.interests.map(s => `<span class="badge badge-info">${s}</span>`).join('')
+      : '—';
+    const langsHtml = vp?.languages?.length
+      ? vp.languages.map(s => `<span class="badge" style="background:#f0fdf4;color:#15803d">${s}</span>`).join('')
+      : '—';
+
+    document.getElementById('content').innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;margin-bottom:1.5rem">
+        <div>
+          <h1 style="font-size:1.4rem;margin:0 0 0.25rem">Application: ${displayName}</h1>
+          <div style="color:var(--text-muted);font-size:0.875rem">For gig: <strong>${g?.title || '—'}</strong></div>
+        </div>
+        ${statusBadge[a.status] || ''}
+      </div>
+
+      <!-- Volunteer card -->
+      <div class="card mb-4">
+        <h3 style="margin-bottom:1rem">Volunteer Profile</h3>
+        <div class="info-grid">
+          <div class="info-item"><span class="info-label">Name</span><span class="info-value">${displayName}</span></div>
+          <div class="info-item"><span class="info-label">Email</span><span class="info-value">${u.email}</span></div>
+          <div class="info-item"><span class="info-label">Phone</span><span class="info-value">${vp?.phone || '—'}</span></div>
+          <div class="info-item"><span class="info-label">Verification</span><span class="info-value"><span class="badge ${u.verificationStatus === 'verified' ? 'badge-verified' : 'badge-pending'}">${u.verificationStatus}</span></span></div>
+          <div class="info-item"><span class="info-label">Total verified hours</span><span class="info-value">${vp?.totalVerifiedHours || 0}h</span></div>
+          <div class="info-item"><span class="info-label">Points</span><span class="info-value">${vp?.totalPoints || 0}</span></div>
+          <div class="info-item"><span class="info-label">Availability</span><span class="info-value">${vp?.weeklyAvailabilityHours ? vp.weeklyAvailabilityHours + 'h/week' : '—'}${vp?.weeklyAvailabilityDays?.length ? ' · ' + vp.weeklyAvailabilityDays.join(', ') : ''}</span></div>
+          <div class="info-item"><span class="info-label">Address</span><span class="info-value">${vp?.address || '—'}</span></div>
+        </div>
+        <div style="margin-top:1rem">
+          <div class="info-label" style="margin-bottom:0.375rem">Skills</div>
+          <div class="pill-list">${skillsHtml}</div>
+        </div>
+        <div style="margin-top:0.75rem">
+          <div class="info-label" style="margin-bottom:0.375rem">Interests</div>
+          <div class="pill-list">${interestsHtml}</div>
+        </div>
+        <div style="margin-top:0.75rem">
+          <div class="info-label" style="margin-bottom:0.375rem">Languages</div>
+          <div class="pill-list">${langsHtml}</div>
+        </div>
+        ${vp?.previousVolunteeringHistory ? `
+        <div style="margin-top:0.75rem">
+          <div class="info-label" style="margin-bottom:0.375rem">Previous Volunteering History</div>
+          <p style="font-size:0.875rem;color:var(--text-muted);line-height:1.6">${vp.previousVolunteeringHistory}</p>
+        </div>` : ''}
+      </div>
+
+      <!-- Personal statement -->
+      <div class="card mb-4">
+        <h3 style="margin-bottom:0.75rem">Personal Statement</h3>
+        <p style="font-size:0.9rem;line-height:1.7;color:var(--text-muted)">${a.personalStatement.replace(/\n/g,'<br>')}</p>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.75rem">Submitted ${fmt.date(a.createdAt)}</div>
+      </div>
+
+      ${a.status === 'pending' ? `
+      <!-- Decision -->
+      <div class="card mb-4" id="decisionCard">
+        <h3 style="margin-bottom:1rem">Make a Decision</h3>
+        <div id="decisionAlert"></div>
+        <div class="form-group">
+          <label for="reason">Reason <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+          <textarea id="reason" rows="3" placeholder="Provide a reason (optional)…"></textarea>
+        </div>
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+          <button class="btn btn-success" onclick="decide('approved')">Approve ✓</button>
+          <button class="btn btn-danger" onclick="decide('rejected')">Reject</button>
+        </div>
+      </div>` : `
+      <div class="card" style="background:${a.status === 'approved' ? '#f0fdf4' : '#fef2f2'}">
+        <div style="font-size:0.9rem;font-weight:600;color:${a.status === 'approved' ? '#16a34a' : '#dc2626'}">
+          ${a.status === 'approved' ? '✓ Application approved' : '✗ Application rejected'}
+        </div>
+        ${a.decisionReason ? `<div style="font-size:0.85rem;color:var(--text-muted);margin-top:0.5rem">${a.decisionReason}</div>` : ''}
+        ${a.decidedAt ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.25rem">${fmt.date(a.decidedAt)}</div>` : ''}
+      </div>`}
+    `;
+  } catch (e) {
+    document.getElementById('content').innerHTML = `<div class="empty-state"><h3>Not found</h3><p>${e.message}</p><a href="/org-dashboard" class="btn btn-primary">Back to Dashboard</a></div>`;
+  }
+}
+
+async function decide(decision) {
+  const reason = document.getElementById('reason')?.value.trim();
+  document.getElementById('decisionAlert').innerHTML = '';
+  try {
+    await API.patch(`/gigs/applications/${appId}/decide`, { decision, reason: reason || undefined });
+    Toast.success(`Application ${decision}!`);
+    setTimeout(() => window.location.href = '/org-dashboard', 800);
+  } catch (e) {
+    document.getElementById('decisionAlert').innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+  }
+}
+
+load();
+</script>
+</body>
+</html>
