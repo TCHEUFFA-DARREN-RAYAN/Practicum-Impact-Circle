@@ -41,7 +41,7 @@
       <div id="modalAlert"></div>
       <div id="modalInfo" style="margin-bottom:1rem"></div>
       <div class="form-group">
-        <label for="rejReason">Rejection Reason (required if rejecting)</label>
+        <label for="rejReason">Rejection Reason <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
         <textarea id="rejReason" rows="3" placeholder="Explain why you are rejecting this application..."></textarea>
         <span class="field-error"></span>
       </div>
@@ -110,6 +110,7 @@ function openVerify(id, email, role) {
   document.getElementById('modalTitle').textContent = `Verify ${role}: ${email}`;
   document.getElementById('modalInfo').innerHTML = `<p>You are about to <strong>verify</strong> this ${role} account. They will receive a confirmation email and gain full platform access.</p>`;
   document.getElementById('rejReason').value = '';
+  Validator.clearError(document.getElementById('rejReason'));
   document.getElementById('modalAlert').innerHTML = '';
   document.getElementById('verifyModal').classList.add('open');
   document.getElementById('approveBtn').onclick = () => submitDecision('verified');
@@ -120,10 +121,10 @@ function openReject(id, email, role) { openVerify(id, email, role); }
 
 async function submitDecision(status) {
   const reason = document.getElementById('rejReason').value.trim();
-  if (status === 'rejected' && reason.length < 5) { Validator.showError(document.getElementById('rejReason'), 'Please provide a reason.'); return; }
+  Validator.clearError(document.getElementById('rejReason'));
   try {
-    await API.patch(`/admin/verify/${currentUserId}`, { status, reason });
-    Toast.success(`Account ${status}!`);
+    await API.patch(`/admin/verify/${currentUserId}`, { status, reason: reason || undefined });
+    Toast.success(status === 'verified' ? 'Account verified!' : 'Account rejected.');
     closeModal();
     load();
   } catch (err) { document.getElementById('modalAlert').innerHTML = `<div class="alert alert-danger">${err.message}</div>`; }
