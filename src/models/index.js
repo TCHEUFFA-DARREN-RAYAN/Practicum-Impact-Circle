@@ -150,8 +150,8 @@ const Application = sequelize.define('Application', {
 
 /* ──────────────────────────────── TASK ──────────────────────────────────── */
 const VALID_TRANSITIONS = {
-  accepted: ['inProgress', 'completed'],
-  inProgress: ['completed'],
+  accepted: ['inProgress', 'approved', 'rejected'],
+  inProgress: ['completed', 'approved', 'rejected'],
   completed: ['approved', 'rejected'],
 };
 

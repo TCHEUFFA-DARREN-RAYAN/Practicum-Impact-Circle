@@ -198,7 +198,7 @@
         <div class="kpi-body">
           <div class="kpi-label">Active Tasks</div>
           <div class="kpi-value" id="statActive">—</div>
-          <div class="kpi-sub">In progress right now</div>
+          <div class="kpi-sub" id="statActiveSub">In progress right now</div>
         </div>
       </div>
     </div>
@@ -254,14 +254,6 @@
           <div id="applications"><div style="padding:2rem;text-align:center"><div class="spinner"></div></div></div>
         </div>
 
-        <!-- Available rewards -->
-        <div class="card" style="padding:1.25rem">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
-            <div class="card-label" style="margin-bottom:0">Rewards you can redeem</div>
-            <a href="/rewards" class="btn btn-ghost btn-sm" style="font-size:0.75rem">View all →</a>
-          </div>
-          <div id="rewardsPreview"><div style="padding:2rem;text-align:center"><div class="spinner"></div></div></div>
-        </div>
 
       </div>
     </div>
@@ -316,8 +308,12 @@ async function load() {
     document.getElementById('statGigs').textContent     = stats.gigCount ?? 0;
     document.getElementById('statCompleted').textContent = stats.approvedCount ?? 0;
 
-    const activeTasks = (tasks || []).filter(t => ['accepted','inProgress','completed'].includes(t.status));
+    const activeTasks = (tasks || []).filter(t => ['accepted','inProgress'].includes(t.status));
+    const pendingApproval = (tasks || []).filter(t => t.status === 'completed').length;
     document.getElementById('statActive').textContent = activeTasks.length;
+    if (pendingApproval > 0) {
+      document.getElementById('statActiveSub').textContent = `${pendingApproval} pending org approval`;
+    }
 
     /* ── Points ring ── */
     const pts = stats.totalPoints ?? 0;
@@ -386,37 +382,21 @@ async function load() {
     /* ── Applications ── */
     document.getElementById('applications').innerHTML = (applications || []).slice(0, 7).length
       ? applications.slice(0, 7).map(a => {
-          const orgInitials = (a.gigId?.orgId?.orgName || 'IC').substring(0, 2).toUpperCase();
+          const g = a.gig || {};
+          const orgName = g.org?.orgName || '';
+          const initials = (orgName || 'IC').substring(0, 2).toUpperCase();
           return `
           <div class="app-row">
-            <div class="app-org-icon">${orgInitials}</div>
+            <div class="app-org-icon">${initials}</div>
             <div class="app-body">
-              <div class="app-title">${a.gigId?.title || 'Gig'}</div>
-              <div class="app-meta">${a.gigId?.orgId?.orgName || ''} · ${fmt.date(a.createdAt)}</div>
+              <div class="app-title">${g.title || '—'}</div>
+              <div class="app-meta">${orgName ? orgName + ' · ' : ''}${fmt.date(a.createdAt)}</div>
             </div>
             <span class="badge ${a.status === 'approved' ? 'badge-verified' : a.status === 'rejected' ? 'badge-rejected' : 'badge-pending'}" style="font-size:0.68rem">${a.status}</span>
           </div>`;
         }).join('')
       : `<div style="padding:1.5rem;text-align:center;color:var(--text-muted);font-size:0.875rem">
            No applications yet. <a href="/gigs">Browse gigs →</a>
-         </div>`;
-
-    /* ── Rewards ── */
-    document.getElementById('rewardsPreview').innerHTML = (eligibleRewards || []).slice(0, 4).length
-      ? eligibleRewards.slice(0, 4).map(r => `
-          <div class="reward-row">
-            <div class="reward-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
-            </div>
-            <div class="reward-body">
-              <div class="reward-name">${r.name}</div>
-              <div class="reward-meta">${r.pointsRequired} pts · ${r.sponsorName || 'Platform'}</div>
-            </div>
-            <a href="/rewards" class="btn btn-sm btn-primary">Redeem</a>
-          </div>`).join('')
-        + (eligibleRewards.length > 4 ? `<div style="padding:0.75rem 0;text-align:center"><a href="/rewards" class="btn btn-ghost btn-sm">+${eligibleRewards.length - 4} more rewards</a></div>` : '')
-      : `<div style="padding:1.5rem;text-align:center;color:var(--text-muted);font-size:0.875rem">
-           Keep volunteering to unlock rewards!
          </div>`;
 
   } catch (err) {
