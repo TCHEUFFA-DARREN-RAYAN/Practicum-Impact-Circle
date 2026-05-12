@@ -10,6 +10,7 @@ const User = sequelize.define('User', {
   role:               { type: DataTypes.ENUM('volunteer', 'org', 'admin', 'csr'), allowNull: false },
   verificationStatus: { type: DataTypes.ENUM('pending', 'verified', 'rejected'), defaultValue: 'pending' },
   rejectionReason:    { type: DataTypes.TEXT, allowNull: true },
+  isBlocked:          { type: DataTypes.BOOLEAN, defaultValue: false },
   /* Password reset — columns must exist in MySQL; run doc/mysql-add-password-reset.sql if missing */
   resetPasswordToken:   { type: DataTypes.STRING(255), allowNull: true },
   resetPasswordExpires: { type: DataTypes.DATE, allowNull: true },
@@ -108,20 +109,29 @@ const Category = sequelize.define('Category', {
 
 /* ──────────────────────────────── GIG ───────────────────────────────────── */
 const Gig = sequelize.define('Gig', {
-  id:             { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  orgId:          { type: DataTypes.INTEGER, allowNull: false },
-  title:          { type: DataTypes.STRING(255), allowNull: false },
-  description:    { type: DataTypes.TEXT, allowNull: false },
-  categoryId:     { type: DataTypes.INTEGER, allowNull: false },
-  startDate:      { type: DataTypes.DATEONLY, allowNull: false },
-  endDate:        { type: DataTypes.DATEONLY, allowNull: false },
-  estimatedHours: { type: DataTypes.FLOAT, allowNull: false },
-  locationType:   { type: DataTypes.ENUM('in-person', 'remote'), defaultValue: 'in-person' },
-  locationAddress:{ type: DataTypes.STRING(255) },
-  requiredSkills: { type: DataTypes.JSON, defaultValue: [] },
-  verifiedOnly:   { type: DataTypes.BOOLEAN, defaultValue: false },
-  status:         { type: DataTypes.ENUM('open', 'closed', 'cancelled'), defaultValue: 'open' },
-  applicantCount: { type: DataTypes.INTEGER, defaultValue: 0 },
+  id:               { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  orgId:            { type: DataTypes.INTEGER, allowNull: false },
+  title:            { type: DataTypes.STRING(255), allowNull: false },
+  description:      { type: DataTypes.TEXT, allowNull: false },
+  categoryId:       { type: DataTypes.INTEGER, allowNull: false },
+  startDate:        { type: DataTypes.DATEONLY, allowNull: false },
+  endDate:          { type: DataTypes.DATEONLY, allowNull: false },
+  estimatedHours:   { type: DataTypes.FLOAT, allowNull: false },
+  locationType:     { type: DataTypes.ENUM('in-person', 'remote'), defaultValue: 'in-person' },
+  locationAddress:  { type: DataTypes.STRING(255) },
+  requiredSkills:   { type: DataTypes.JSON, defaultValue: [] },
+  verifiedOnly:     { type: DataTypes.BOOLEAN, defaultValue: false },
+  status:           { type: DataTypes.ENUM('open', 'closed', 'cancelled'), defaultValue: 'open' },
+  applicantCount:   { type: DataTypes.INTEGER, defaultValue: 0 },
+  /* Time of day */
+  timeOfDay:        { type: DataTypes.ENUM('morning', 'afternoon', 'evening', 'flexible'), allowNull: true },
+  startTime:        { type: DataTypes.STRING(10), allowNull: true },
+  endTime:          { type: DataTypes.STRING(10), allowNull: true },
+  /* Recurrence */
+  isRecurring:      { type: DataTypes.BOOLEAN, defaultValue: false },
+  recurrenceType:   { type: DataTypes.ENUM('daily', 'weekly', 'monthly'), allowNull: true },
+  recurrenceDays:   { type: DataTypes.JSON, defaultValue: [] },
+  hoursPerOccurrence: { type: DataTypes.FLOAT, allowNull: true },
 });
 
 /* ─────────────────────────── APPLICATION ────────────────────────────────── */
@@ -155,6 +165,9 @@ const Task = sequelize.define('Task', {
   autoApprovedAt:  { type: DataTypes.DATE },
   rejectionReason: { type: DataTypes.TEXT },
   remindersSent:   { type: DataTypes.JSON, defaultValue: [] },
+  orgRating:       { type: DataTypes.INTEGER, allowNull: true },
+  orgFeedback:     { type: DataTypes.TEXT, allowNull: true },
+  attendedAt:      { type: DataTypes.DATE, allowNull: true },
 });
 
 Task.prototype.canTransitionTo = function (next) {
