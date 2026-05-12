@@ -1,6 +1,44 @@
 (() => {
   if (document.querySelector('.global-footer') || document.querySelector('.lp-footer')) return;
 
+  /* ── Slim footer for dashboard/logged-in pages (sidebar present) ── */
+  if (document.getElementById('sidebar')) {
+    if (!document.getElementById('gf-slim-css')) {
+      const s = document.createElement('style');
+      s.id = 'gf-slim-css';
+      s.textContent = `
+        .dashboard-footer {
+          margin-left: var(--sidebar-width, 240px);
+          background: #f1f5f9;
+          border-top: 1px solid #e2e8f0;
+          padding: 0.875rem 1.5rem;
+          text-align: center;
+          font-size: 0.78rem;
+          color: #94a3b8;
+          letter-spacing: 0.01em;
+          transition: margin-left 0.3s ease;
+        }
+        .dashboard-footer .df-brand {
+          color: #1e40af;
+          font-weight: 600;
+        }
+        .has-sidebar.sidebar-collapsed .dashboard-footer {
+          margin-left: var(--sidebar-rail-width, 72px);
+        }
+        @media (max-width: 900px) {
+          .dashboard-footer { margin-left: 0; }
+        }
+      `;
+      document.head.appendChild(s);
+    }
+    const footer = document.createElement('footer');
+    footer.className = 'dashboard-footer';
+    footer.innerHTML = `© 2026 <span class="df-brand">ImpactCircle</span>. All rights reserved. &nbsp;·&nbsp; Greater Moncton, NB, Canada`;
+    document.body.appendChild(footer);
+    return;
+  }
+
+  /* ── Full public footer ── */
   if (!document.getElementById('gf-css')) {
     const s = document.createElement('style');
     s.id = 'gf-css';
