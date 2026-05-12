@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Analytics | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    /* ── KPI cards ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .kpi-grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.35rem 1.45rem;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      min-height: 108px;
+    }
+    .kpi-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .kpi-icon svg { width: 22px; height: 22px; }
+    .ki-blue   { background: #dbeafe; color: #1e40af; }
+    .ki-green  { background: #dcfce7; color: #16a34a; }
+    .ki-amber  { background: #fef3c7; color: #d97706; }
+    .ki-sky    { background: #e0f2fe; color: #0891b2; }
+    .ki-teal   { background: #ccfbf1; color: #0f766e; }
+    .ki-orange { background: #ffedd5; color: #ea580c; }
+    .ki-purple { background: #ede9fe; color: #7c3aed; }
+    .kpi-body { flex: 1; min-width: 0; }
+    .kpi-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.3rem; }
+    .kpi-value { font-size: 2.1rem; font-weight: 800; color: var(--text); line-height: 1; letter-spacing: -0.04em; }
+    .kpi-value.warn   { color: #d97706; }
+    .kpi-value.danger { color: #dc2626; }
+    .kpi-value.good   { color: #16a34a; }
+    .kpi-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+    /* ── Section ── */
+    .card-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 0.6rem; }
+    .dash-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+      overflow: hidden;
+      margin-bottom: 1.25rem;
+    }
+    .section-head {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .section-title { font-size: 0.82rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text); }
+    .section-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem; }
+    .section-body { padding: 1.25rem; }
+    .dash-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem; }
+
+    /* ── Funnel bars ── */
+    .funnel-row { display: flex; align-items: center; gap: 0.875rem; padding: 0.625rem 0; border-bottom: 1px solid var(--border); }
+    .funnel-row:last-child { border-bottom: none; }
+    .funnel-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .fd-blue   { background: #2563eb; }
+    .fd-green  { background: #16a34a; }
+    .fd-red    { background: #dc2626; }
+    .fd-amber  { background: #d97706; }
+    .fd-grey   { background: #94a3b8; }
+    .funnel-label { font-size: 0.82rem; color: var(--text); flex: 1; }
+    .funnel-pct { font-size: 0.75rem; color: var(--text-muted); min-width: 38px; text-align: right; flex-shrink: 0; }
+    .funnel-count { font-size: 0.875rem; font-weight: 700; color: var(--text); min-width: 32px; text-align: right; flex-shrink: 0; }
+    .funnel-bar-wrap { width: 90px; height: 6px; background: var(--border); border-radius: 3px; flex-shrink: 0; }
+    .funnel-bar { height: 100%; border-radius: 3px; }
+
+    /* ── Gig table ── */
+    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .gig-table { width: 100%; border-collapse: collapse; min-width: 560px; }
+    .gig-table th { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); padding: 0 0.75rem 0.75rem; text-align: left; border-bottom: 2px solid var(--border); }
+    .gig-table td { padding: 0.75rem; border-bottom: 1px solid var(--border); font-size: 0.85rem; color: var(--text); vertical-align: middle; }
+    .gig-table tr:last-child td { border-bottom: none; }
+    .gig-table tr:hover td { background: #f8fafc; }
+    .status-pill { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.625rem; border-radius: 20px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+    .sp-open     { background: #dcfce7; color: #16a34a; }
+    .sp-closed   { background: #dbeafe; color: #1e40af; }
+    .sp-cancelled{ background: #f1f5f9; color: #64748b; }
+    .cat-pill { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.15rem 0.5rem; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }
+
+    /* ── Alert callout ── */
+    .insight-box { padding: 1rem 1.125rem; border-radius: 10px; margin-top: 1rem; font-size: 0.82rem; line-height: 1.5; }
+    .insight-box.warn { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+    .insight-box.ok   { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+
+    @media (max-width: 1100px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } .kpi-grid-3 { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 900px)  { .dash-row { grid-template-columns: 1fr; } }
+    @media (max-width: 600px)  { .kpi-grid { grid-template-columns: 1fr 1fr; } .kpi-grid-3 { grid-template-columns: 1fr 1fr; } }
+  </style>
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside id="sidebar" class="sidebar"></aside>
+
+<div class="page-content">
+  <div class="container">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.25rem">
+      <div>
+        <h1 style="font-size:1.5rem;font-weight:800;color:var(--text);margin:0 0 0.25rem" id="pageTitle">Analytics</h1>
+        <p style="color:var(--text-muted);font-size:0.85rem;margin:0" id="pageSubtitle">Your program performance — loading…</p>
+      </div>
+      <a href="/org-dashboard" class="btn btn-secondary btn-sm">← Dashboard</a>
+    </div>
+
+    <!-- KPI Row 1: Volume -->
+    <div class="card-label">Your program at a glance</div>
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon ki-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div class="kpi-body"><div class="kpi-label">Gigs Posted</div><div class="kpi-value" id="sGigs">—</div><div class="kpi-sub" id="sGigsSub">loading…</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon ki-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div class="kpi-body"><div class="kpi-label">Applications</div><div class="kpi-value" id="sApps">—</div><div class="kpi-sub" id="sAppsSub">loading…</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon ki-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+        <div class="kpi-body"><div class="kpi-label">Volunteers Served</div><div class="kpi-value" id="sVolunteers">—</div><div class="kpi-sub">Approved applications</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon ki-sky"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="kpi-body"><div class="kpi-label">Hours Facilitated</div><div class="kpi-value" id="sHours">—</div><div class="kpi-sub">All-time volunteer hours</div></div>
+      </div>
+    </div>
+
+    <!-- KPI Row 2: Operations -->
+    <div class="card-label">Task operations</div>
+    <div class="kpi-grid kpi-grid-3" style="margin-bottom:1.5rem">
+      <div class="kpi-card">
+        <div class="kpi-icon ki-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg></div>
+        <div class="kpi-body"><div class="kpi-label">Pending Approvals</div><div class="kpi-value warn" id="sPending">—</div><div class="kpi-sub">Task completions awaiting your review</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon ki-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <div class="kpi-body"><div class="kpi-label">Tasks Approved</div><div class="kpi-value good" id="sApproved">—</div><div class="kpi-sub" id="sApprovedSub">loading…</div></div>
+      </div>
+      <div class="kpi-card" id="autoCard">
+        <div class="kpi-icon ki-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+        <div class="kpi-body"><div class="kpi-label">Your Auto-Approval Rate</div><div class="kpi-value" id="sAutoRate">—</div><div class="kpi-sub">Target: below 10% — review tasks promptly</div></div>
+      </div>
+    </div>
+
+    <!-- Application Funnel + Task Health -->
+    <div class="dash-row">
+
+      <!-- Application Funnel -->
+      <div class="dash-section">
+        <div class="section-head">
+          <div><div class="section-title">Application Funnel</div><div class="section-sub">How volunteers progress through your gigs</div></div>
+        </div>
+        <div class="section-body" id="appFunnel">
+          <div style="padding:1.5rem;text-align:center"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <!-- Task Health -->
+      <div class="dash-section">
+        <div class="section-head">
+          <div><div class="section-title">Task Approval Health</div><div class="section-sub">Volunteer task submission outcomes</div></div>
+        </div>
+        <div class="section-body" id="taskHealth">
+          <div style="padding:1.5rem;text-align:center"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Per-Gig Breakdown -->
+    <div class="dash-section">
+      <div class="section-head">
+        <div><div class="section-title">Gig Performance Breakdown</div><div class="section-sub">Results per opportunity</div></div>
+        <a href="/org-dashboard" class="btn btn-ghost btn-sm" style="font-size:0.75rem">Manage gigs →</a>
+      </div>
+      <div class="section-body" style="padding:0">
+        <div class="table-wrapper">
+          <table class="gig-table">
+            <thead>
+              <tr>
+                <th style="padding-left:1.25rem">Opportunity</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Applications</th>
+                <th>Tasks Approved</th>
+                <th style="padding-right:1.25rem">Hours Generated</th>
+              </tr>
+            </thead>
+            <tbody id="gigTableBody">
+              <tr><td colspan="6" style="text-align:center;padding:2.5rem"><div class="spinner"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script>
+API.requireAuth('org');
+
+(async () => {
+  try {
+    const { data: d } = await API.get('/orgs/me/analytics');
+
+    const now = new Date();
+    document.getElementById('pageTitle').textContent = (d.org?.name || 'Your Organization') + ' — Analytics';
+    document.getElementById('pageSubtitle').textContent =
+      'Program performance · ' + now.toLocaleDateString('en-CA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    /* ── KPI Row 1 ── */
+    document.getElementById('sGigs').textContent = d.gigs.total;
+    document.getElementById('sGigsSub').textContent =
+      `${d.gigs.open} open · ${d.gigs.closed} closed · ${d.gigs.cancelled} cancelled`;
+    document.getElementById('sApps').textContent = d.applications.total;
+    document.getElementById('sAppsSub').textContent =
+      `${d.applications.approved} approved · ${d.applications.rejected} rejected`;
+    document.getElementById('sVolunteers').textContent = d.applications.approved;
+    document.getElementById('sHours').textContent =
+      (d.org?.totalFacilitatedHours || 0).toFixed(1) + 'h';
+
+    /* ── KPI Row 2 ── */
+    document.getElementById('sPending').textContent = d.tasks.pending;
+    document.getElementById('sApproved').textContent = d.tasks.approved;
+    document.getElementById('sApprovedSub').textContent =
+      d.tasks.autoApproved > 0 ? `${d.tasks.autoApproved} were auto-approved` : 'All manually reviewed';
+
+    const autoRate = d.tasks.autoApprovalRate ?? 0;
+    const autoEl = document.getElementById('sAutoRate');
+    autoEl.textContent = autoRate + '%';
+    if (autoRate >= 10) autoEl.classList.add('danger');
+    else if (autoRate >= 5) autoEl.classList.add('warn');
+    else autoEl.classList.add('good');
+
+    /* ── Application Funnel ── */
+    const apps = d.applications;
+    const appTotal = apps.total || 1;
+    document.getElementById('appFunnel').innerHTML = `
+      <div class="funnel-row" style="padding-top:0;border-bottom:1px solid var(--border)">
+        <div class="funnel-dot fd-blue"></div>
+        <div class="funnel-label" style="font-weight:700">Total Applications</div>
+        <div class="funnel-count">${apps.total}</div>
+      </div>
+      ${[
+        { dot:'fd-green', label:'Approved', val: apps.approved, color:'#16a34a' },
+        { dot:'fd-red',   label:'Rejected', val: apps.rejected, color:'#dc2626' },
+        { dot:'fd-amber', label:'Pending decision', val: apps.pending, color:'#d97706' },
+      ].map(r => `
+        <div class="funnel-row">
+          <div class="funnel-dot ${r.dot}"></div>
+          <div class="funnel-label">${r.label}</div>
+          <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${apps.total ? Math.round((r.val/apps.total)*100) : 0}%;background:${r.color}"></div></div>
+          <div class="funnel-pct">${apps.total ? Math.round((r.val/apps.total)*100) : 0}%</div>
+          <div class="funnel-count">${r.val}</div>
+        </div>`).join('')}
+      <div style="margin-top:1rem;font-size:0.78rem;color:var(--text-muted);line-height:1.5">
+        ${apps.total === 0
+          ? 'No applications received yet. Post a gig to start attracting volunteers.'
+          : `Acceptance rate: <strong>${apps.total ? Math.round((apps.approved/apps.total)*100) : 0}%</strong> — ${apps.approved} of ${apps.total} applicants approved.`}
+      </div>`;
+
+    /* ── Task Health ── */
+    const tasks = d.tasks;
+    const taskReviewed = tasks.approved + tasks.rejected;
+    document.getElementById('taskHealth').innerHTML = `
+      <div class="funnel-row" style="padding-top:0;border-bottom:1px solid var(--border)">
+        <div class="funnel-dot fd-blue"></div>
+        <div class="funnel-label" style="font-weight:700">Submitted for Approval</div>
+        <div class="funnel-count">${tasks.pending + taskReviewed}</div>
+      </div>
+      ${[
+        { dot:'fd-green', label:'Approved', val: tasks.approved, max: tasks.approved + tasks.rejected || 1, color:'#16a34a' },
+        { dot:'fd-red',   label:'Rejected', val: tasks.rejected, max: tasks.approved + tasks.rejected || 1, color:'#dc2626' },
+        { dot:'fd-amber', label:'Still pending your review', val: tasks.pending, max: tasks.approved + tasks.rejected + tasks.pending || 1, color:'#d97706' },
+      ].map(r => `
+        <div class="funnel-row">
+          <div class="funnel-dot ${r.dot}"></div>
+          <div class="funnel-label">${r.label}</div>
+          <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${Math.round((r.val/r.max)*100)}%;background:${r.color}"></div></div>
+          <div class="funnel-pct">${Math.round((r.val/r.max)*100)}%</div>
+          <div class="funnel-count">${r.val}</div>
+        </div>`).join('')}
+      <div class="insight-box ${autoRate >= 10 ? 'warn' : 'ok'}" style="margin-top:0.875rem">
+        ${autoRate >= 10
+          ? `⚠ Your auto-approval rate is ${autoRate}% — above the 10% target. ${tasks.autoApproved} of your approved tasks were auto-approved because you did not review them within 30 days. Review task submissions promptly to keep this below 10%.`
+          : autoRate > 0
+            ? `✓ Auto-approval rate: ${autoRate}% — within target. ${tasks.autoApproved} task${tasks.autoApproved !== 1 ? 's' : ''} were auto-approved. Keep reviewing submissions within 30 days.`
+            : `✓ No tasks have been auto-approved. Great work reviewing submissions on time!`}
+      </div>`;
+
+    /* ── Per-Gig Table ── */
+    const perGig = d.perGig || [];
+    document.getElementById('gigTableBody').innerHTML = perGig.length === 0
+      ? `<tr><td colspan="6" style="text-align:center;padding:2.5rem;color:var(--text-muted)">No gigs posted yet. <a href="/org-gig-create">Post your first gig →</a></td></tr>`
+      : perGig.map(g => {
+          const statusClass = g.status === 'open' ? 'sp-open' : g.status === 'closed' ? 'sp-closed' : 'sp-cancelled';
+          const catStyle = g.category ? `background:${g.category.colorHex}22;color:${g.category.colorHex}` : 'background:#e2e8f0;color:#475569';
+          return `
+            <tr>
+              <td style="padding-left:1.25rem">
+                <div style="font-weight:600;font-size:0.875rem;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${g.title}</div>
+              </td>
+              <td>
+                ${g.category
+                  ? `<span class="cat-pill" style="${catStyle}">${g.category.icon || ''} ${g.category.name}</span>`
+                  : '<span style="color:var(--text-muted);font-size:0.8rem">—</span>'}
+              </td>
+              <td><span class="status-pill ${statusClass}">${g.status}</span></td>
+              <td style="font-weight:600;text-align:center">${g.applications}</td>
+              <td style="font-weight:600;text-align:center;color:#16a34a">${g.approvedTasks}</td>
+              <td style="padding-right:1.25rem;font-weight:700;color:#0f766e;text-align:right">${g.hoursGenerated > 0 ? g.hoursGenerated + 'h' : '—'}</td>
+            </tr>`;
+        }).join('');
+
+  } catch (err) {
+    Toast.error('Failed to load analytics: ' + err.message);
+    document.getElementById('pageSubtitle').textContent = 'Could not load data — check your connection.';
+  }
+})();
+</script>
+<script src="/js/footer.js"></script>
+</body>
+</html>
