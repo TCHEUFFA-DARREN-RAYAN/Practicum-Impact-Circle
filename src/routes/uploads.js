@@ -40,6 +40,11 @@ router.get('/:userId/:filename', async (req, res, next) => {
       res.setHeader('Cache-Control', 'public, max-age=86400');
     }
 
+    // Force download (attachment) for documents; inline for images
+    if (!isAvatar) {
+      res.setHeader('Content-Disposition', `attachment; filename="${path.basename(filename)}"`);
+    }
+
     res.sendFile(path.resolve(filePath));
   } catch (err) {
     next(err);

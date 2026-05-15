@@ -141,14 +141,14 @@ function render() {
         <div style="font-size:0.75rem;color:var(--text-muted)">Applied ${fmt.date(a.createdAt)}</div>
         <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem;font-size:0.78rem">
           ${v.id && vp.resumeUrl
-            ? `<a href="/api/uploads/${v.id}/${vp.resumeUrl}" target="_blank" class="btn btn-sm btn-secondary">Resume</a>`
-            : `<span style="color:var(--text-muted);padding:0.25rem 0.5rem;border:1px dashed var(--border);border-radius:6px">No resume uploaded</span>`}
+            ? `<button class="btn btn-sm btn-primary" onclick="downloadDoc('${v.id}','${vp.resumeUrl}','Resume')">&#x2193; Resume</button>`
+            : `<span style="color:var(--text-muted);padding:0.25rem 0.5rem;border:1px dashed var(--border);border-radius:6px;font-size:0.75rem">No resume</span>`}
           ${v.id && vp.govId
-            ? `<a href="/api/uploads/${v.id}/${vp.govId}" target="_blank" class="btn btn-sm btn-secondary">Gov ID</a>`
-            : `<span style="color:var(--text-muted);padding:0.25rem 0.5rem;border:1px dashed var(--border);border-radius:6px">No ID uploaded</span>`}
+            ? `<button class="btn btn-sm btn-primary" onclick="downloadDoc('${v.id}','${vp.govId}','Gov ID')">&#x2193; Gov ID</button>`
+            : `<span style="color:var(--text-muted);padding:0.25rem 0.5rem;border:1px dashed var(--border);border-radius:6px;font-size:0.75rem">No ID</span>`}
           ${v.id && vp.backgroundCheck
-            ? `<a href="/api/uploads/${v.id}/${vp.backgroundCheck}" target="_blank" class="btn btn-sm btn-secondary">Background Check</a>`
-            : `<span style="color:var(--text-muted);padding:0.25rem 0.5rem;border:1px dashed var(--border);border-radius:6px">No background check</span>`}
+            ? `<button class="btn btn-sm btn-primary" onclick="downloadDoc('${v.id}','${vp.backgroundCheck}','Background Check')">&#x2193; Bg Check</button>`
+            : `<span style="color:var(--text-muted);padding:0.25rem 0.5rem;border:1px dashed var(--border);border-radius:6px;font-size:0.75rem">No bg check</span>`}
         </div>
         <div class="action-btns" style="margin-top:0.5rem">
           ${a.status==='pending'?`<button class="btn btn-sm btn-primary" onclick="openDecide(${a.id},'approved')">Approve</button><button class="btn btn-sm btn-danger" onclick="openDecide(${a.id},'rejected')">Reject</button>`:''}
@@ -158,6 +158,31 @@ function render() {
       <span class="badge" style="background:${SC[a.status]||'var(--primary)'};color:#fff;flex-shrink:0">${a.status}</span>
     </div>`;
   }).join('');
+}
+
+async function downloadDoc(userId, filename, label) {
+  try {
+    const headers = {};
+    const token = API.getToken ? API.getToken() : localStorage.getItem('token');
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`/api/uploads/${userId}/${filename}`, { headers });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      Toast.error(err.message || `${label} file is not available on the server.`);
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(e) {
+    Toast.error(`Could not download ${label}.`);
+  }
 }
 
 async function startChat(userId) {

@@ -94,6 +94,7 @@ const pages = [
   ['/org/schedule', 'pages/org-schedule.html'],
   ['/org/opportunities', 'pages/org-opportunities.html'],
   ['/org/applications', 'pages/org-applications.html'],
+  ['/org/announcements', 'pages/org-announcements.html'],
 
   // ── Opportunity detail ──
   ['/gigs', 'pages/gig-list.html'],

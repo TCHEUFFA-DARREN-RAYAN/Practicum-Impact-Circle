@@ -4,7 +4,7 @@ const fs = require('fs');
 const multer = require('multer');
 const { fn, col, Op } = require('sequelize');
 const { requireAuth, requireRole } = require('../middleware/auth');
-const { Organization, Gig, Application, Task, HourRecord, Category, User, VolunteerProfile } = require('../models/index');
+const { Organization, Gig, Application, Task, HourRecord, Category, User, VolunteerProfile, Notification } = require('../models/index');
 
 const logoStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -278,6 +278,47 @@ router.get('/me/calendar', requireAuth, requireRole('org'), async (req, res, nex
       }
     });
     res.json({ success: true, data: { calendar: byDate, year, month } });
+  } catch (err) { next(err); }
+});
+
+/* POST /api/orgs/me/announcements — send a notification to all volunteers with approved applications */
+router.post('/me/announcements', requireAuth, requireRole('org'), async (req, res, next) => {
+  try {
+    const { title, body } = req.body;
+    if (!title || !body)
+      return res.status(400).json({ success: false, message: 'title and body are required.' });
+
+    const org = await Organization.findOne({ where: { userId: req.user.id } });
+    if (!org) return res.status(404).json({ success: false, message: 'Organization not found.' });
+
+    /* Find all gigs for this org */
+    const gigs = await Gig.findAll({ where: { organizationId: org.id }, attributes: ['id'] });
+    const gigIds = gigs.map(g => g.id);
+    if (!gigIds.length)
+      return res.json({ success: true, message: 'Announcement sent to 0 volunteers.', data: { recipientCount: 0 } });
+
+    /* Find approved volunteers (deduplicated) */
+    const applications = await Application.findAll({
+      where: { gigId: { [Op.in]: gigIds }, status: 'approved' },
+      attributes: ['volunteerId'],
+    });
+    const volunteerIds = [...new Set(applications.map(a => a.volunteerId))];
+    if (!volunteerIds.length)
+      return res.json({ success: true, message: 'Announcement sent to 0 volunteers (none approved yet).', data: { recipientCount: 0 } });
+
+    /* Bulk-create in-app notifications */
+    await Notification.bulkCreate(volunteerIds.map(uid => ({
+      userId: uid,
+      message: `${org.orgName}: ${title} — ${body.substring(0, 100)}${body.length > 100 ? '…' : ''}`,
+      type: 'general',
+      link: null,
+    })));
+
+    res.status(201).json({
+      success: true,
+      message: `Announcement sent to ${volunteerIds.length} volunteer${volunteerIds.length !== 1 ? 's' : ''}.`,
+      data: { recipientCount: volunteerIds.length },
+    });
   } catch (err) { next(err); }
 });
 
