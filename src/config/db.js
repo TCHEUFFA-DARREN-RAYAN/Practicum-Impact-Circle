@@ -54,7 +54,19 @@ const connectDB = async () => {
     }
   } catch (err) {
     console.error('  MySQL connection failed:', err.message);
-    process.exit(1);
+    const parent = err.parent || err.original;
+    const errno = parent?.errno;
+    const code = parent?.code;
+    if (code === 'ECONNREFUSED' || String(err.message || '').includes('ECONNREFUSED')) {
+      console.error('  Hint: MySQL is not accepting connections on this host/port. Start MySQL (Windows: Services), or run `docker compose up -d` from the project root.');
+    } else if (errno === 1045 || /Access denied for user/i.test(err.message || '')) {
+      console.error('  Hint: Wrong DB_USER or DB_PASS. If the password has # ! or spaces, wrap the whole value in double quotes in .env, e.g. DB_PASS="your!pass".');
+    } else if (errno === 1049 || /Unknown database/i.test(err.message || '')) {
+      console.error(`  Hint: Create the database first, e.g. CREATE DATABASE ${process.env.DB_NAME || 'impactcircle'} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`);
+    } else if (errno === 2003 || /Can't connect to MySQL/i.test(err.message || '')) {
+      console.error('  Hint: Check DB_HOST and DB_PORT. Remote hosts often need DB_SSL_ENABLED=true and a CA path (see doc/DEPLOYMENT.md).');
+    }
+    throw err;
   }
 };
 

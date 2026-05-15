@@ -10,8 +10,30 @@ const errorHandler = (err, req, res, next) => {
   }
 
   if (err.name === 'SequelizeDatabaseError') {
-    console.error('DB error detail:', err.parent?.message);
-    return res.status(500).json({ success: false, message: 'Database error. Please try again.' });
+    const detail = err.parent?.message || err.message;
+    console.error('DB error detail:', detail);
+    const safeProd = 'Database error. Please try again.';
+    const message =
+      process.env.NODE_ENV === 'production'
+        ? safeProd
+        : (detail || safeProd);
+    return res.status(500).json({ success: false, message });
+  }
+
+  if (
+    err.name === 'SequelizeConnectionError'
+    || err.name === 'SequelizeConnectionRefusedError'
+    || err.name === 'SequelizeHostNotFoundError'
+    || err.name === 'SequelizeInvalidConnectionError'
+  ) {
+    console.error('DB connection error:', err.message);
+    return res.status(503).json({
+      success: false,
+      message:
+        process.env.NODE_ENV === 'production'
+          ? 'Database is temporarily unavailable. Please try again later.'
+          : err.message || 'Cannot connect to the database.',
+    });
   }
 
   if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {

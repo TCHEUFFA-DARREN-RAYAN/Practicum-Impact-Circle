@@ -15,27 +15,64 @@
       position: absolute; inset: 0;
       background-image: url('https://images.unsplash.com/photo-1593113598332-cd288d649433?w=1400&fit=crop&auto=format&q=80');
       background-size: cover; background-position: center 20%;
-      filter: brightness(0.4);
+      filter: brightness(0.38) contrast(1.05);
     }
-    .ph-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.42); }
+    .ph-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(7, 26, 61, 0.72) 0%,
+        rgba(7, 26, 61, 0.58) 45%,
+        rgba(7, 26, 61, 0.68) 100%
+      );
+      box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.35);
+    }
     .ph-content {
       position: relative; z-index: 1;
       padding: calc(var(--nav-height) + 3rem) 1.5rem 4.5rem; width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
     }
-    .ph-content h1 { font-size: clamp(1.9rem,4vw,2.75rem); font-weight: 800; color: white; margin-bottom: 0.75rem; }
-    .ph-content p { font-size: 1.1rem; opacity: 0.92; max-width: 580px; margin: 0 auto; }
-    .ph-wave { position: absolute; bottom: -1px; left: 0; right: 0; z-index: 2; }
+    .ph-content h1 {
+      font-family: 'Poppins', 'Inter', sans-serif;
+      font-size: clamp(2rem, 4vw, 2.75rem);
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 0.75rem;
+      text-shadow: 0 2px 24px rgba(7, 26, 61, 0.4);
+    }
+    /* Override global body `p` colour — must stay light on dark hero */
+    .ph-content p {
+      font-size: 1.0625rem;
+      line-height: 1.65;
+      color: rgba(255, 255, 255, 0.95);
+      max-width: 580px;
+      margin: 0 auto;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), 0 2px 18px rgba(7, 26, 61, 0.45);
+    }
+    .ph-wave {
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
+      height: clamp(48px, 9vw, 80px);
+      pointer-events: none;
+      background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.45) 45%,
+        rgba(255, 255, 255, 0.97) 88%,
+        #f2f8ff 100%
+      );
+    }
 
-    .cat-section { padding: 3.5rem 0; }
+    .cat-section { padding: 3.5rem 0; background: #f2f8ff; }
     .cat-intro { text-align: center; max-width: 620px; margin: 0 auto 2.5rem; }
-    .cat-intro h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; }
-    .cat-intro p { color: #666; line-height: 1.7; }
+    .cat-intro h2 { font-size: clamp(1.75rem, 3vw, 2rem); font-weight: 700; margin-bottom: 0.5rem; color: #071a3d; }
+    .cat-intro p { color: #334155; line-height: 1.75; font-size: 1rem; }
 
     .cat-photo-row {
       display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 3rem;
     }
     @media (max-width: 600px) { .cat-photo-row { grid-template-columns: 1fr 1fr; } }
-    .cat-photo-item { border-radius: 12px; overflow: hidden; aspect-ratio: 3/2; position: relative; }
+    .cat-photo-item { border-radius: 24px; overflow: hidden; aspect-ratio: 3/2; position: relative; box-shadow: 0 12px 30px rgba(7, 26, 61, 0.08); border: 1px solid rgba(0, 102, 255, 0.08); }
     .cat-photo-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
     .cat-photo-item:hover img { transform: scale(1.04); }
     .cat-photo-label {
@@ -49,20 +86,35 @@
       display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
       gap: 1.25rem; margin-top: 1.5rem;
     }
-    .category-card {
-      background: white; border: 1px solid #e5e7eb;
-      border-radius: 14px; padding: 1.5rem 1rem;
-      text-align: center; cursor: pointer;
-      transition: all 0.15s; text-decoration: none; color: var(--text);
-      display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    .category-card,
+    .category-card:link,
+    .category-card:visited {
+      background: #ffffff;
+      border: 1px solid rgba(0, 102, 255, 0.12);
+      border-radius: 16px;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+      text-decoration: none;
+      color: #334155;
+      display: block;
+      box-shadow: 0 12px 30px rgba(7, 26, 61, 0.06);
     }
     .category-card:hover {
-      box-shadow: 0 6px 20px rgba(14,165,233,0.15);
-      transform: translateY(-3px); border-color: #0EA5E9;
+      box-shadow: 0 16px 40px rgba(7, 26, 61, 0.1);
+      transform: translateY(-2px);
+      border-color: rgba(0, 102, 255, 0.35);
       text-decoration: none;
     }
-    .category-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.25rem; }
-    .category-card span { font-size: 0.8rem; color: var(--text-muted); }
+    /* Override global `h3` navy so every chip matches (no mixed link/title colours) */
+    .categories-grid .category-card h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      color: #071a3d;
+    }
+    .category-card span { font-size: 0.8125rem; color: #64748b; }
     #categories-loading { text-align: center; padding: 3rem; color: var(--text-muted); }
   </style>
 </head>
@@ -76,11 +128,7 @@
     <h1>Volunteer Categories</h1>
     <p>Explore opportunities across all areas of community service and find your passion.</p>
   </div>
-  <div class="ph-wave">
-    <svg viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <path fill="#ffffff" d="M0,58 C480,128 960,-28 1440,52 L1440,120 L0,120 Z"/>
-    </svg>
-  </div>
+  <div class="ph-wave" aria-hidden="true"></div>
 </div>
 
 <main>
@@ -99,7 +147,7 @@
           <div class="cat-photo-label">Food & Nutrition</div>
         </div>
         <div class="cat-photo-item">
-          <img src="https://images.unsplash.com/photo-1571425046056-78a1cab4be01?w=600&h=400&fit=crop&auto=format&q=80" alt="Environmental volunteering" loading="lazy">
+          <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&h=400&fit=crop&auto=format&q=80" alt="Forest trail — environmental stewardship" loading="lazy">
           <div class="cat-photo-label">Environment</div>
         </div>
         <div class="cat-photo-item">

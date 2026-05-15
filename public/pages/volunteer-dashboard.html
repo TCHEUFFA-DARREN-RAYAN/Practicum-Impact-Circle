@@ -263,8 +263,6 @@
 <script src="/js/api.js"></script>
 <script src="/js/nav.js"></script>
 <script>
-API.requireAuth('volunteer');
-
 const STATUS_LABEL = {
   accepted: 'Accepted', inProgress: 'In Progress',
   completed: 'Pending Approval', approved: 'Approved', rejected: 'Rejected',
@@ -278,10 +276,40 @@ const DOT_CLASS = {
   completed: 'dot-completed', approved: 'dot-approved', rejected: 'dot-rejected',
 };
 
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+}
+
+function renderDashboardLoadError(message) {
+  document.getElementById('statHours').textContent = '0';
+  document.getElementById('statGigs').textContent = '0';
+  document.getElementById('statCompleted').textContent = '0';
+  document.getElementById('statActive').textContent = '0';
+  document.getElementById('statActiveSub').textContent = 'In progress right now';
+  const body = `
+    <div class="alert alert-danger" style="text-align:left;margin:0 auto;max-width:28rem;font-size:0.875rem">
+      ${escHtml(message)}
+    </div>
+    <p style="margin:0.75rem 0 0;font-size:0.8125rem;color:var(--text-muted)">
+      ${/Unknown column/i.test(message)
+        ? 'Your database is behind the app code. <strong>Restart</strong> the server once (missing columns are added on startup), or run <code style="font-size:0.8em">node scripts/sync-db.js</code>. See <code style="font-size:0.8em">doc/SETUP.md</code>.'
+        : 'Start MySQL, match <code style="font-size:0.8em">DB_*</code> in your <code style="font-size:0.8em">.env</code>, then run <code style="font-size:0.8em">DB_SYNC_ALTER=true npm run dev</code> once. See <code style="font-size:0.8em">doc/SETUP.md</code>.'}
+    </p>
+    <button type="button" class="btn btn-primary btn-sm" style="margin-top:1rem" onclick="load()">Retry</button>`;
+  const wrap = `<div style="padding:1.25rem 1.5rem;text-align:center">${body}</div>`;
+  document.getElementById('activeTasks').innerHTML = wrap;
+  document.getElementById('categoryBreakdown').innerHTML = wrap;
+  document.getElementById('applications').innerHTML = wrap;
+}
+
 async function load() {
   try {
-    const { data } = await API.get('/volunteers/me/dashboard');
-    const { profile, stats, applications, tasks, eligibleRewards } = data;
+    const dash = await API.get('/volunteers/me/dashboard');
+    const data = dash?.data;
+    if (!data) throw new Error('Unexpected response from server.');
+
+    const { profile, stats: statsRaw, applications, tasks } = data;
+    const stats = statsRaw || {};
 
     /* ── Header ── */
     const firstName = profile?.firstName || 'Volunteer';
@@ -297,21 +325,6 @@ async function load() {
     document.getElementById('statActive').textContent = activeTasks.length;
     if (pendingApproval > 0) {
       document.getElementById('statActiveSub').textContent = `${pendingApproval} pending org approval`;
-    }
-
-
-    /* ── Verification banner ── */
-    const userFull = await API.get('/auth/me');
-    const vs = userFull.data.user.verificationStatus;
-    if (vs !== 'verified') {
-      document.getElementById('verifyBanner').innerHTML = `
-        <div class="alert alert-${vs === 'pending' ? 'warning' : 'danger'} mb-4"
-             style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem">
-          <span>${vs === 'pending'
-            ? '⏳ Your account is pending admin verification. Upload your documents to speed up the process.'
-            : '❌ Verification was rejected. Visit your profile to resubmit documents.'}</span>
-          <a href="/volunteer-profile" class="btn btn-sm btn-secondary">Go to Profile</a>
-        </div>`;
     }
 
     /* ── Active tasks ── */
@@ -376,8 +389,31 @@ async function load() {
            No applications yet. <a href="/gigs">Browse gigs →</a>
          </div>`;
 
+    /* ── Verification banner (non-blocking: must not leave panels on spinners) ── */
+    try {
+      const userFull = await API.get('/auth/me');
+      const vs = userFull?.data?.user?.verificationStatus;
+      if (vs && vs !== 'verified') {
+        document.getElementById('verifyBanner').innerHTML = `
+        <div class="alert alert-${vs === 'pending' ? 'warning' : 'danger'} mb-4"
+             style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem">
+          <span>${vs === 'pending'
+            ? '⏳ Your account is pending admin verification. Upload your documents to speed up the process.'
+            : '❌ Verification was rejected. Visit your profile to resubmit documents.'}</span>
+          <a href="/volunteer-profile" class="btn btn-sm btn-secondary">Go to Profile</a>
+        </div>`;
+      } else {
+        document.getElementById('verifyBanner').innerHTML = '';
+      }
+    } catch (bannerErr) {
+      console.warn('Verification banner skipped:', bannerErr?.message || bannerErr);
+    }
+
   } catch (err) {
-    Toast.error('Failed to load dashboard: ' + err.message);
+    if (err.__authRedirect) return;
+    const msg = err.message || 'Request failed';
+    Toast.error('Failed to load dashboard: ' + msg);
+    renderDashboardLoadError(msg);
   }
 }
 
@@ -453,7 +489,9 @@ function closeModal() {
   btn.disabled = false; btn.textContent = 'Submit'; btn.style.display = '';
 }
 
-load();
+if (API.requireAuth('volunteer')) {
+  load();
+}
 </script>
 <script src="/js/footer.js"></script>
 </body>

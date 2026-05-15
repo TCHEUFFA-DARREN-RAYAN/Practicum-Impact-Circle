@@ -26,8 +26,6 @@ const messageRoutes = require('./src/routes/messages');
 
 const app = express();
 
-connectDB();
-
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: process.env.NODE_ENV === 'production' ? process.env.CLIENT_URL : '*' }));
 app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
@@ -132,12 +130,23 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
-    console.log(`\n  ImpactCircle running → http://localhost:${PORT}`);
-    console.log(`  Environment: ${process.env.NODE_ENV || 'development'}\n`);
-    require('./src/services/autoApproval').start();
-  });
+
+async function startServer() {
+  try {
+    await connectDB();
+  } catch (e) {
+    console.error(e);
+    process.exit(1);
+  }
+  if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, () => {
+      console.log(`\n  ImpactCircle running → http://localhost:${PORT}`);
+      console.log(`  Environment: ${process.env.NODE_ENV || 'development'}\n`);
+      require('./src/services/autoApproval').start();
+    });
+  }
 }
+
+startServer();
 
 module.exports = app;

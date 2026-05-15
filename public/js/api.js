@@ -15,12 +15,39 @@ const API = (() => {
     const opts = { method, headers };
     if (body) opts.body = isFormData ? body : JSON.stringify(body);
 
-    const res = await fetch(`${BASE}${path}`, opts);
+    const controller = new AbortController();
+    const timeoutMs = 30000;
+    const tid = setTimeout(() => controller.abort(), timeoutMs);
+
+    let res;
+    try {
+      res = await fetch(`${BASE}${path}`, { ...opts, signal: controller.signal });
+    } catch (e) {
+      if (e.name === 'AbortError') {
+        throw {
+          status: 0,
+          message: 'Request timed out. Check that the app is running and MySQL is reachable (see doc/SETUP.md).',
+          errors: [],
+        };
+      }
+      throw {
+        status: 0,
+        message: e.message === 'Failed to fetch'
+          ? 'Cannot reach the server. Use npm run dev on the same host/port as this page, or verify your network connection.'
+          : (e.message || 'Network error'),
+        errors: [],
+      };
+    } finally {
+      clearTimeout(tid);
+    }
+
     const data = await res.json().catch(() => ({ success: false, message: 'Server error' }));
     if (res.status === 401 && window.location.pathname !== '/login') {
       clearSession();
       window.location.replace('/login');
-      return;
+      const err = new Error('Session expired');
+      err.__authRedirect = true;
+      throw err;
     }
     if (!res.ok) throw { status: res.status, message: data.message || 'Request failed', errors: data.errors || [] };
     return data;
