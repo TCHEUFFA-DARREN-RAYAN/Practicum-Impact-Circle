@@ -114,14 +114,14 @@ async function load() {
       applyHtml = `<div class="alert alert-warning">This gig is no longer accepting applications.</div>`;
     } else if (appData?.applied) {
       if (appData.status === 'approved') {
-        applyHtml = `<div class="alert alert-success" style="text-align:center"><strong>Your application was approved!</strong><br>Check your tasks dashboard.</div>`;
+        applyHtml = `<div class="alert alert-success" style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap"><strong style="flex-shrink:0">Your application was approved!</strong><a href="/volunteer-dashboard" style="color:inherit;font-weight:600;font-size:0.875rem;text-decoration:underline;white-space:nowrap">Check your tasks dashboard →</a></div>`;
       } else if (appData.status === 'rejected') {
         applyHtml = `<div class="alert alert-danger" style="text-align:center">Your application was not accepted for this gig.</div>`;
       } else {
         applyHtml = `
-          <div style="border:1px solid #bbf7d0;background:#f0fdf4;border-radius:8px;padding:1rem;text-align:center">
-            <div style="font-weight:700;color:#00a344;margin-bottom:0.25rem">Application Submitted</div>
-            <div style="font-size:0.85rem;color:#00a344">You have already applied for this position. You'll be notified of the decision.</div>
+          <div style="border:1px solid #bbf7d0;background:#f0fdf4;border-radius:8px;padding:1rem;display:flex;align-items:center;gap:0.75rem">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00a344" stroke-width="2" style="flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <div><div style="font-weight:700;color:#00a344;font-size:0.875rem">Application Submitted</div><div style="font-size:0.8rem;color:#16a34a">You'll be notified of the decision.</div></div>
           </div>`;
       }
     } else if (isVerifiedVolunteer) {
@@ -238,9 +238,9 @@ document.getElementById('submitApply').addEventListener('click', async () => {
     closeApply();
     Toast.success('Application submitted successfully!');
     document.getElementById('applySection').innerHTML = `
-      <div style="border:1px solid #bbf7d0;background:#f0fdf4;border-radius:8px;padding:1rem;text-align:center">
-        <div style="font-weight:700;color:#00a344;margin-bottom:0.25rem">Application Submitted</div>
-        <div style="font-size:0.85rem;color:#00a344">You have already applied for this position. You'll be notified of the decision.</div>
+      <div style="border:1px solid #bbf7d0;background:#f0fdf4;border-radius:8px;padding:1rem;display:flex;align-items:center;gap:0.75rem">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00a344" stroke-width="2" style="flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <div><div style="font-weight:700;color:#00a344;font-size:0.875rem">Application Submitted</div><div style="font-size:0.8rem;color:#16a34a">You'll be notified of the decision.</div></div>
       </div>`;
     currentApplicantCount++;
     const el = document.getElementById('applicantCount');

@@ -1,8 +1,8 @@
 (() => {
   if (document.querySelector('.global-footer') || document.querySelector('.lp-footer')) return;
 
-  /* ── Slim footer for dashboard/logged-in pages (sidebar present) ── */
-  if (document.getElementById('sidebar')) {
+  /* ── Slim footer for dashboard/logged-in pages (sidebar populated by nav.js) ── */
+  if (document.body.classList.contains('has-sidebar')) {
     if (!document.getElementById('gf-slim-css')) {
       const s = document.createElement('style');
       s.id = 'gf-slim-css';

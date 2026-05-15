@@ -7,6 +7,15 @@
   <link rel="stylesheet" href="/css/base.css">
   <style>
     .gig-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; }
+    .gig-grid .gig-title {
+      white-space: normal;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      text-overflow: unset;
+    }
+    .gig-meta-item { font-size: 0.72rem !important; }
     .page-content .gig-card {
       overflow: hidden;
       padding: 0;
@@ -109,6 +118,27 @@
             <option value="Fri">Friday</option>
             <option value="Sat">Saturday</option>
             <option value="Sun">Sunday</option>
+          </select>
+        </div>
+
+        <!-- Province -->
+        <div class="filter-group">
+          <label for="filterProvince">Province</label>
+          <select id="filterProvince">
+            <option value="">All Provinces</option>
+            <option value="NB">New Brunswick</option>
+            <option value="NS">Nova Scotia</option>
+            <option value="PE">Prince Edward Island</option>
+            <option value="NL">Newfoundland &amp; Labrador</option>
+            <option value="QC">Quebec</option>
+            <option value="ON">Ontario</option>
+            <option value="MB">Manitoba</option>
+            <option value="SK">Saskatchewan</option>
+            <option value="AB">Alberta</option>
+            <option value="BC">British Columbia</option>
+            <option value="NT">Northwest Territories</option>
+            <option value="NU">Nunavut</option>
+            <option value="YT">Yukon</option>
           </select>
         </div>
 
@@ -223,6 +253,7 @@
     const loc      = document.getElementById('filterLocation').value;
     const time     = document.getElementById('filterTime').value;
     const day      = document.getElementById('filterDay').value;
+    const province = document.getElementById('filterProvince').value;
     const verified = document.getElementById('filterVerified').value;
     const search   = document.getElementById('filterSearch').value.trim();
 
@@ -230,6 +261,7 @@
     if (loc)      params.set('location', loc);
     if (time)     params.set('timeOfDay', time);
     if (day)      params.set('dayOfWeek', day);
+    if (province) params.set('province', province);
     if (verified) params.set('verifiedOnly', verified);
     if (search)   params.set('search', search);
 
@@ -283,7 +315,7 @@
         <div class="gig-card-body">
         <div class="gig-card-top">
           <div style="flex:1;min-width:0">
-            <div class="gig-title truncate">${gig.title}</div>
+            <div class="gig-title">${gig.title}</div>
             ${orgName ? `<div class="gig-org" style="display:flex;align-items:center;gap:0.3rem">${SVG.bldg} ${orgName}</div>` : ''}
           </div>
           <span class="${pillCls}" style="flex-shrink:0">${catName}</span>
@@ -379,6 +411,7 @@
   function resetFilters() {
     document.getElementById('filterCategory').value = '';
     document.getElementById('filterLocation').value = '';
+    document.getElementById('filterProvince').value = '';
     document.getElementById('filterVerified').value = '';
     document.getElementById('filterSearch').value   = '';
     currentPage = 1;
@@ -396,6 +429,9 @@
   // ── Event Listeners ────────────────────────────────────────────────────────
   document.getElementById('filterCategory').addEventListener('change', onFilterChange);
   document.getElementById('filterLocation').addEventListener('change', onFilterChange);
+  document.getElementById('filterTime').addEventListener('change', onFilterChange);
+  document.getElementById('filterDay').addEventListener('change', onFilterChange);
+  document.getElementById('filterProvince').addEventListener('change', onFilterChange);
   document.getElementById('filterVerified').addEventListener('change', onFilterChange);
   document.getElementById('filterSearch').addEventListener('input', onSearchInput);
   document.getElementById('clearFilters').addEventListener('click', resetFilters);
