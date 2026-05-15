@@ -46,7 +46,9 @@ router.post('/register', [
   body('role').isIn(['volunteer', 'org', 'csr']).withMessage('Invalid role.'),
 ], validate, async (req, res, next) => {
   try {
-    const { email, password, role, orgName, companyName } = req.body;
+    const { email, password, role, orgName, companyName,
+      missionStatement, contactName, contactEmail, contactPhone, address, website, categories,
+      province, city } = req.body;
 
     const existing = await User.findOne({ where: { email } });
     if (existing) return res.status(409).json({ success: false, message: 'An account with that email already exists. Please sign in or use a different email.' });
@@ -56,7 +58,19 @@ router.post('/register', [
     if (role === 'volunteer') {
       await VolunteerProfile.create({ userId: user.id });
     } else if (role === 'org') {
-      await Organization.create({ userId: user.id, orgName: orgName || 'My Organization' });
+      await Organization.create({
+        userId: user.id,
+        orgName: orgName || 'My Organization',
+        missionStatement: missionStatement || null,
+        contactName: contactName || null,
+        contactEmail: contactEmail || email,
+        contactPhone: contactPhone || null,
+        address: address || null,
+        website: website || null,
+        categories: categories || [],
+        province: province || null,
+        city: city || null,
+      });
     } else if (role === 'csr') {
       await CsrPartner.create({ userId: user.id, companyName: companyName || 'My Company' });
     }
@@ -78,6 +92,7 @@ router.post('/login', [
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ success: false, message: 'Invalid email or password.' });
     }
+    await user.update({ lastLoginAt: new Date() });
     const token = issueToken(user);
     res.json({ success: true, message: 'Login successful.', data: { token, user: user.toSafeObject() } });
   } catch (err) {

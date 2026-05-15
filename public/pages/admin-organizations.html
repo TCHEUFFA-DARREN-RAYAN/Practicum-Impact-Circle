@@ -92,7 +92,7 @@ async function load() {
     document.getElementById('tbl').innerHTML = rows.length ? rows.map(o => {
       const u = o.User || o.user;
       const st = u ? u.verificationStatus : '—';
-      return `<tr>
+      return `<tr data-org-id="${o.id}">
         <td style="font-weight:600">${o.orgName || '—'}${u?.isBlocked ? ' <span class="badge badge-rejected" style="font-size:0.68rem">Blocked</span>' : ''}</td>
         <td>${u ? u.email : '—'}</td>
         <td><span class="badge ${st === 'verified' ? 'badge-verified' : st === 'rejected' ? 'badge-rejected' : 'badge-pending'}">${st}</span></td>
@@ -204,6 +204,9 @@ async function saveEdit() {
     });
     Toast.success('Organization updated.');
     closeModal('editModal');
+    /* Update row name optimistically */
+    const row = document.querySelector(`[data-org-id="${currentOrgId}"]`);
+    if (row) { const firstTd = row.querySelector('td:first-child'); if (firstTd) firstTd.childNodes[0].textContent = orgNameEl.value.trim(); }
     load();
   } catch (e) { document.getElementById('editAlert').innerHTML = `<div class="alert alert-danger">${e.message}</div>`; }
   finally { btn.disabled = false; }
@@ -214,6 +217,12 @@ async function deleteOrg() {
   try {
     await API.delete(`/admin/organizations/${currentOrgId}`);
     Toast.success('Organization deactivated.');
+    /* Optimistic: mark row as deactivated immediately */
+    const row = document.querySelector(`[data-org-id="${currentOrgId}"]`);
+    if (row) {
+      const actionCell = row.querySelector('td:last-child div');
+      if (actionCell) actionCell.innerHTML = '<span class="badge badge-rejected" style="font-size:0.7rem;padding:0.3rem 0.6rem">Deactivated</span>';
+    }
     closeModal('viewModal');
     load();
   } catch (e) { Toast.error(e.message); }

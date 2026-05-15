@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const { fn, col, literal, Op } = require('sequelize');
 const { requireAuth, requireRole } = require('../middleware/auth');
-const { User, VolunteerProfile, Organization, Category, Gig, Application, Reward, Task, HourRecord, AuditLog, Notification } = require('../models/index');
+const { User, VolunteerProfile, Organization, Category, Gig, Application, Reward, Task, HourRecord, AuditLog, Notification, Announcement } = require('../models/index');
 const { createNotification } = require('../services/notifications');
 const { sendEmail, templates } = require('../services/email');
 
@@ -147,9 +147,29 @@ router.put('/organizations/:id', ...adminAuth, async (req, res, next) => {
   try {
     const allowed = ['orgName', 'missionStatement', 'contactName', 'contactEmail', 'contactPhone', 'address', 'website'];
     const updates = {};
-    allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
+    const changedLabels = [];
+    const labelMap = { orgName:'Organization Name', missionStatement:'Mission Statement', contactName:'Contact Name', contactEmail:'Contact Email', contactPhone:'Contact Phone', address:'Address', website:'Website' };
+    allowed.forEach(k => {
+      if (req.body[k] !== undefined) {
+        updates[k] = req.body[k];
+        changedLabels.push(labelMap[k] || k);
+      }
+    });
     await Organization.update(updates, { where: { id: req.params.id } });
-    const org = await Organization.findByPk(req.params.id);
+    const org = await Organization.findByPk(req.params.id, { include: [{ model: User, attributes: ['email'] }] });
+
+    if (org && changedLabels.length > 0) {
+      const emailTarget = org.contactEmail || org.User?.email;
+      if (emailTarget) {
+        try {
+          const tpl = templates.orgUpdatedByAdmin(org.orgName, changedLabels);
+          await sendEmail(emailTarget, tpl.subject, tpl.html);
+        } catch (e) {
+          console.error('[ADMIN] org update email failed:', e.message);
+        }
+      }
+    }
+
     res.json({ success: true, message: 'Organization updated.', data: { organization: org } });
   } catch (err) { next(err); }
 });
@@ -172,16 +192,19 @@ router.get('/gigs', ...adminAuth, async (req, res, next) => {
     if (String(upcoming).toLowerCase() === 'true') {
       where.startDate = { [Op.gte]: new Date().toISOString().slice(0, 10) };
     }
+    const { sortBy } = req.query;
     const lim = Math.min(parseInt(limit, 10) || 30, 100);
     const pg = parseInt(page, 10) || 1;
     const offset = (pg - 1) * lim;
+    let orderClause = [['startDate', String(upcoming).toLowerCase() === 'true' ? 'ASC' : 'DESC']];
+    if (sortBy === 'viewCount') orderClause = [['viewCount', 'DESC']];
     const { count: total, rows: gigs } = await Gig.findAndCountAll({
       where,
       include: [
         { model: Organization, as: 'org', attributes: ['id', 'orgName', 'address', 'contactEmail'] },
         { model: Category, as: 'category', attributes: ['name'] },
       ],
-      order: [['startDate', String(upcoming).toLowerCase() === 'true' ? 'ASC' : 'DESC']],
+      order: orderClause,
       offset,
       limit: lim,
     });
@@ -433,7 +456,7 @@ router.get('/calendar', ...adminAuth, async (req, res, next) => {
     const endOfMonth = `${year}-${String(month).padStart(2,'0')}-${String(endDate.getDate()).padStart(2,'0')}`;
     const gigs = await Gig.findAll({
       where: { startDate: { [Op.lte]: endOfMonth }, endDate: { [Op.gte]: startOfMonth } },
-      attributes: ['id', 'title', 'startDate', 'endDate', 'startTime', 'endTime', 'locationType'],
+      attributes: ['id', 'title', 'startDate', 'endDate', 'startTime', 'endTime', 'locationType', 'maxVolunteers'],
       include: [
         { model: Organization, as: 'org', attributes: ['orgName'] },
         { model: Category, as: 'category', attributes: ['name', 'colorHex'] },
@@ -446,13 +469,76 @@ router.get('/calendar', ...adminAuth, async (req, res, next) => {
     });
     const byDate = {};
     gigs.forEach(g => {
+      const obj = g.toJSON();
+      const activeTasks = (obj.Tasks || []).filter(t => ['accepted','inProgress','completed','approved'].includes(t.status));
+      obj.acceptedCount = activeTasks.length;
+      obj.isFull = obj.maxVolunteers != null && obj.acceptedCount >= obj.maxVolunteers;
       for (let d = new Date(g.startDate); d <= new Date(g.endDate); d.setDate(d.getDate() + 1)) {
         const key = d.toISOString().slice(0, 10);
         if (!byDate[key]) byDate[key] = [];
-        byDate[key].push(g.toJSON());
+        byDate[key].push(obj);
       }
     });
     res.json({ success: true, data: { calendar: byDate, year, month } });
+  } catch (err) { next(err); }
+});
+
+/* ── Announcements ── */
+router.get('/announcements', ...adminAuth, async (req, res, next) => {
+  try {
+    const announcements = await Announcement.findAll({ order: [['createdAt', 'DESC']], limit: 50 });
+    res.json({ success: true, data: { announcements } });
+  } catch (err) { next(err); }
+});
+
+router.post('/announcements', ...adminAuth, async (req, res, next) => {
+  try {
+    const { title, body, targetGroup, sendEmails } = req.body;
+    if (!title || !body || !targetGroup)
+      return res.status(400).json({ success: false, message: 'title, body and targetGroup are required.' });
+    if (!['all', 'volunteers', 'orgs', 'inactive'].includes(targetGroup))
+      return res.status(400).json({ success: false, message: 'Invalid targetGroup.' });
+
+    /* Resolve target users */
+    const where = {};
+    if (targetGroup === 'volunteers') {
+      where.role = 'volunteer';
+    } else if (targetGroup === 'orgs') {
+      where.role = 'org';
+    } else if (targetGroup === 'inactive') {
+      const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      where[Op.or] = [{ lastLoginAt: null }, { lastLoginAt: { [Op.lt]: cutoff } }];
+      where.role = { [Op.in]: ['volunteer', 'org'] };
+    } else {
+      where.role = { [Op.in]: ['volunteer', 'org'] };
+    }
+    const targets = await User.findAll({ where, attributes: ['id', 'email'] });
+
+    /* Bulk-create notifications */
+    if (targets.length > 0) {
+      await Notification.bulkCreate(targets.map(u => ({
+        userId: u.id,
+        message: `${title}: ${body.substring(0, 120)}${body.length > 120 ? '…' : ''}`,
+        type: 'general',
+        link: null,
+      })));
+    }
+
+    /* Optionally send emails */
+    if (sendEmails && targets.length > 0) {
+      const tpl = templates.announcement(title, body);
+      for (const u of targets) {
+        try { await sendEmail(u.email, tpl.subject, tpl.html); } catch (_) {}
+      }
+    }
+
+    const announcement = await Announcement.create({
+      title, body, targetGroup,
+      sentBy: req.user.id,
+      recipientCount: targets.length,
+    });
+
+    res.status(201).json({ success: true, message: `Announcement sent to ${targets.length} users.`, data: { announcement } });
   } catch (err) { next(err); }
 });
 

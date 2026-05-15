@@ -97,6 +97,14 @@
           <option value="4,8">4 – 8 hours</option>
           <option value="8,">8+ hours</option>
         </select>
+        <select id="province-filter">
+          <option value="">All Provinces</option>
+          <option>Alberta</option><option>British Columbia</option><option>Manitoba</option>
+          <option>New Brunswick</option><option>Newfoundland and Labrador</option>
+          <option>Northwest Territories</option><option>Nova Scotia</option><option>Nunavut</option>
+          <option>Ontario</option><option>Prince Edward Island</option><option>Quebec</option>
+          <option>Saskatchewan</option><option>Yukon</option>
+        </select>
         <select id="sort-filter">
           <option value="">Sort: Newest</option>
           <option value="date">Sort: Date (soon first)</option>
@@ -164,10 +172,11 @@
       category: document.getElementById('category-filter').value,
       timeOfDay: document.getElementById('time-filter').value,
       sortBy: document.getElementById('sort-filter').value,
+      province: document.getElementById('province-filter').value,
     });
     if (minH) q.set('minHours', minH);
     if (maxH) q.set('maxHours', maxH);
-    ['search','category','timeOfDay','sortBy'].forEach(k => { if (!q.get(k)) q.delete(k); });
+    ['search','category','timeOfDay','sortBy','province'].forEach(k => { if (!q.get(k)) q.delete(k); });
 
     try {
       const { data } = await API.get(`/gigs?${q}`);

@@ -41,6 +41,9 @@ router.post('/register/step/:step', requireAuth, requireRole('volunteer'), async
         firstName: req.body.firstName, lastName: req.body.lastName,
         phone: req.body.phone, dateOfBirth: req.body.dateOfBirth,
         address: req.body.address,
+        province: req.body.province || null,
+        city: req.body.city || null,
+        hasDrivingLicense: !!req.body.hasDrivingLicense,
         registrationStep: Math.max(profile.registrationStep, 2),
       });
     } else if (step === 2) {
@@ -106,7 +109,8 @@ router.put('/me', requireAuth, requireRole('volunteer'), async (req, res, next) 
   try {
     const allowed = ['firstName', 'lastName', 'phone', 'address', 'skills', 'interests',
       'languages', 'weeklyAvailabilityHours', 'weeklyAvailabilityDays',
-      'previousVolunteeringHistory', 'preferredCategories', 'references', 'bio'];
+      'previousVolunteeringHistory', 'preferredCategories', 'references', 'bio',
+      'hasDrivingLicense', 'province', 'city'];
     const updates = {};
     allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
     await VolunteerProfile.update(updates, { where: { userId: req.user.id } });

@@ -94,12 +94,24 @@ function closeDecide() {
 document.getElementById('decideConfirm').addEventListener('click', async () => {
   if (!pendingDecide) return;
   const { appId, action } = pendingDecide;
+  const btn = document.getElementById('decideConfirm');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block"></div>';
   try {
     await API.patch(`/gigs/applications/${appId}/decide`, { decision: action });
     Toast.success(action === 'approved' ? 'Application approved!' : 'Application rejected.');
+    /* Optimistic update: mutate local state immediately */
+    const appIdx = all.findIndex(a => a.id === appId);
+    if (appIdx !== -1) all[appIdx].status = action;
     closeDecide();
+    render();
+    /* Background refresh to sync latest state */
     load();
-  } catch(e) { Toast.error(e.message); }
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = action === 'approved' ? 'Approve' : 'Reject';
+    Toast.error(e.message);
+  }
 });
 
 function render() {

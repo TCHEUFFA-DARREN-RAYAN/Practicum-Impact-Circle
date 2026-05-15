@@ -59,10 +59,13 @@ router.get('/conversations', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-/* POST /api/messages/conversations — start or get existing conversation */
+/* POST /api/messages/conversations — start or get existing conversation (volunteers cannot initiate) */
 router.post('/conversations', requireAuth, async (req, res, next) => {
   try {
     const uid = req.user.id;
+    if (req.user.role === 'volunteer')
+      return res.status(403).json({ success: false, message: 'Volunteers cannot start new conversations. You may only reply to existing messages.' });
+
     const { partnerId } = req.body;
     if (!partnerId || Number(partnerId) === uid)
       return res.status(400).json({ success: false, message: 'Invalid partner.' });

@@ -142,6 +142,34 @@
             <input type="text" id="address" placeholder="123 Main St, Moncton, NB">
             <span class="field-error"></span>
           </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="prof_province">Province</label>
+              <select id="prof_province">
+                <option value="">Select province…</option>
+                <option>Alberta</option><option>British Columbia</option><option>Manitoba</option>
+                <option>New Brunswick</option><option>Newfoundland and Labrador</option>
+                <option>Northwest Territories</option><option>Nova Scotia</option><option>Nunavut</option>
+                <option>Ontario</option><option>Prince Edward Island</option><option>Quebec</option>
+                <option>Saskatchewan</option><option>Yukon</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="prof_city">City</label>
+              <input type="text" id="prof_city" placeholder="e.g. Moncton">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Driving License</label>
+            <div style="display:flex;gap:1rem;margin-top:0.35rem">
+              <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-weight:400">
+                <input type="radio" name="profDrivingLicense" value="yes" id="profDlYes"> Yes
+              </label>
+              <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-weight:400">
+                <input type="radio" name="profDrivingLicense" value="no" id="profDlNo"> No
+              </label>
+            </div>
+          </div>
           <div style="display:flex;justify-content:flex-end">
             <button type="submit" class="btn btn-primary" id="saveProfileBtn">Save Changes</button>
           </div>
@@ -320,6 +348,10 @@
       document.getElementById('phone').value                   = profile.phone     || '';
       document.getElementById('address').value                 = profile.address   || '';
       document.getElementById('weeklyAvailabilityHours').value = profile.weeklyAvailabilityHours || '';
+      document.getElementById('prof_province').value           = profile.province  || '';
+      document.getElementById('prof_city').value               = profile.city      || '';
+      if (profile.hasDrivingLicense) document.getElementById('profDlYes').checked = true;
+      else document.getElementById('profDlNo').checked = true;
 
       // Stats
       document.getElementById('statHours').textContent  = profile.totalVerifiedHours ?? 0;
@@ -436,6 +468,9 @@
         phone:                  document.getElementById('phone').value.trim() || undefined,
         address:                document.getElementById('address').value.trim() || undefined,
         weeklyAvailabilityHours: parseInt(document.getElementById('weeklyAvailabilityHours').value) || undefined,
+        province:               document.getElementById('prof_province').value || undefined,
+        city:                   document.getElementById('prof_city').value.trim() || undefined,
+        hasDrivingLicense:      document.getElementById('profDlYes').checked,
       };
 
       await API.put('/volunteers/me', payload);

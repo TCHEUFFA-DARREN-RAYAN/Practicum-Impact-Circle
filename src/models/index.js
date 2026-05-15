@@ -15,6 +15,7 @@ const User = sequelize.define('User', {
   resetPasswordToken:   { type: DataTypes.STRING(255), allowNull: true },
   resetPasswordExpires: { type: DataTypes.DATE, allowNull: true },
   avatarUrl:            { type: DataTypes.STRING(255), allowNull: true },
+  lastLoginAt:          { type: DataTypes.DATE, allowNull: true },
 });
 
 User.beforeCreate(async (u) => { u.passwordHash = await bcrypt.hash(u.passwordHash, 12); });
@@ -51,6 +52,9 @@ const VolunteerProfile = sequelize.define('VolunteerProfile', {
   consentGiven:                 { type: DataTypes.BOOLEAN, defaultValue: false },
   resumeUrl:                    { type: DataTypes.STRING(255), allowNull: true },
   bio:                          { type: DataTypes.TEXT, allowNull: true },
+  hasDrivingLicense:            { type: DataTypes.BOOLEAN, defaultValue: false },
+  province:                     { type: DataTypes.STRING(100), allowNull: true },
+  city:                         { type: DataTypes.STRING(100), allowNull: true },
 });
 
 /* ────────────────────── VOLUNTEER CATEGORY HOURS ────────────────────────── */
@@ -75,6 +79,8 @@ const Organization = sequelize.define('Organization', {
   website:               { type: DataTypes.STRING(255) },
   logoUrl:               { type: DataTypes.STRING(255) },
   totalFacilitatedHours: { type: DataTypes.FLOAT, defaultValue: 0 },
+  province:              { type: DataTypes.STRING(100), allowNull: true },
+  city:                  { type: DataTypes.STRING(100), allowNull: true },
 });
 
 /* ─────────────────────────── CSR PARTNER ────────────────────────────────── */
@@ -135,6 +141,9 @@ const Gig = sequelize.define('Gig', {
   recurrenceType:   { type: DataTypes.ENUM('daily', 'weekly', 'monthly'), allowNull: true },
   recurrenceDays:   { type: DataTypes.JSON, defaultValue: [] },
   hoursPerOccurrence: { type: DataTypes.FLOAT, allowNull: true },
+  /* Capacity & engagement */
+  maxVolunteers:    { type: DataTypes.INTEGER, allowNull: true },
+  viewCount:        { type: DataTypes.INTEGER, defaultValue: 0 },
 });
 
 /* ─────────────────────────── APPLICATION ────────────────────────────────── */
@@ -258,6 +267,16 @@ const ChatMessage = sequelize.define('ChatMessage', {
   isRead:         { type: DataTypes.BOOLEAN, defaultValue: false },
 }, { timestamps: true, updatedAt: false });
 
+/* ─────────────────────────── ANNOUNCEMENT ───────────────────────────────── */
+const Announcement = sequelize.define('Announcement', {
+  id:          { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  title:       { type: DataTypes.STRING(255), allowNull: false },
+  body:        { type: DataTypes.TEXT, allowNull: false },
+  targetGroup: { type: DataTypes.ENUM('all', 'volunteers', 'orgs', 'inactive'), allowNull: false },
+  sentBy:      { type: DataTypes.INTEGER, allowNull: true },
+  recipientCount: { type: DataTypes.INTEGER, defaultValue: 0 },
+}, { updatedAt: false });
+
 /* ─────────────────────────── ASSOCIATIONS ───────────────────────────────── */
 User.hasOne(VolunteerProfile, { foreignKey: 'userId', as: 'volunteerProfile' });
 VolunteerProfile.belongsTo(User, { foreignKey: 'userId' });
@@ -335,4 +354,5 @@ module.exports = {
   AuditLog,
   Conversation,
   ChatMessage,
+  Announcement,
 };

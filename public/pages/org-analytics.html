@@ -197,13 +197,14 @@
                 <th style="padding-left:1.25rem">Opportunity</th>
                 <th>Category</th>
                 <th>Status</th>
+                <th>Views</th>
                 <th>Applications</th>
                 <th>Tasks Approved</th>
                 <th style="padding-right:1.25rem">Hours Generated</th>
               </tr>
             </thead>
             <tbody id="gigTableBody">
-              <tr><td colspan="6" style="text-align:center;padding:2.5rem"><div class="spinner"></div></td></tr>
+              <tr><td colspan="7" style="text-align:center;padding:2.5rem"><div class="spinner"></div></td></tr>
             </tbody>
           </table>
         </div>
@@ -310,7 +311,7 @@ API.requireAuth('org');
     /* ── Per-Gig Table ── */
     const perGig = d.perGig || [];
     document.getElementById('gigTableBody').innerHTML = perGig.length === 0
-      ? `<tr><td colspan="6" style="text-align:center;padding:2.5rem;color:var(--text-muted)">No gigs posted yet. <a href="/org-gig-create">Post your first gig →</a></td></tr>`
+      ? `<tr><td colspan="7" style="text-align:center;padding:2.5rem;color:var(--text-muted)">No gigs posted yet. <a href="/org-gig-create">Post your first gig →</a></td></tr>`
       : perGig.map(g => {
           const statusClass = g.status === 'open' ? 'sp-open' : g.status === 'closed' ? 'sp-closed' : 'sp-cancelled';
           const catStyle = g.category ? `background:${g.category.colorHex}22;color:${g.category.colorHex}` : 'background:#e2e8f0;color:#475569';
@@ -325,6 +326,7 @@ API.requireAuth('org');
                   : '<span style="color:var(--text-muted);font-size:0.8rem">—</span>'}
               </td>
               <td><span class="status-pill ${statusClass}">${g.status}</span></td>
+              <td style="text-align:center;color:var(--text-muted);font-weight:600">${g.viewCount || 0}</td>
               <td style="font-weight:600;text-align:center">${g.applications}</td>
               <td style="font-weight:600;text-align:center;color:#16a34a">${g.approvedTasks}</td>
               <td style="padding-right:1.25rem;font-weight:700;color:#0f766e;text-align:right">${g.hoursGenerated > 0 ? g.hoursGenerated + 'h' : '—'}</td>

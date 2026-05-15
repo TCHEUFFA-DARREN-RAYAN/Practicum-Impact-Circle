@@ -37,7 +37,7 @@ router.get('/me', requireAuth, requireRole('org'), async (req, res, next) => {
 
 router.put('/me', requireAuth, requireRole('org'), async (req, res, next) => {
   try {
-    const allowed = ['orgName', 'missionStatement', 'categories', 'contactName', 'contactEmail', 'contactPhone', 'address', 'website'];
+    const allowed = ['orgName', 'missionStatement', 'categories', 'contactName', 'contactEmail', 'contactPhone', 'address', 'website', 'province', 'city'];
     const updates = {};
     allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
     await Organization.update(updates, { where: { userId: req.user.id } });
@@ -116,7 +116,7 @@ router.get('/me/analytics', requireAuth, requireRole('org'), async (req, res, ne
 
     const gigs = await Gig.findAll({
       where: { orgId: org.id },
-      attributes: ['id', 'title', 'status', 'applicantCount'],
+      attributes: ['id', 'title', 'status', 'applicantCount', 'viewCount'],
       include: [{ model: Category, as: 'category', attributes: ['name', 'colorHex', 'icon'] }],
       order: [['createdAt', 'DESC']],
     });
@@ -169,6 +169,7 @@ router.get('/me/analytics', requireAuth, requireRole('org'), async (req, res, ne
         category: g.category,
         approvedTasks: gigApprovedTasks,
         hoursGenerated: parseFloat((gigHoursRaw[0]?.total || 0).toFixed(1)),
+        viewCount: g.viewCount || 0,
       };
     }));
 
@@ -255,7 +256,7 @@ router.get('/me/calendar', requireAuth, requireRole('org'), async (req, res, nex
     const endOfMonth = `${year}-${String(month).padStart(2,'0')}-${String(endDate.getDate()).padStart(2,'0')}`;
     const gigs = await Gig.findAll({
       where: { orgId: org.id, startDate: { [Op.lte]: endOfMonth }, endDate: { [Op.gte]: startOfMonth } },
-      attributes: ['id', 'title', 'startDate', 'endDate', 'startTime', 'endTime', 'locationType'],
+      attributes: ['id', 'title', 'startDate', 'endDate', 'startTime', 'endTime', 'locationType', 'maxVolunteers'],
       include: [{
         model: Task, foreignKey: 'gigId',
         where: { status: { [Op.in]: ['accepted', 'inProgress', 'completed', 'approved'] } },
@@ -266,10 +267,14 @@ router.get('/me/calendar', requireAuth, requireRole('org'), async (req, res, nex
     });
     const byDate = {};
     gigs.forEach(g => {
+      const obj = g.toJSON();
+      const activeTasks = (obj.Tasks || []).filter(t => ['accepted','inProgress','completed','approved'].includes(t.status));
+      obj.acceptedCount = activeTasks.length;
+      obj.isFull = obj.maxVolunteers != null && obj.acceptedCount >= obj.maxVolunteers;
       for (let d = new Date(g.startDate); d <= new Date(g.endDate); d.setDate(d.getDate() + 1)) {
         const key = d.toISOString().slice(0, 10);
         if (!byDate[key]) byDate[key] = [];
-        byDate[key].push(g.toJSON());
+        byDate[key].push(obj);
       }
     });
     res.json({ success: true, data: { calendar: byDate, year, month } });

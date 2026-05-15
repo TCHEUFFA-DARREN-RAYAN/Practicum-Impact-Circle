@@ -70,7 +70,7 @@ async function load() {
     const { data } = await API.get(`/admin/verifications?${q}`);
 
     document.getElementById('verifyList').innerHTML = data.users.length ? data.users.map(u => `
-      <div class="card mb-3">
+      <div class="card mb-3" data-user-id="${u.id}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem">
           <div style="flex:1">
             <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem">
@@ -122,12 +122,24 @@ function openReject(id, email, role) { openVerify(id, email, role); }
 async function submitDecision(status) {
   const reason = document.getElementById('rejReason').value.trim();
   Validator.clearError(document.getElementById('rejReason'));
+  const btn = document.getElementById('approveBtn');
+  const rejBtn = document.getElementById('rejectBtn');
+  btn.disabled = true; rejBtn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block"></div>';
   try {
     await API.patch(`/admin/verify/${currentUserId}`, { status, reason: reason || undefined });
     Toast.success(status === 'verified' ? 'Account verified!' : 'Account rejected.');
+    /* Optimistic: remove the card immediately so there is no perceived lag */
+    const card = document.querySelector(`[data-user-id="${currentUserId}"]`);
+    if (card) card.remove();
     closeModal();
+    /* Silently refresh list in background */
     load();
-  } catch (err) { document.getElementById('modalAlert').innerHTML = `<div class="alert alert-danger">${err.message}</div>`; }
+  } catch (err) {
+    btn.disabled = false; rejBtn.disabled = false;
+    btn.innerHTML = 'Verify ';
+    document.getElementById('modalAlert').innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+  }
 }
 
 function closeModal() { document.getElementById('verifyModal').classList.remove('open'); }

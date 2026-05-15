@@ -11,7 +11,7 @@ router.get('/', optionalAuth, async (req, res, next) => {
   try {
     const {
       category, location, timeOfDay, dayOfWeek, dateFrom, dateTo,
-      org, search, minHours, maxHours, sortBy = 'createdAt',
+      org, search, minHours, maxHours, province, sortBy = 'createdAt',
       page = 1, limit = Math.min(parseInt(req.query.limit) || 12, 50),
     } = req.query;
     const where = { status: 'open' };
@@ -35,6 +35,11 @@ router.get('/', optionalAuth, async (req, res, next) => {
       { description: { [Op.like]: `%${search}%` } },
     ];
 
+    /* Province filter — join with Organization */
+    const orgInclude = province
+      ? { model: Organization, as: 'org', attributes: ['orgName', 'address', 'province'], where: { province } }
+      : { model: Organization, as: 'org', attributes: ['orgName', 'address', 'province'] };
+
     const orderMap = { hours: [['estimatedHours', 'ASC']], hoursDesc: [['estimatedHours', 'DESC']], date: [['startDate', 'ASC']] };
     const order = orderMap[sortBy] || [['createdAt', 'DESC']];
     const offset = (parseInt(page) - 1) * parseInt(limit);
@@ -42,7 +47,7 @@ router.get('/', optionalAuth, async (req, res, next) => {
       where,
       include: [
         { model: Category, as: 'category', attributes: ['id', 'name', 'colorHex', 'icon'] },
-        { model: Organization, as: 'org', attributes: ['orgName', 'address'] },
+        orgInclude,
       ],
       order,
       offset,
@@ -50,6 +55,14 @@ router.get('/', optionalAuth, async (req, res, next) => {
     });
 
     res.json({ success: true, data: { gigs, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) } });
+  } catch (err) { next(err); }
+});
+
+/* POST /api/gigs/:id/view — increment view counter (public, no auth required) */
+router.post('/:id/view', async (req, res, next) => {
+  try {
+    await Gig.increment('viewCount', { where: { id: req.params.id } });
+    res.json({ success: true });
   } catch (err) { next(err); }
 });
 
@@ -113,6 +126,7 @@ router.post('/', requireAuth, requireRole('org'), [
       location, requiredSkills, verifiedOnly,
       timeOfDay, startTime, endTime,
       isRecurring, recurrenceType, recurrenceDays, hoursPerOccurrence,
+      maxVolunteers,
     } = req.body;
     const gig = await Gig.create({
       orgId: org.id, title, description, categoryId: parseInt(categoryId),
@@ -128,6 +142,7 @@ router.post('/', requireAuth, requireRole('org'), [
       recurrenceType: recurrenceType || null,
       recurrenceDays: recurrenceDays || [],
       hoursPerOccurrence: hoursPerOccurrence || null,
+      maxVolunteers: maxVolunteers ? parseInt(maxVolunteers) : null,
     });
 
     const populated = await Gig.findByPk(gig.id, {
@@ -144,7 +159,7 @@ router.put('/:id', requireAuth, requireRole('org'), async (req, res, next) => {
     if (!gig) return res.status(404).json({ success: false, message: 'Gig not found.' });
 
     const allowed = ['title', 'description', 'startDate', 'endDate', 'estimatedHours', 'requiredSkills', 'verifiedOnly', 'status',
-      'timeOfDay', 'startTime', 'endTime', 'isRecurring', 'recurrenceType', 'recurrenceDays', 'hoursPerOccurrence'];
+      'timeOfDay', 'startTime', 'endTime', 'isRecurring', 'recurrenceType', 'recurrenceDays', 'hoursPerOccurrence', 'maxVolunteers'];
     const updates = {};
     allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
     if (req.body.location) {

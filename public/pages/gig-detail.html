@@ -78,6 +78,9 @@ async function load() {
     const user = API.getUser();
     const isVolunteer = user && user.role === 'volunteer';
 
+    /* Track gig view — fire-and-forget, no auth needed */
+    fetch(`/api/gigs/${gigId}/view`, { method: 'POST' }).catch(() => {});
+
     const [gigRes, appRes] = await Promise.all([
       API.get(`/gigs/${gigId}`),
       isVolunteer ? API.get(`/gigs/${gigId}/my-application`).catch(() => null) : Promise.resolve(null),

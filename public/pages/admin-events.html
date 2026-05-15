@@ -4,8 +4,38 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>Manage Events | Admin | ImpactCircle</title>
+  <title>Manage Events &amp; Opportunities | Admin | ImpactCircle</title>
   <link rel="stylesheet" href="/css/base.css">
+  <style>
+    .view-toggle { display:inline-flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+    .view-toggle button { background:#fff; border:none; padding:0.45rem 1rem; font-size:0.82rem; font-weight:600; cursor:pointer; color:var(--text-muted); transition:background 0.1s,color 0.1s; display:flex;align-items:center;gap:0.4rem; }
+    .view-toggle button.active { background:var(--primary); color:#fff; }
+    .view-toggle button:not(:last-child) { border-right:1px solid var(--border); }
+    /* Calendar styles */
+    .cal-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+    .cal-label { font-size:1.1rem; font-weight:700; }
+    .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+    .cal-dow { text-align:center; font-size:0.72rem; font-weight:700; color:var(--text-muted); padding:0.5rem 0; text-transform:uppercase; }
+    .cal-cell { min-height:68px; border:1px solid var(--border); border-radius:6px; padding:0.35rem 0.45rem; cursor:pointer; background:#fff; transition:background 0.12s; }
+    .cal-cell:hover { background:#f0f9ff; }
+    .cal-cell.empty { background:var(--bg-subtle,#f8fafc); cursor:default; border-color:transparent; }
+    .cal-cell.today { border-color:var(--primary); }
+    .cal-cell.selected { background:var(--primary); }
+    .cal-cell.selected .cal-dn { color:#fff; }
+    .cal-cell.selected .cal-dot { background:rgba(255,255,255,0.8); }
+    .cal-cell.selected .cal-cnt { color:rgba(255,255,255,0.85); }
+    .cal-dn { font-size:0.8rem; font-weight:600; }
+    .cal-dots { display:flex; gap:2px; margin-top:3px; flex-wrap:wrap; }
+    .cal-dot { width:6px; height:6px; border-radius:50%; background:var(--primary); }
+    .cal-dot.full { background:#16a34a; }
+    .cal-cnt { font-size:0.67rem; color:var(--primary); font-weight:600; margin-top:2px; }
+    .cal-layout { display:grid; grid-template-columns:1fr 360px; gap:1.25rem; align-items:start; }
+    @media(max-width:960px){ .cal-layout{ grid-template-columns:1fr; } }
+    .detail-panel { position:sticky; top:1rem; }
+    .shift-card { border:1px solid var(--border); border-radius:10px; padding:1rem; margin-bottom:0.875rem; }
+    .shift-card.full { border-color:#16a34a; }
+    .full-badge { display:inline-flex;align-items:center;gap:0.25rem;background:#dcfce7;color:#15803d;border-radius:20px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:700;margin-left:0.375rem; }
+  </style>
 </head>
 <body>
 <nav id="navbar"></nav>
@@ -15,66 +45,199 @@
   <div class="container">
     <div class="page-header">
       <div class="page-header-row">
-        <div><h1>Upcoming shifts &amp; dates</h1><p class="text-muted">Opportunities with a start date on or after today</p></div>
-        <div style="display:flex;gap:0.75rem">
-          <a href="/admin/opportunities" class="btn btn-secondary">All opportunities</a>
+        <div><h1>Manage Events &amp; Opportunities</h1><p class="text-muted">All volunteer gigs — switch between list and calendar view</p></div>
+        <div style="display:flex;gap:0.75rem;align-items:center">
+          <div class="view-toggle">
+            <button id="btnList" class="active" onclick="switchView('list')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> List
+            </button>
+            <button id="btnCal" onclick="switchView('calendar')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Calendar
+            </button>
+          </div>
           <a href="/admin" class="btn btn-secondary">← Admin Home</a>
         </div>
       </div>
     </div>
-    <div class="card">
-      <div class="table-wrapper">
-        <table>
-          <thead><tr><th>Start date</th><th>Title</th><th>Organization</th><th>Status</th><th></th></tr></thead>
-          <tbody id="tbl"><tr><td colspan="5" class="text-center" style="padding:2rem"><div class="spinner"></div></td></tr></tbody>
-        </table>
+
+    <!-- LIST VIEW -->
+    <div id="listView">
+      <div class="filters mb-4">
+        <div class="filters-row">
+          <div class="filter-group"><label>Status</label><select id="st"><option value="">All</option><option value="open">Open</option><option value="closed">Closed</option><option value="cancelled">Cancelled</option></select></div>
+          <div class="filter-group"><label>Scope</label><select id="scope"><option value="all">All gigs</option><option value="upcoming">Upcoming only</option></select></div>
+          <div class="filter-group" style="flex:1"></div>
+          <button class="btn btn-primary" type="button" onclick="loadList(1)">Refresh</button>
+        </div>
       </div>
-      <div class="card-footer" style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;border-top:1px solid var(--border)">
-        <span class="text-muted" style="font-size:0.85rem" id="pageInfo"></span>
-        <div style="display:flex;gap:0.5rem">
-          <button class="btn btn-sm btn-secondary" type="button" id="prevBtn" onclick="changePage(-1)">Previous</button>
-          <button class="btn btn-sm btn-secondary" type="button" id="nextBtn" onclick="changePage(1)">Next</button>
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Title</th><th>Organization</th><th>Category</th><th>Dates</th><th>Views</th><th>Status</th><th></th></tr></thead>
+            <tbody id="tbl"><tr><td colspan="7" class="text-center" style="padding:2rem"><div class="spinner"></div></td></tr></tbody>
+          </table>
+        </div>
+        <div class="card-footer" style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;border-top:1px solid var(--border)">
+          <span class="text-muted" style="font-size:0.85rem" id="pageInfo"></span>
+          <div style="display:flex;gap:0.5rem">
+            <button class="btn btn-sm btn-secondary" type="button" id="prevBtn" onclick="changeListPage(-1)">Previous</button>
+            <button class="btn btn-sm btn-secondary" type="button" id="nextBtn" onclick="changeListPage(1)">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALENDAR VIEW -->
+    <div id="calView" style="display:none">
+      <div class="cal-layout">
+        <div class="card" style="padding:1.25rem">
+          <div class="cal-nav">
+            <button class="btn btn-secondary btn-sm" onclick="calChangeMonth(-1)">&#8249; Prev</button>
+            <span class="cal-label" id="calMonthLabel"></span>
+            <button class="btn btn-secondary btn-sm" onclick="calChangeMonth(1)">Next &#8250;</button>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+        </div>
+        <div class="card detail-panel" style="padding:1.25rem">
+          <div id="calDetailEmpty" style="text-align:center;padding:2rem 1rem;color:var(--text-muted)">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:block;margin:0 auto 0.75rem;opacity:0.4"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <p style="margin:0;font-size:0.875rem">Click a date to see shifts</p>
+          </div>
+          <div id="calDetailContent" style="display:none">
+            <div id="calDetailDate" style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:1rem"></div>
+            <div id="calDetailShifts"></div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+
 <script src="/js/api.js"></script>
 <script src="/js/nav.js"></script>
 <script src="/js/footer.js"></script>
 <script>
 API.requireAuth('admin');
-let page = 1;
-const limit = 30;
 
-async function load(p) {
-  if (p) page = p;
-  const q = new URLSearchParams({ page: String(page), limit: String(limit), upcoming: 'true' });
-  document.getElementById('tbl').innerHTML = '<tr><td colspan="5" class="text-center" style="padding:2rem"><div class="spinner"></div></td></tr>';
+/* ── View toggle ── */
+let currentView = 'list';
+function switchView(v) {
+  currentView = v;
+  document.getElementById('listView').style.display = v === 'list' ? '' : 'none';
+  document.getElementById('calView').style.display  = v === 'calendar' ? '' : 'none';
+  document.getElementById('btnList').classList.toggle('active', v === 'list');
+  document.getElementById('btnCal').classList.toggle('active', v === 'calendar');
+  if (v === 'calendar' && !calLoaded) loadCal();
+}
+
+/* ── LIST VIEW ── */
+let listPage = 1;
+const listLimit = 25;
+
+async function loadList(p) {
+  if (p) listPage = p;
+  const status = document.getElementById('st').value;
+  const scope  = document.getElementById('scope').value;
+  const q = new URLSearchParams({ page: String(listPage), limit: String(listLimit) });
+  if (status) q.set('status', status);
+  if (scope === 'upcoming') q.set('upcoming', 'true');
+  document.getElementById('tbl').innerHTML = '<tr><td colspan="7" class="text-center" style="padding:2rem"><div class="spinner"></div></td></tr>';
   try {
     const { data } = await API.get(`/admin/gigs?${q}`);
-    document.getElementById('pageInfo').textContent = `Page ${data.page} of ${data.pages || 1} · ${data.total} upcoming`;
+    document.getElementById('pageInfo').textContent = `Page ${data.page} of ${data.pages || 1} · ${data.total} gigs`;
     document.getElementById('prevBtn').disabled = data.page <= 1;
     document.getElementById('nextBtn').disabled = data.page >= (data.pages || 1);
     document.getElementById('tbl').innerHTML = (data.gigs || []).length ? data.gigs.map(g => {
       const org = g.org || {};
+      const cat = (g.category && g.category.name) || '—';
+      const statusClass = g.status === 'open' ? 'badge-success' : g.status === 'closed' ? 'badge-secondary' : 'badge-rejected';
       return `<tr>
-        <td style="font-weight:600">${g.startDate}</td>
-        <td>${g.title}</td>
+        <td style="font-weight:600"><a href="/gigs/${g.id}" style="text-decoration:none;color:inherit">${g.title}</a></td>
         <td>${org.orgName || '—'}</td>
-        <td><span class="badge badge-primary">${g.status}</span></td>
+        <td>${cat}</td>
+        <td style="font-size:0.8rem;color:var(--text-muted)">${g.startDate} → ${g.endDate}</td>
+        <td style="text-align:center;color:var(--text-muted)">${g.viewCount || 0}</td>
+        <td><span class="badge ${statusClass}">${g.status}</span></td>
         <td><a class="btn btn-sm btn-secondary" href="/gigs/${g.id}">View</a></td>
       </tr>`;
-    }).join('') : '<tr><td colspan="5" class="text-center text-muted" style="padding:2rem">No upcoming shifts in this range.</td></tr>';
+    }).join('') : '<tr><td colspan="7" class="text-center text-muted" style="padding:2rem">No gigs found.</td></tr>';
   } catch (e) { Toast.error(e.message); }
 }
 
-function changePage(delta) {
-  page = Math.max(1, page + delta);
-  load();
+function changeListPage(d) { listPage = Math.max(1, listPage + d); loadList(); }
+document.getElementById('st').addEventListener('change', () => { listPage = 1; loadList(); });
+document.getElementById('scope').addEventListener('change', () => { listPage = 1; loadList(); });
+
+/* ── CALENDAR VIEW ── */
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+let calYear = new Date().getFullYear(), calMonth = new Date().getMonth()+1, calData = {}, calSel = null, calLoaded = false;
+
+async function loadCal() {
+  calLoaded = true;
+  document.getElementById('calMonthLabel').textContent = `${MONTHS[calMonth-1]} ${calYear}`;
+  const dow = DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  document.getElementById('calGrid').innerHTML = dow + '<div style="grid-column:1/-1;text-align:center;padding:2rem"><div class="spinner"></div></div>';
+  try {
+    const { data } = await API.get(`/admin/calendar?year=${calYear}&month=${calMonth}`);
+    calData = data.calendar || {};
+    renderCalGrid();
+  } catch(e) { Toast.error('Calendar load failed: '+e.message); }
 }
 
-load(1);
+function renderCalGrid() {
+  const first = new Date(calYear, calMonth-1, 1).getDay();
+  const days = new Date(calYear, calMonth, 0).getDate();
+  const td = new Date(), isToday = d => td.getFullYear()===calYear&&td.getMonth()+1===calMonth&&td.getDate()===d;
+  let html = DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  for (let i=0; i<first; i++) html += '<div class="cal-cell empty"></div>';
+  for (let d=1; d<=days; d++) {
+    const k = `${calYear}-${String(calMonth).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const gigs = calData[k] || [];
+    const vols = gigs.reduce((s,g)=>s+(g.Tasks||[]).length, 0);
+    html += `<div class="cal-cell${isToday(d)?' today':''}${calSel===k?' selected':''}" onclick="calSelectDate('${k}')">
+      <div class="cal-dn">${d}</div>
+      ${gigs.length?`<div class="cal-dots">${gigs.slice(0,4).map(g=>`<div class="cal-dot${g.isFull?' full':''}"></div>`).join('')}</div><div class="cal-cnt">${gigs.length}g·${vols}v</div>`:''}
+    </div>`;
+  }
+  document.getElementById('calGrid').innerHTML = html;
+}
+
+function calSelectDate(k) {
+  calSel = k; renderCalGrid();
+  const gigs = calData[k] || [];
+  document.getElementById('calDetailEmpty').style.display = gigs.length?'none':'';
+  document.getElementById('calDetailContent').style.display = gigs.length?'':'none';
+  if (!gigs.length) return;
+  document.getElementById('calDetailDate').textContent = new Date(k+'T12:00:00').toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  document.getElementById('calDetailShifts').innerHTML = gigs.map(g => {
+    const tasks = g.Tasks || [];
+    const time = g.startTime&&g.endTime?`${g.startTime}–${g.endTime}`:'';
+    const fullBadge = g.isFull ? '<span class="full-badge">✓ Full</span>' : (g.maxVolunteers ? `<span style="font-size:0.7rem;color:var(--text-muted)">${g.acceptedCount}/${g.maxVolunteers}</span>` : '');
+    return `<div class="shift-card${g.isFull?' full':''}">
+      <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.2rem">${g.title}${fullBadge}</div>
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.4rem">${(g.org&&g.org.orgName)||'—'}${time?' · '+time:''}</div>
+      <div style="font-size:0.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.25rem">Volunteers (${tasks.length}${g.maxVolunteers?' / '+g.maxVolunteers:''})</div>
+      ${tasks.length ? tasks.slice(0,5).map(t => {
+        const v = t.volunteer||{}, vp = v.volunteerProfile||{};
+        const nm = [vp.firstName,vp.lastName].filter(Boolean).join(' ')||v.email||'—';
+        return `<div style="font-size:0.8rem;color:var(--text-muted);padding:0.2rem 0">${nm}</div>`;
+      }).join('') : '<div style="font-size:0.82rem;color:var(--text-muted)">No volunteers assigned.</div>'}
+      <div style="margin-top:0.625rem"><a href="/admin/gigs/${g.id}/applicants" class="btn btn-sm btn-secondary">View Applicants</a></div>
+    </div>`;
+  }).join('');
+}
+
+function calChangeMonth(d) {
+  calMonth+=d; if(calMonth>12){calMonth=1;calYear++;} if(calMonth<1){calMonth=12;calYear--;}
+  calSel=null;
+  document.getElementById('calDetailEmpty').style.display='';
+  document.getElementById('calDetailContent').style.display='none';
+  loadCal();
+}
+
+/* Init */
+loadList(1);
 </script>
 </body>
 </html>

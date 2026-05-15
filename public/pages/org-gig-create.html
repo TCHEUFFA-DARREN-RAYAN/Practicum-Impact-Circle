@@ -54,6 +54,11 @@
             <div class="form-hint">Estimated hours per session</div>
             <span class="field-error"></span>
           </div>
+          <div class="form-group">
+            <label for="maxVolunteers">Max Volunteers</label>
+            <input type="number" id="maxVolunteers" min="1" step="1" placeholder="e.g. 10 (optional)">
+            <div class="form-hint">Leave blank for unlimited</div>
+          </div>
         </div>
 
         <div class="form-row">
@@ -321,6 +326,7 @@ document.getElementById('gigForm').addEventListener('submit', async (e) => {
     const todVal = document.getElementById('timeOfDay').value;
     const payload = {
       title, description, categoryId, estimatedHours, startDate, endDate,
+      maxVolunteers: parseInt(document.getElementById('maxVolunteers').value) || null,
       location: { type: locType, address: locType === 'remote' ? '' : document.getElementById('address').value.trim() },
       requiredSkills: skillsList,
       verifiedOnly: document.getElementById('verifiedOnly').checked,

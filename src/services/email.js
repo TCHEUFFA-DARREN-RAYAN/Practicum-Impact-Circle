@@ -122,6 +122,19 @@ const templates = {
     subject: `Reward redeemed: ${rewardName}`,
     html: `<h2>Congratulations, ${name}!</h2><p>You've successfully redeemed <strong>${rewardName}</strong>. Check your dashboard for details.</p>`,
   }),
+  orgUpdatedByAdmin: (orgName, changedFields) => ({
+    subject: 'Your ImpactCircle organization profile has been updated',
+    html: `<h2>Hi ${orgName},</h2>
+      <p>An administrator has updated your organization profile on ImpactCircle.</p>
+      <p><strong>Fields updated:</strong></p>
+      <ul>${changedFields.map(f => `<li>${f}</li>`).join('')}</ul>
+      <p>If you did not request these changes or believe this is an error, please contact our support team.</p>
+      <p style="color:#64748b;font-size:13px;">This is an automated notification from ImpactCircle.</p>`,
+  }),
+  announcement: (title, body) => ({
+    subject: `ImpactCircle Announcement: ${title}`,
+    html: `<h2>${title}</h2><p>${body.replace(/\n/g, '<br>')}</p><p style="color:#64748b;font-size:13px;">This message was sent to you by the ImpactCircle admin team.</p>`,
+  }),
   passwordReset: (resetUrl) => ({
     subject: 'Reset your ImpactCircle password',
     html: `

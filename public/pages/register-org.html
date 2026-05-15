@@ -136,6 +136,26 @@
           <span class="field-error"></span>
         </div>
 
+        <div class="form-row">
+          <div class="form-group">
+            <label for="org_province">Province <span class="required">*</span></label>
+            <select id="org_province">
+              <option value="">Select province…</option>
+              <option>Alberta</option><option>British Columbia</option><option>Manitoba</option>
+              <option>New Brunswick</option><option>Newfoundland and Labrador</option>
+              <option>Northwest Territories</option><option>Nova Scotia</option><option>Nunavut</option>
+              <option>Ontario</option><option>Prince Edward Island</option><option>Quebec</option>
+              <option>Saskatchewan</option><option>Yukon</option>
+            </select>
+            <span class="field-error"></span>
+          </div>
+          <div class="form-group">
+            <label for="org_city">City <span class="required">*</span></label>
+            <input type="text" id="org_city" placeholder="e.g. Moncton">
+            <span class="field-error"></span>
+          </div>
+        </div>
+
         <div class="form-group">
           <label>Impact Categories <span class="text-muted" style="font-weight:400;font-size:0.8rem">(Select all that apply)</span></label>
           <div class="tags-input" id="orgCatWrapper">
@@ -361,6 +381,8 @@
         contactEmail:     document.getElementById('email').value.trim(),
         contactPhone:     document.getElementById('phone').value.trim(),
         address:          document.getElementById('address').value.trim(),
+        province:         document.getElementById('org_province').value || undefined,
+        city:             document.getElementById('org_city').value.trim() || undefined,
         website:          document.getElementById('website').value.trim() || undefined,
         categories:       orgCatList.slice(),
       };

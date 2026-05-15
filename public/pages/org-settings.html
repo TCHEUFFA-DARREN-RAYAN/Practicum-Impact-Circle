@@ -93,6 +93,20 @@
               <div class="form-group"><label>Contact Phone</label><input type="tel" id="oPhone"></div>
               <div class="form-group"><label>Website</label><input type="url" id="oWebsite" placeholder="https://"></div>
             </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Province</label>
+                <select id="oProvince">
+                  <option value="">Select province…</option>
+                  <option>Alberta</option><option>British Columbia</option><option>Manitoba</option>
+                  <option>New Brunswick</option><option>Newfoundland and Labrador</option>
+                  <option>Northwest Territories</option><option>Nova Scotia</option><option>Nunavut</option>
+                  <option>Ontario</option><option>Prince Edward Island</option><option>Quebec</option>
+                  <option>Saskatchewan</option><option>Yukon</option>
+                </select>
+              </div>
+              <div class="form-group"><label>City</label><input type="text" id="oCity" placeholder="e.g. Moncton"></div>
+            </div>
             <div class="form-group"><label>Mission Statement</label><textarea id="oMission" rows="4" placeholder="Describe your organization's mission..."></textarea></div>
             <div class="save-bar">
               <button class="btn btn-secondary" onclick="loadOrgInfo()">Reset</button>
@@ -139,6 +153,8 @@ async function loadOrgInfo() {
     document.getElementById('oPhone').value = (org && org.contactPhone) || '';
     document.getElementById('oWebsite').value = (org && org.website) || '';
     document.getElementById('oMission').value = (org && org.missionStatement) || '';
+    document.getElementById('oProvince').value = (org && org.province) || '';
+    document.getElementById('oCity').value = (org && org.city) || '';
   } catch(e) { Toast.error('Failed to load: '+e.message); }
 }
 
@@ -216,6 +232,8 @@ async function saveOrgInfo() {
       contactPhone: phone,
       website,
       missionStatement: document.getElementById('oMission').value.trim(),
+      province: document.getElementById('oProvince').value || undefined,
+      city: document.getElementById('oCity').value.trim() || undefined,
     });
     document.getElementById('orgAlert').innerHTML='<div class="alert alert-success">Organization info saved.</div>';
   } catch(e) { document.getElementById('orgAlert').innerHTML=`<div class="alert alert-danger">${e.message}</div>`; }
