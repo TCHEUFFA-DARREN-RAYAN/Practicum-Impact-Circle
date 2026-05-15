@@ -53,6 +53,21 @@ const COLUMN_MIGRATIONS = [
     column: 'bio',
     ddl: 'ALTER TABLE `VolunteerProfiles` ADD COLUMN `bio` TEXT NULL',
   },
+  {
+    table: 'Tasks',
+    column: 'orgRating',
+    ddl: 'ALTER TABLE `Tasks` ADD COLUMN `orgRating` INT NULL',
+  },
+  {
+    table: 'Tasks',
+    column: 'orgFeedback',
+    ddl: 'ALTER TABLE `Tasks` ADD COLUMN `orgFeedback` TEXT NULL',
+  },
+  {
+    table: 'Tasks',
+    column: 'attendedAt',
+    ddl: 'ALTER TABLE `Tasks` ADD COLUMN `attendedAt` DATETIME NULL',
+  },
 ];
 
 async function assertUserResetColumns(sequelize) {

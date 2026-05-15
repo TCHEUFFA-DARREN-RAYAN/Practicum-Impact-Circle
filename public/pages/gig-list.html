@@ -7,17 +7,40 @@
   <link rel="stylesheet" href="/css/base.css">
   <style>
     .gig-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; }
-    .gig-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; padding-top: 0.875rem; border-top: 1px solid var(--border); }
+    .page-content .gig-card {
+      overflow: hidden;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .gig-card-media {
+      height: 132px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, #eaf4ff 0%, #e0f2fe 100%);
+    }
+    .gig-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .gig-card-body { padding: 1.15rem 1.25rem 0; flex: 1; display: flex; flex-direction: column; }
+    .gig-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+      padding: 0.875rem 1.25rem 1.15rem;
+      border-top: 1px solid var(--border);
+    }
     .pagination { display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin-top: 2rem; }
     .pagination-info { font-size: 0.85rem; color: var(--text-muted); }
-    .cat-pill-1  { background: #dbeafe; color: #1e40af; }
-    .cat-pill-2  { background: #dcfce7; color: #16a34a; }
-    .cat-pill-3  { background: #fef3c7; color: #d97706; }
-    .cat-pill-4  { background: #fce7f3; color: #be185d; }
-    .cat-pill-5  { background: #e0e7ff; color: #4338ca; }
-    .cat-pill-6  { background: #e0f2fe; color: #0284c7; }
-    .cat-pill-7  { background: #f0fdf4; color: #15803d; }
-    .cat-pill-8  { background: #fff7ed; color: #c2410c; }
+    .cat-pill { border-radius: 999px; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.65rem; }
+    .cat-pill-1  { background: #e6f0ff; color: #0066ff; }
+    .cat-pill-2  { background: #effff6; color: #00a344; }
+    .cat-pill-3  { background: #fff9d6; color: #8a6a00; }
+    .cat-pill-4  { background: #f3e8ff; color: #7e22ce; }
+    .cat-pill-5  { background: #e0f7fa; color: #0e7490; }
+    .cat-pill-6  { background: #e6f0ff; color: #0066ff; }
+    .cat-pill-7  { background: #dcfce7; color: #166534; }
+    .cat-pill-8  { background: #fff1e0; color: #c2410c; }
     .search-wrap { flex: 1; min-width: 180px; }
     @media (max-width: 600px) {
       .gig-grid { grid-template-columns: 1fr; }
@@ -213,6 +236,21 @@
     return params.toString();
   }
 
+  function gigPlaceholderImage(catName) {
+    const s = String(catName || '').toLowerCase();
+    const base = 'https://images.unsplash.com/photo-';
+    const q = '?w=800&h=480&fit=crop&auto=format&q=80';
+    if (/food|nutrition|hunger|meal/.test(s)) return base + '1488521787991-ed7bbaae773c' + q;
+    if (/environment|climate|nature|garden|green|planet|earth/.test(s)) return base + '1441974231531-c6227db76b6e' + q;
+    if (/youth|child|student|school|education|tutor|learn/.test(s)) return base + '1527525443983-6e60c75fff46' + q;
+    if (/senior|elder|aging|older/.test(s)) return base + '1573496359142-b8d87734a5a2' + q;
+    if (/newcomer|immigrant|cultural|integration|refugee/.test(s)) return base + '1529156069898-49953e39b3ac' + q;
+    if (/women|woman|gender/.test(s)) return base + '1573497620053-ea30e8c2ccc8' + q;
+    if (/shelter|housing|home/.test(s)) return base + '1560518883-ce09059eeffa' + q;
+    if (/health|medical|wellness|care/.test(s)) return base + '1576091160399-112ba8d25d1d' + q;
+    return base + '1559027615-cd4628902d4a' + q;
+  }
+
   // ── Render Gig Card ────────────────────────────────────────────────────────
   function renderGigCard(gig) {
     const catName = gig.category?.name || 'General';
@@ -234,8 +272,15 @@
     const hours = gig.estimatedHours || gig.hoursRequired;
     const lockBadge = gig.verifiedOnly ? `<span class="verified-lock">Verified Only</span>` : '';
 
+    const safeAlt = String(catName).replace(/"/g, '');
+    const imgSrc = gigPlaceholderImage(catName);
+
     return `
       <div class="gig-card" onclick="goToGig('${gig.id}')">
+        <div class="gig-card-media">
+          <img src="${imgSrc}" alt="${safeAlt} volunteering" loading="lazy" width="400" height="210">
+        </div>
+        <div class="gig-card-body">
         <div class="gig-card-top">
           <div style="flex:1;min-width:0">
             <div class="gig-title truncate">${gig.title}</div>
@@ -258,6 +303,7 @@
           <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();goToGig('${gig.id}')">
             ${_viewOnly ? 'View &rarr;' : 'View &amp; Apply &rarr;'}
           </button>
+        </div>
         </div>
       </div>
     `;

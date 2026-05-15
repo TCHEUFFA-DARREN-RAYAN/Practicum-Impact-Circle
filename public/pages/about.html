@@ -16,18 +16,60 @@
       position: absolute; inset: 0;
       background-image: url('https://images.unsplash.com/photo-1593113598332-cd288d649433?w=1400&fit=crop&auto=format&q=80');
       background-size: cover; background-position: center 30%;
-      filter: brightness(0.45);
+      filter: brightness(0.38) contrast(1.05);
+      transform: scale(1.02);
     }
-    .ph-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.42); }
+    /* Stronger scrim so white type stays readable on busy photos (WCAG-minded) */
+    .ph-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(7, 26, 61, 0.72) 0%,
+        rgba(7, 26, 61, 0.58) 42%,
+        rgba(7, 26, 61, 0.68) 100%
+      );
+      box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.35);
+    }
     .ph-content {
       position: relative; z-index: 1;
       padding: calc(var(--nav-height) + 3rem) 1.5rem 4.5rem;
       width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
     }
-    .ph-content h1 { font-size: clamp(1.9rem,4vw,2.75rem); font-weight: 800; color: white; margin-bottom: 0.75rem; }
-    .ph-content p { font-size: 1.1rem; opacity: 0.92; max-width: 580px; margin: 0 auto; }
+    .ph-content h1 {
+      font-family: 'Poppins', 'Inter', sans-serif;
+      font-size: clamp(2rem, 4.5vw, 2.875rem);
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 0.875rem;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      text-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.55),
+        0 4px 24px rgba(7, 26, 61, 0.65);
+    }
+    .ph-content p {
+      font-size: 1.0625rem;
+      line-height: 1.65;
+      color: rgba(255, 255, 255, 0.96);
+      max-width: 580px;
+      margin: 0 auto;
+      text-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.65),
+        0 2px 20px rgba(7, 26, 61, 0.55);
+    }
     .ph-wave {
-      position: absolute; bottom: -1px; left: 0; right: 0; z-index: 2;
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
+      height: clamp(48px, 9vw, 80px);
+      pointer-events: none;
+      background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.45) 45%,
+        rgba(255, 255, 255, 0.97) 88%,
+        #ffffff 100%
+      );
     }
 
     /* ── Content sections ── */
@@ -115,11 +157,7 @@
     <h1>About ImpactCircle</h1>
     <p>We believe every person has something meaningful to give. Our platform turns that belief into action — connecting volunteers and organizations across Greater Moncton.</p>
   </div>
-  <div class="ph-wave">
-    <svg viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <path fill="#ffffff" d="M0,58 C480,128 960,-28 1440,52 L1440,120 L0,120 Z"/>
-    </svg>
-  </div>
+  <div class="ph-wave" aria-hidden="true"></div>
 </div>
 
 <main>
@@ -216,7 +254,7 @@
           <img src="https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=400&h=400&fit=crop&auto=format&q=80" alt="Group of volunteers smiling" loading="lazy">
         </div>
         <div class="team-photo-item">
-          <img src="https://images.unsplash.com/photo-1571425046056-78a1cab4be01?w=400&h=400&fit=crop&auto=format&q=80" alt="Community garden volunteers" loading="lazy">
+          <img src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=400&fit=crop&auto=format&q=80" alt="Community garden volunteers" loading="lazy">
         </div>
       </div>
     </div>

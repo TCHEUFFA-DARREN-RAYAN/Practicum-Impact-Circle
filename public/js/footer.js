@@ -9,17 +9,17 @@
       s.textContent = `
         .dashboard-footer {
           margin-left: var(--sidebar-width, 240px);
-          background: #f1f5f9;
-          border-top: 1px solid #e2e8f0;
+          background: var(--color-navy, #071a3d);
+          border-top: 1px solid rgba(255,255,255,0.08);
           padding: 0.875rem 1.5rem;
           text-align: center;
           font-size: 0.78rem;
-          color: #94a3b8;
+          color: #cbd5e1;
           letter-spacing: 0.01em;
           transition: margin-left 0.3s ease;
         }
         .dashboard-footer .df-brand {
-          color: #1e40af;
+          color: #ffd600;
           font-weight: 600;
         }
         .has-sidebar.sidebar-collapsed .dashboard-footer {
@@ -44,8 +44,8 @@
     s.id = 'gf-css';
     s.textContent = `
       .global-footer {
-        background: #111111;
-        color: rgba(255,255,255,0.5);
+        background: #071a3d;
+        color: rgba(255,255,255,0.65);
         padding: 4rem 0 1.75rem;
         margin-top: auto;
       }
@@ -65,7 +65,7 @@
         .gf-grid { grid-template-columns: 1fr; }
       }
       .gf-logo { height: 80px; width: auto; display: block; margin-bottom: 0.875rem; object-fit: contain; }
-      .gf-brand-desc { font-size: 0.8125rem; line-height: 1.65; max-width: 240px; color: rgba(255,255,255,0.45); }
+      .gf-brand-desc { font-size: 0.8125rem; line-height: 1.65; max-width: 240px; color: #cbd5e1; }
       .gf-social { display: flex; gap: 0.625rem; margin-top: 1.25rem; }
       .gf-social a {
         width: 34px; height: 34px; background: rgba(255,255,255,0.07); border-radius: 8px;
@@ -73,16 +73,16 @@
         color: rgba(255,255,255,0.55); text-decoration: none; font-size: 0.8rem; font-weight: 700;
         transition: background 0.15s, color 0.15s;
       }
-      .gf-social a:hover { background: #0EA5E9; color: white; text-decoration: none; }
+      .gf-social a:hover { background: #0066ff; color: white; text-decoration: none; }
       .gf-col h4 {
         color: white; font-size: 0.875rem; font-weight: 700;
         margin-bottom: 1.1rem; margin-top: 0;
       }
       .gf-col a {
-        display: block; color: rgba(255,255,255,0.5); font-size: 0.825rem;
+        display: block; color: #cbd5e1; font-size: 0.825rem;
         padding: 0.3rem 0; text-decoration: none; transition: color 0.15s;
       }
-      .gf-col a:hover { color: white; text-decoration: none; }
+      .gf-col a:hover { color: #ffd600; text-decoration: none; }
       .gf-bottom {
         border-top: 1px solid rgba(255,255,255,0.08);
         padding-top: 1.5rem; text-align: center; font-size: 0.8125rem;

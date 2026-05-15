@@ -17,14 +17,48 @@
       background-size: cover; background-position: center 50%;
       filter: brightness(0.4);
     }
-    .ph-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.42); }
+    .ph-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        155deg,
+        rgba(7, 26, 61, 0.58) 0%,
+        rgba(0, 102, 255, 0.42) 38%,
+        rgba(0, 184, 217, 0.28) 62%,
+        rgba(255, 138, 0, 0.22) 100%
+      );
+    }
     .ph-content {
       position: relative; z-index: 1;
       padding: calc(var(--nav-height) + 2.5rem) 1.5rem 4rem; width: 100%;
     }
-    .ph-content h1 { font-size: clamp(1.7rem,4vw,2.5rem); font-weight: 800; color: white; margin-bottom: 0.6rem; }
-    .ph-content p { font-size: 1rem; opacity: 0.92; max-width: 540px; margin: 0 auto; }
-    .ph-wave { position: absolute; bottom: -1px; left: 0; right: 0; z-index: 2; }
+    .ph-content h1 {
+      font-family: 'Poppins', 'Inter', sans-serif;
+      font-size: clamp(2.25rem, 4.5vw, 2.75rem);
+      font-weight: 700;
+      color: white;
+      margin-bottom: 0.6rem;
+      text-shadow: 0 2px 24px rgba(7, 26, 61, 0.35);
+    }
+    .ph-content p {
+      font-size: 1.0625rem;
+      line-height: 1.65;
+      color: rgba(255, 255, 255, 0.95);
+      max-width: 540px;
+      margin: 0 auto;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), 0 2px 18px rgba(7, 26, 61, 0.45);
+    }
+    .ph-wave { position: absolute; bottom: 0; left: 0; right: 0; z-index: 2; }
+    /* Seam into white listing area (overrides global ice fade for this page) */
+    .page-hero .ph-wave {
+      background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.35) 38%,
+        rgba(255, 255, 255, 0.95) 82%,
+        #ffffff 100%
+      );
+    }
+    main { background: var(--surface); }
 
     .shifts-section { padding: 2.5rem 0 4.5rem; }
     .filters-bar {
@@ -37,26 +71,51 @@
       gap: 1.25rem;
     }
     .shift-card {
-      background: white; border: 1px solid #e5e7eb;
-      border-radius: 14px; padding: 1.5rem;
-      transition: all 0.15s; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      background: var(--surface);
+      border: 1px solid rgba(0, 102, 255, 0.08);
+      border-radius: var(--radius-lg);
+      padding: 0;
+      overflow: hidden;
+      transition: box-shadow 0.2s, transform 0.2s;
+      box-shadow: var(--shadow-card);
     }
-    .shift-card:hover { box-shadow: 0 6px 20px rgba(14,165,233,0.12); transform: translateY(-2px); }
+    .shift-card-media {
+      height: 140px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #eaf4ff 0%, #e0f2fe 100%);
+    }
+    .shift-card-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .shift-card-body { padding: 1.25rem 1.5rem 1.5rem; }
+    .filters-bar .btn.btn-primary {
+      background: #0066ff;
+      border-color: #0066ff;
+      flex-shrink: 0;
+    }
+    .shift-card:hover {
+      box-shadow: 0 16px 40px rgba(7, 26, 61, 0.1);
+      transform: translateY(-2px);
+    }
     .shift-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
-    .badge { display: inline-flex; align-items: center; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: #EFF6FF; color: #0284C7; }
-    .badge-inperson { background: #DCFCE7; color: #16A34A; }
-    .badge-remote { background: #EDE9FE; color: #7C3AED; }
-    .badge-morning { background: #fef9c3; color: #854d0e; }
-    .badge-afternoon { background: #ffedd5; color: #9a3412; }
-    .badge-evening { background: #ede9fe; color: #5b21b6; }
-    .badge-hours { background: #e0f2fe; color: #0369a1; }
-    .shift-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.35rem; }
-    .shift-card .org-name { font-size: 0.825rem; color: #666; margin-bottom: 0.5rem; }
-    .shift-detail { font-size: 0.825rem; color: #666; display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.25rem; }
+    .shift-card-body .shift-meta { margin-top: 0; }
+    .badge { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 999px; font-size: 0.8125rem; font-weight: 700; background: var(--primary-light); color: var(--primary); }
+    .badge-inperson { background: var(--color-soft-green); color: #00a344; }
+    .badge-remote { background: #f3e8ff; color: var(--color-purple); }
+    .badge-morning { background: var(--color-soft-yellow); color: #8a6a00; }
+    .badge-afternoon { background: #fff1e0; color: #c2410c; }
+    .badge-evening { background: #e0f7fa; color: #00838f; }
+    .badge-hours { background: var(--primary-light); color: var(--primary); }
+    .shift-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.35rem; color: var(--color-navy); }
+    .shift-card .org-name { font-size: 0.825rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .shift-detail { font-size: 0.825rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.25rem; }
     .shift-detail svg { flex-shrink: 0; }
     .shift-actions { margin-top: 1rem; display: flex; gap: 0.5rem; }
-    #shifts-loading { text-align: center; padding: 4rem; color: #666; }
-    #shifts-empty { display:none; text-align:center; padding: 4rem; color: #666; }
+    #shifts-loading { text-align: center; padding: 4rem; color: var(--text-muted); }
+    #shifts-empty { display:none; text-align:center; padding: 4rem; color: var(--text-muted); }
     .pagination { display: flex; gap: 0.5rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap; }
   </style>
 </head>
@@ -70,11 +129,7 @@
     <h1>Upcoming Volunteer Shifts</h1>
     <p>Browse available opportunities and find the perfect match for your schedule and interests.</p>
   </div>
-  <div class="ph-wave">
-    <svg viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <path fill="#ffffff" d="M0,58 C480,128 960,-28 1440,52 L1440,120 L0,120 Z"/>
-    </svg>
-  </div>
+  <div class="ph-wave" aria-hidden="true"></div>
 </div>
 
 <main>
@@ -120,6 +175,23 @@
 <script>
   let currentPage = 1;
   const params = new URLSearchParams(window.location.search);
+
+  /** Stock photo by category name when gigs have no image field */
+  function gigPlaceholderImage(catName) {
+    const s = String(catName || '').toLowerCase();
+    const u = 'https://images.unsplash.com/photo-';
+    const q = '?w=800&h=480&fit=crop&auto=format&q=80';
+    if (/food|nutrition|hunger|meal/.test(s)) return u + '1488521787991-ed7bbaae773c' + q;
+    if (/environment|climate|nature|garden|green|planet|earth/.test(s)) return u + '1441974231531-c6227db76b6e' + q;
+    if (/youth|child|student|school|education|tutor|learn/.test(s)) return u + '1527525443983-6e60c75fff46' + q;
+    if (/senior|elder|aging|older/.test(s)) return u + '1573496359142-b8d87734a5a2' + q;
+    if (/newcomer|immigrant|cultural|integration|refugee/.test(s)) return u + '1529156069898-49953e39b3ac' + q;
+    if (/women|woman|gender/.test(s)) return u + '1573497620053-ea30e8c2ccc8' + q;
+    if (/shelter|housing|home/.test(s)) return u + '1560518883-ce09059eeffa' + q;
+    if (/health|medical|wellness|care/.test(s)) return u + '1576091160399-112ba8d25d1d' + q;
+    if (/volunteer|community|coordination/.test(s)) return u + '1559027615-cd4628902d4a' + q;
+    return u + '1559027615-cd4628902d4a' + q;
+  }
 
   async function loadCategories() {
     try {
@@ -192,8 +264,15 @@
           ? g.endTime ? `${g.startTime} – ${g.endTime}` : g.startTime
           : null;
 
+        const imgSrc = gigPlaceholderImage(cname);
+        const imgAlt = esc(`${cname || 'Volunteer'} opportunity`.trim());
+
         return `
         <div class="shift-card">
+          <div class="shift-card-media">
+            <img src="${imgSrc}" alt="${imgAlt}" loading="lazy" width="400" height="210">
+          </div>
+          <div class="shift-card-body">
           <div class="shift-meta">
             ${cname ? `<span class="badge">${esc(cname)}</span>` : ''}
             ${tod ? `<span class="badge ${tod[0]}">${tod[1]}</span>` : ''}
@@ -221,6 +300,7 @@
           </div>
           <div class="shift-actions">
             <a href="/gigs/${g.id}" class="btn btn-primary btn-sm">View Details</a>
+          </div>
           </div>
         </div>`;
       }).join('');

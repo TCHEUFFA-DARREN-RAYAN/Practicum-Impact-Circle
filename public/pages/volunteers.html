@@ -15,16 +15,52 @@
       position: absolute; inset: 0;
       background-image: url('https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=1400&fit=crop&auto=format&q=80');
       background-size: cover; background-position: center 35%;
-      filter: brightness(0.4);
+      filter: brightness(0.38) contrast(1.05);
     }
-    .ph-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.42); }
+    .ph-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(7, 26, 61, 0.72) 0%,
+        rgba(7, 26, 61, 0.58) 45%,
+        rgba(7, 26, 61, 0.68) 100%
+      );
+      box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.35);
+    }
     .ph-content {
       position: relative; z-index: 1;
       padding: calc(var(--nav-height) + 3rem) 1.5rem 4.5rem; width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
     }
-    .ph-content h1 { font-size: clamp(1.9rem,4vw,2.75rem); font-weight: 800; color: white; margin-bottom: 0.75rem; }
-    .ph-content p { font-size: 1.1rem; opacity: 0.92; max-width: 580px; margin: 0 auto; }
-    .ph-wave { position: absolute; bottom: -1px; left: 0; right: 0; z-index: 2; }
+    .ph-content h1 {
+      font-family: 'Poppins', 'Inter', sans-serif;
+      font-size: clamp(2rem, 4vw, 2.75rem);
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 0.75rem;
+      text-shadow: 0 2px 24px rgba(7, 26, 61, 0.4);
+    }
+    .ph-content p {
+      font-size: 1.0625rem;
+      line-height: 1.65;
+      color: rgba(255, 255, 255, 0.95);
+      max-width: 580px;
+      margin: 0 auto;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), 0 2px 18px rgba(7, 26, 61, 0.45);
+    }
+    .ph-wave {
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
+      height: clamp(48px, 9vw, 80px);
+      pointer-events: none;
+      background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.45) 45%,
+        rgba(255, 255, 255, 0.97) 88%,
+        #f2f8ff 100%
+      );
+    }
 
     .vol-section { padding: 3.5rem 0; }
     .section-label {
@@ -69,17 +105,45 @@
       margin: 2.5rem 0 0;
     }
     @media (max-width: 540px) { .photo-band { grid-template-columns: 1fr 1fr; } }
-    .photo-band-item { border-radius: 12px; overflow: hidden; aspect-ratio: 3/2; }
+    .photo-band-item { border-radius: 16px; overflow: hidden; aspect-ratio: 3/2; box-shadow: 0 12px 30px rgba(7, 26, 61, 0.08); border: 1px solid rgba(0, 102, 255, 0.08); }
     .photo-band-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
     .photo-band-item:hover img { transform: scale(1.04); }
 
     .testimonial-strip {
-      background: #F0F9FF; border-radius: 18px; padding: 2.5rem;
-      display: flex; gap: 1.5rem; align-items: flex-start;
+      background: #ffffff;
+      border-radius: 24px;
+      padding: 2rem 2.25rem;
+      border: 1px solid rgba(0, 102, 255, 0.1);
+      box-shadow: 0 12px 30px rgba(7, 26, 61, 0.08);
+      display: flex;
+      gap: 1.25rem;
+      align-items: flex-start;
     }
-    .testimonial-strip .quote-icon { font-size: 2.5rem; line-height: 1; color: #BAE6FD; flex-shrink: 0; margin-top: -6px; }
-    .testimonial-strip blockquote { margin: 0; font-size: 1.05rem; line-height: 1.75; color: #334155; font-style: italic; }
-    .testimonial-strip cite { display: block; margin-top: 0.75rem; font-style: normal; font-weight: 700; color: #0284C7; font-size: 0.9rem; }
+    .testimonial-strip .quote-icon {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 2.75rem;
+      line-height: 1;
+      color: #0066ff;
+      opacity: 0.35;
+      flex-shrink: 0;
+      margin-top: -4px;
+    }
+    .testimonial-strip blockquote {
+      margin: 0;
+      font-size: 1.0625rem;
+      line-height: 1.7;
+      color: #334155;
+      font-style: normal;
+      font-weight: 500;
+    }
+    .testimonial-strip cite {
+      display: block;
+      margin-top: 1rem;
+      font-style: normal;
+      font-weight: 700;
+      color: #0066ff;
+      font-size: 0.875rem;
+    }
 
     .divider { border: none; border-top: 1px solid #e5e7eb; margin: 0; }
 
@@ -107,11 +171,7 @@
     <h1>Become a Volunteer</h1>
     <p>Thousands of people in Greater Moncton give their time every week. Join them, find your cause, and make your contribution count.</p>
   </div>
-  <div class="ph-wave">
-    <svg viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <path fill="#ffffff" d="M0,58 C480,128 960,-28 1440,52 L1440,120 L0,120 Z"/>
-    </svg>
-  </div>
+  <div class="ph-wave" aria-hidden="true"></div>
 </div>
 
 <main>
@@ -138,7 +198,7 @@
   <section class="vol-section" style="background:#F8FAFC; padding-top:3rem;">
     <div class="container">
       <h2 class="section-title" style="text-align:center;">Everything you need to volunteer with confidence</h2>
-      <p style="text-align:center; color:#666; max-width:520px; margin:0 auto 0;">From finding the right fit to logging your hours, ImpactCircle handles the logistics so you can focus on the work that matters.</p>
+      <p style="text-align:center; color:#334155; max-width:520px; margin:0 auto 0;">From finding the right fit to logging your hours, ImpactCircle handles the logistics so you can focus on the work that matters.</p>
       <div class="benefits-grid">
         <div class="benefit-card">
           <div class="benefit-icon">
@@ -190,13 +250,13 @@
   <section class="vol-section">
     <div class="container">
       <h2 class="section-title" style="text-align:center; margin-bottom:0.25rem;">Volunteers in action</h2>
-      <p style="text-align:center; color:#666; margin-bottom:0;">Real people, real shifts, real impact happening across our community right now.</p>
+      <p style="text-align:center; color:#334155; margin-bottom:0;">Real people, real shifts, real impact happening across our community right now.</p>
       <div class="photo-band">
         <div class="photo-band-item">
           <img src="https://images.unsplash.com/photo-1593113598332-cd288d649433?w=600&h=400&fit=crop&auto=format&q=80" alt="Volunteers at a food drive" loading="lazy">
         </div>
         <div class="photo-band-item">
-          <img src="https://images.unsplash.com/photo-1571425046056-78a1cab4be01?w=600&h=400&fit=crop&auto=format&q=80" alt="Community garden volunteers" loading="lazy">
+          <img src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&h=400&fit=crop&auto=format&q=80" alt="Volunteers working in a community garden" loading="lazy">
         </div>
         <div class="photo-band-item">
           <img src="https://images.unsplash.com/photo-1527525443983-6e60c75fff46?w=600&h=400&fit=crop&auto=format&q=80" alt="Youth mentoring volunteer session" loading="lazy">

@@ -1,0 +1,19 @@
+# Local MySQL for ImpactCircle — run: docker compose up -d
+# Then set DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS in .env to match below.
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: impactcircle_root_dev
+      MYSQL_DATABASE: impactcircle
+      MYSQL_USER: impactcircle
+      MYSQL_PASSWORD: impactcircle_dev
+    ports:
+      - "3306:3306"
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - impactcircle_mysql_data:/var/lib/mysql
+
+volumes:
+  impactcircle_mysql_data:
