@@ -32,10 +32,10 @@
     .cal-dots { display:flex; gap:2px; margin-top:4px; flex-wrap:wrap; }
     .cal-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
     /* Status-coded dot colors */
-    .cal-dot.dot-active   { background:#0066ff; }   /* upcoming / in progress */
-    .cal-dot.dot-pending  { background:#ff8a00; }   /* pending org approval */
-    .cal-dot.dot-approved { background:#00a344; }   /* completed & approved */
-    .cal-dot.dot-rejected { background:#ff4f6d; }   /* rejected */
+    .cal-dot.dot-active   { background:#0066ff; }
+    .cal-dot.dot-pending  { background:#ff8a00; }
+    .cal-dot.dot-approved { background:#00a344; }
+    .cal-dot.dot-rejected { background:#ff4f6d; }
     .cal-cnt { font-size:0.65rem; color:var(--primary); font-weight:700; margin-top:2px; }
 
     /* ── Legend ── */
@@ -50,6 +50,39 @@
 
     /* ── Detail panel ── */
     .detail-panel { position:sticky; top:1rem; }
+
+    /* ── Mobile detail drawer ── */
+    .detail-drawer {
+      display:none;
+      position:fixed; inset:0; z-index:400;
+    }
+    .detail-drawer.open { display:flex; flex-direction:column; }
+    .drawer-backdrop {
+      position:absolute; inset:0; background:rgba(7,26,61,0.45);
+    }
+    .drawer-sheet {
+      position:absolute; bottom:0; left:0; right:0;
+      background:#fff; border-radius:20px 20px 0 0;
+      padding:1.25rem 1rem 2rem;
+      max-height:82vh; display:flex; flex-direction:column;
+      box-shadow:0 -8px 32px rgba(7,26,61,0.14);
+    }
+    .drawer-handle {
+      width:40px; height:4px; border-radius:2px;
+      background:#cbd5e1; margin:0 auto 1rem; flex-shrink:0;
+    }
+    .drawer-header {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:0.875rem; flex-shrink:0;
+    }
+    .drawer-date { font-size:1rem; font-weight:700; color:var(--color-navy); }
+    .drawer-close {
+      width:32px; height:32px; border-radius:50%; border:none;
+      background:#f1f5f9; color:var(--text-muted); cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      font-size:1rem; line-height:1; flex-shrink:0;
+    }
+    .drawer-body { overflow-y:auto; flex:1; }
 
     /* ── Shift cards in detail ── */
     .shift-card {
@@ -78,6 +111,25 @@
     /* ── Empty states ── */
     .empty-panel { text-align:center; padding:2.5rem 1rem; color:var(--text-muted); }
     .empty-page  { text-align:center; padding:4rem 1rem; color:var(--text-muted); }
+
+    /* ── Mobile tweaks ── */
+    @media(max-width:600px) {
+      .cal-cell { min-height:52px; padding:0.25rem 0.3rem; border-radius:5px; }
+      .cal-dn   { font-size:0.75rem; }
+      .cal-cnt  { display:none; }       /* hide "N gigs" count, dots suffice */
+      .cal-dot  { width:6px; height:6px; }
+      .cal-nav  { gap:0.5rem; }
+      .cal-label { font-size:0.95rem; }
+      .cal-legend { gap:0.625rem; padding:0.5rem 0.75rem; }
+      .legend-item { font-size:0.68rem; }
+      /* On mobile the sidebar detail panel is replaced by the drawer */
+      .detail-panel { display:none; }
+    }
+
+    @media(min-width:601px) {
+      /* Drawer is never shown on desktop */
+      .detail-drawer { display:none !important; }
+    }
   </style>
 </head>
 <body>
@@ -85,13 +137,26 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <aside id="sidebar" class="sidebar"></aside>
 
+<!-- Mobile bottom drawer -->
+<div class="detail-drawer" id="mobileDrawer" role="dialog" aria-modal="true" aria-label="Shift details">
+  <div class="drawer-backdrop" onclick="closeDrawer()"></div>
+  <div class="drawer-sheet">
+    <div class="drawer-handle"></div>
+    <div class="drawer-header">
+      <div class="drawer-date" id="drawerDate"></div>
+      <button class="drawer-close" onclick="closeDrawer()" aria-label="Close">&#x2715;</button>
+    </div>
+    <div class="drawer-body" id="drawerShifts"></div>
+  </div>
+</div>
+
 <div class="page-content">
   <div class="container">
     <div class="page-header">
       <div class="page-header-row">
         <div>
           <h1>My Schedule</h1>
-          <p class="text-muted">Click any date to see your assigned and completed gigs</p>
+          <p class="text-muted">Tap a date to see your assigned and completed gigs</p>
         </div>
         <a href="/gigs" class="btn btn-primary">Find More Gigs</a>
       </div>
@@ -216,21 +281,43 @@ function renderGrid(calData) {
   document.getElementById('calGrid').innerHTML = html;
 }
 
-/* ── Detail panel ── */
+function closeDrawer() {
+  document.getElementById('mobileDrawer').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ── Detail panel / drawer ── */
 function selectDate(k) {
   sel = k;
   const calData = buildCalData(allTasks, year, month);
   renderGrid(calData);
 
   const list = calData[k] || [];
+  const dateLabel = new Date(k + 'T12:00:00')
+    .toLocaleDateString('en-CA', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+  const shiftsHtml = buildShiftsHtml(list, dateLabel);
+
+  const isMobile = window.innerWidth <= 600;
+  if (isMobile) {
+    if (!list.length) return;
+    document.getElementById('drawerDate').textContent = dateLabel;
+    document.getElementById('drawerShifts').innerHTML = shiftsHtml;
+    document.getElementById('mobileDrawer').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    return;
+  }
+
+  /* Desktop: update right panel */
   document.getElementById('detailEmpty').style.display   = list.length ? 'none' : '';
   document.getElementById('detailContent').style.display = list.length ? '' : 'none';
   if (!list.length) return;
+  document.getElementById('detailDate').textContent = dateLabel;
+  document.getElementById('detailShifts').innerHTML = shiftsHtml;
+}
 
-  document.getElementById('detailDate').textContent =
-    new Date(k + 'T12:00:00').toLocaleDateString('en-CA', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
-
-  document.getElementById('detailShifts').innerHTML = list.map(t => {
+function buildShiftsHtml(list, _dateLabel) {
+  if (!list.length) return '';
+  return list.map(t => {
     const g   = t.gig || {};
     const st  = STATUS_STYLE[t.status] || { bg:'#f3f4f6', color:'#374151', label:t.status, dotClass:'dot-active' };
     const cat = g.category || {};
@@ -285,8 +372,10 @@ function changeMonth(delta) {
   if (month > 12) { month = 1; year++; }
   if (month < 1)  { month = 12; year--; }
   sel = null;
-  document.getElementById('detailEmpty').style.display   = '';
-  document.getElementById('detailContent').style.display = 'none';
+  const de = document.getElementById('detailEmpty');
+  const dc = document.getElementById('detailContent');
+  if (de) de.style.display = '';
+  if (dc) dc.style.display = 'none';
   refreshCalendar();
 }
 
@@ -373,6 +462,27 @@ async function load() {
 }
 
 load();
+
+/* ── Swipe-down to close drawer on mobile ── */
+(function() {
+  let startY = 0, dragging = false;
+  const sheet = () => document.querySelector('.drawer-sheet');
+  document.addEventListener('touchstart', e => {
+    if (!document.getElementById('mobileDrawer').classList.contains('open')) return;
+    startY = e.touches[0].clientY; dragging = true;
+  }, { passive:true });
+  document.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy > 0 && sheet()) sheet().style.transform = `translateY(${dy}px)`;
+  }, { passive:true });
+  document.addEventListener('touchend', e => {
+    if (!dragging) return; dragging = false;
+    const dy = e.changedTouches[0].clientY - startY;
+    if (sheet()) sheet().style.transform = '';
+    if (dy > 90) closeDrawer();
+  });
+})();
 </script>
 </body>
 </html>
