@@ -59,7 +59,7 @@ async function load() {
       ? vp.interests.map(s => `<span class="badge badge-info">${s}</span>`).join('')
       : '—';
     const langsHtml = vp?.languages?.length
-      ? vp.languages.map(s => `<span class="badge" style="background:#f0fdf4;color:#15803d">${s}</span>`).join('')
+      ? vp.languages.map(s => `<span class="badge" style="background:#effff6;color:#00a344">${s}</span>`).join('')
       : '—';
 
     document.getElementById('content').innerHTML = `
@@ -125,7 +125,7 @@ async function load() {
         </div>
       </div>` : `
       <div class="card" style="background:${a.status === 'approved' ? '#f0fdf4' : '#fef2f2'}">
-        <div style="font-size:0.9rem;font-weight:600;color:${a.status === 'approved' ? '#16a34a' : '#dc2626'}">
+        <div style="font-size:0.9rem;font-weight:600;color:${a.status === 'approved' ? '#00a344' : '#dc2626'}">
           ${a.status === 'approved' ? '✓ Application approved' : '✗ Application rejected'}
         </div>
         ${a.decisionReason ? `<div style="font-size:0.85rem;color:var(--text-muted);margin-top:0.5rem">${a.decisionReason}</div>` : ''}

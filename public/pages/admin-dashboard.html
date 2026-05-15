@@ -32,18 +32,10 @@
       flex-shrink: 0;
     }
     .kpi-icon svg { width: 22px; height: 22px; }
-    .ki-blue   { background: #dbeafe; color: #1e40af; }
-    .ki-green  { background: #dcfce7; color: #16a34a; }
-    .ki-purple { background: #ede9fe; color: #7c3aed; }
-    .ki-orange { background: #ffedd5; color: #ea580c; }
-    .ki-amber  { background: #fef3c7; color: #d97706; }
-    .ki-red    { background: #fee2e2; color: #dc2626; }
-    .ki-sky    { background: #e0f2fe; color: #0891b2; }
-    .ki-teal   { background: #ccfbf1; color: #0f766e; }
     .kpi-body { flex: 1; min-width: 0; }
     .kpi-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.3rem; }
     .kpi-value { font-size: 2.1rem; font-weight: 800; color: var(--text); line-height: 1; letter-spacing: -0.04em; }
-    .kpi-value.warn { color: #d97706; }
+    .kpi-value.warn { color: #8a6a00; }
     .kpi-value.danger { color: #dc2626; }
     .kpi-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.3rem; }
 
@@ -109,9 +101,9 @@
       width: 8px; height: 8px; border-radius: 50%;
       flex-shrink: 0; margin-top: 5px;
     }
-    .activity-dot.green { background: #16a34a; }
-    .activity-dot.amber { background: #d97706; }
-    .activity-dot.blue  { background: #1e40af; }
+    .activity-dot.green { background: #00a344; }
+    .activity-dot.amber { background: #ff8a00; }
+    .activity-dot.blue  { background: #0066ff; }
     .activity-dot.red   { background: #dc2626; }
     .activity-text { font-size: 0.82rem; color: var(--text); line-height: 1.4; flex: 1; }
     .activity-time { font-size: 0.72rem; color: var(--text-muted); flex-shrink: 0; }
@@ -461,9 +453,9 @@ document.querySelectorAll('.dashboard-section .section-toggle').forEach((button)
 
     /* ── Platform health bars ── */
     const hItems = [
-      { label: 'Verified accounts', val: s.totalUsers > 0 ? Math.round(((s.totalUsers - (s.pendingVerifications ?? 0)) / s.totalUsers) * 100) : 0, color: '#16a34a' },
-      { label: 'Org approval rate',  val: s.totalOrgs > 0 ? Math.min(100, Math.round((s.totalOrgs / (s.totalOrgs + (s.pendingVerifications ?? 0))) * 100)) : 0, color: '#1e40af' },
-      { label: 'Task response rate', val: Math.max(0, Math.min(100, 100 - (autoRate * 2))), color: autoRate >= 10 ? '#dc2626' : '#0f766e' },
+      { label: 'Verified accounts', val: s.totalUsers > 0 ? Math.round(((s.totalUsers - (s.pendingVerifications ?? 0)) / s.totalUsers) * 100) : 0, color: '#00a344' },
+      { label: 'Org approval rate',  val: s.totalOrgs > 0 ? Math.min(100, Math.round((s.totalOrgs / (s.totalOrgs + (s.pendingVerifications ?? 0))) * 100)) : 0, color: '#0066ff' },
+      { label: 'Task response rate', val: Math.max(0, Math.min(100, 100 - (autoRate * 2))), color: autoRate >= 10 ? '#dc2626' : '#00838f' },
     ];
     document.getElementById('healthSection').innerHTML = hItems.map(h => `
       <div class="health-row">

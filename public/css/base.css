@@ -94,8 +94,8 @@ h1, h2, h3, h4 {
 }
 h1 { font-size: clamp(2.25rem, 4vw, 2.75rem); font-weight: 700; line-height: 1.15; }
 h2 { font-size: clamp(1.75rem, 3vw, 2.125rem); font-weight: 700; line-height: 1.2; }
-h3 { font-size: clamp(1.125rem, 2vw, 1.5rem); font-weight: 600; line-height: 1.25; }
-h4 { font-size: 1rem; font-weight: 600; }
+h3 { font-size: clamp(1.25rem, 2vw, 1.75rem); font-weight: 600; line-height: 1.25; }
+h4 { font-size: 1.125rem; font-weight: 600; }
 p { margin-bottom: 0.75rem; font-size: 1rem; color: var(--text); }
 p:last-child { margin-bottom: 0; }
 small { font-size: 0.8125rem; color: var(--text-muted); }
@@ -710,6 +710,18 @@ body.public-page {
   transform: translateY(-2px);
   box-shadow: 0 10px 25px rgba(255, 79, 109, 0.28);
 }
+.btn-outline {
+  background: var(--surface);
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
+  border-radius: var(--radius-full);
+  padding: 14px 28px;
+  font-weight: 700;
+}
+.btn-outline:hover:not(:disabled) {
+  background: var(--primary-light);
+  transform: translateY(-1px);
+}
 
 /* ===== Forms ===== */
 .form-group { margin-bottom: 1.125rem; }
@@ -790,11 +802,29 @@ textarea { min-height: 100px; resize: vertical; }
 .icon-circle--coral { background: #ffe8ed; color: #ff4f6d; }
 .icon-circle--cyan { background: #e0f7fa; color: #00b8d9; }
 
+/* KPI icon colour utilities (guide §8 — brand-aligned) */
+.ki-blue   { background: var(--primary-light);     color: var(--color-primary); }
+.ki-green  { background: var(--color-soft-green);  color: #00a344; }
+.ki-purple { background: #f3e8ff;                  color: var(--color-purple); }
+.ki-orange { background: var(--warning-light);     color: var(--color-orange); }
+.ki-amber  { background: var(--color-soft-yellow); color: #8a6a00; }
+.ki-coral  { background: #ffe8ed;                  color: var(--color-coral); }
+.ki-cyan   { background: var(--info-light);        color: var(--color-cyan); }
+.ki-red    { background: var(--danger-light);      color: var(--danger); }
+.ki-sky    { background: #e0f7fa;                  color: var(--color-cyan); }
+.ki-teal   { background: #e0f7fa;                  color: #00838f; }
+
+/* Points ring / dashboard highlight band (guide §15 — Electric Blue primary) */
+.points-ring-wrap {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--primary-dark) 100%);
+  box-shadow: 0 4px 20px rgba(0, 102, 255, 0.25);
+}
+
 /* Guide §11 — impact stat colours */
 .stat-number { font-size: clamp(2.25rem, 4vw, 3rem); font-weight: 800; line-height: 1; }
 .stat-number--hours { color: #0066ff; }
 .stat-number--verified { color: #00c853; }
-.stat-number--rewards { color: #ffd600; }
+.stat-number--rewards { color: #b8860b; }
 .stat-number--partners { color: #8e24aa; }
 .stat-number--impact { color: #ff8a00; }
 
@@ -1007,6 +1037,13 @@ tr:hover td { background: var(--surface-2); }
 .section { padding: 3rem 0; }
 .section-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
 .section-subtitle { color: var(--text-muted); margin-bottom: 2rem; font-size: 0.9rem; }
+
+/* Section background utilities (guide §9) */
+.bg-soft-blue   { background: #eaf4ff; }
+.bg-soft-green  { background: #effff6; }
+.bg-soft-yellow { background: #fff9d6; }
+.bg-white       { background: #ffffff; }
+.bg-navy        { background: #071a3d; color: #ffffff; }
 
 /* ===== Responsive ===== */
 
@@ -1296,6 +1333,8 @@ tr:hover td { background: var(--surface-2); }
   color: #94a3b8;
   text-align: center;
 }
+.global-footer a       { color: #cbd5e1; text-decoration: none; }
+.global-footer a:hover { color: #ffd600; text-decoration: none; }
 
 /* ===== Mobile Responsive Enhancements ===== */
 @media (max-width: 768px) {
@@ -1344,4 +1383,24 @@ tr:hover td { background: var(--surface-2); }
     font-size: 0.7rem;
     padding: 0.2rem 0.5rem;
   }
+}
+
+/* ===== Page-theme overrides (guide §15) ===== */
+/* Apply via <body class="page-theme-rewards"> etc. */
+body.page-theme-rewards {
+  --primary: var(--color-highlight);
+  --primary-dark: var(--color-orange);
+  --primary-light: #fff9d6;
+  --shadow-button: 0 10px 25px rgba(255, 214, 0, 0.3);
+}
+body.page-theme-csr {
+  --primary: var(--color-purple);
+  --primary-dark: #6a1b9a;
+  --primary-light: #f3e8ff;
+  --shadow-button: 0 10px 25px rgba(142, 36, 170, 0.25);
+}
+body.page-theme-opps {
+  --primary: var(--color-primary);
+  --accent: var(--color-cyan);
+  --primary-light: var(--color-soft-blue);
 }

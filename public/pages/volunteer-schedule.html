@@ -6,31 +6,100 @@
   <title>My Schedule | ImpactCircle</title>
   <link rel="stylesheet" href="/css/base.css">
   <style>
-    .shift-card { border:1px solid var(--border); border-radius:12px; padding:1.25rem 1.375rem; background:#fff; margin-bottom:0.875rem; }
-    .shift-top { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap; margin-bottom:0.75rem; }
-    .shift-title { font-weight:700; font-size:0.95rem; margin-bottom:0.2rem; }
-    .shift-org { font-size:0.82rem; color:var(--text-muted); }
-    .shift-details { display:flex; flex-direction:column; gap:0.3rem; font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem; }
-    .shift-detail-row { display:flex; align-items:center; gap:0.4rem; }
-    .cat-tag { display:inline-block; padding:0.15rem 0.55rem; border-radius:20px; font-size:0.72rem; font-weight:600; }
-    .status-pill { display:inline-flex; align-items:center; padding:0.25rem 0.75rem; border-radius:20px; font-size:0.75rem; font-weight:600; white-space:nowrap; }
-    .section-head { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin:1.5rem 0 0.75rem; padding-bottom:0.5rem; border-bottom:1px solid var(--border); }
-    .empty-state { text-align:center; padding:4rem 1rem; color:var(--text-muted); }
+    /* ── Calendar layout ── */
+    .cal-layout { display:grid; grid-template-columns:1fr 360px; gap:1.25rem; align-items:start; }
+    @media(max-width:960px){ .cal-layout{ grid-template-columns:1fr; } }
+
+    /* ── Month nav ── */
+    .cal-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+    .cal-label { font-size:1.1rem; font-weight:700; color:var(--color-navy); }
+
+    /* ── Grid ── */
+    .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+    .cal-dow { text-align:center; font-size:0.72rem; font-weight:700; color:var(--text-muted); padding:0.5rem 0; text-transform:uppercase; }
+    .cal-cell {
+      min-height:72px; border:1px solid var(--border); border-radius:7px;
+      padding:0.35rem 0.45rem; cursor:pointer; background:#fff; transition:background 0.12s;
+    }
+    .cal-cell:hover { background:#f0f7ff; }
+    .cal-cell.empty { background:var(--bg,#f8fafc); cursor:default; border-color:transparent; }
+    .cal-cell.today { border-color:var(--primary); border-width:2px; }
+    .cal-cell.selected { background:var(--primary); }
+    .cal-cell.selected .cal-dn { color:#fff; font-weight:800; }
+    .cal-cell.selected .cal-cnt { color:rgba(255,255,255,0.85); }
+    .cal-cell.selected .cal-dot { opacity:0.85; }
+    .cal-dn { font-size:0.8rem; font-weight:600; color:var(--color-navy); }
+    .cal-dots { display:flex; gap:2px; margin-top:4px; flex-wrap:wrap; }
+    .cal-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    /* Status-coded dot colors */
+    .cal-dot.dot-active   { background:#0066ff; }   /* upcoming / in progress */
+    .cal-dot.dot-pending  { background:#ff8a00; }   /* pending org approval */
+    .cal-dot.dot-approved { background:#00a344; }   /* completed & approved */
+    .cal-dot.dot-rejected { background:#ff4f6d; }   /* rejected */
+    .cal-cnt { font-size:0.65rem; color:var(--primary); font-weight:700; margin-top:2px; }
+
+    /* ── Legend ── */
+    .cal-legend {
+      display:flex; flex-wrap:wrap; gap:0.875rem;
+      padding:0.625rem 1rem; background:#f8fafc;
+      border-radius:0 0 12px 12px; border-top:1px solid var(--border);
+      margin-top:0.75rem;
+    }
+    .legend-item { display:flex; align-items:center; gap:0.4rem; font-size:0.72rem; font-weight:600; color:var(--text-muted); }
+    .legend-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+
+    /* ── Detail panel ── */
+    .detail-panel { position:sticky; top:1rem; }
+
+    /* ── Shift cards in detail ── */
+    .shift-card {
+      border:1px solid var(--border); border-radius:10px;
+      padding:1rem 1.125rem; margin-bottom:0.875rem; background:#fff;
+      transition:box-shadow 0.15s;
+    }
+    .shift-card:last-child { margin-bottom:0; }
+    .shift-card.status-active   { border-left:3px solid #0066ff; }
+    .shift-card.status-pending  { border-left:3px solid #ff8a00; }
+    .shift-card.status-approved { border-left:3px solid #00a344; }
+    .shift-card.status-rejected { border-left:3px solid #ff4f6d; }
+    .shift-title { font-weight:700; font-size:0.9rem; color:var(--color-navy); margin-bottom:0.2rem; }
+    .shift-org   { font-size:0.78rem; color:var(--text-muted); margin-bottom:0.5rem; }
+    .shift-meta  { display:flex; flex-direction:column; gap:0.3rem; font-size:0.78rem; color:var(--text-muted); }
+    .shift-meta-row { display:flex; align-items:center; gap:0.4rem; }
+    .status-pill {
+      display:inline-flex; align-items:center; padding:0.2rem 0.625rem;
+      border-radius:20px; font-size:0.72rem; font-weight:700; white-space:nowrap;
+    }
+    .cat-tag {
+      display:inline-block; padding:0.15rem 0.55rem;
+      border-radius:20px; font-size:0.7rem; font-weight:600;
+    }
+
+    /* ── Empty states ── */
+    .empty-panel { text-align:center; padding:2.5rem 1rem; color:var(--text-muted); }
+    .empty-page  { text-align:center; padding:4rem 1rem; color:var(--text-muted); }
   </style>
 </head>
 <body>
 <nav id="navbar"></nav>
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <aside id="sidebar" class="sidebar"></aside>
+
 <div class="page-content">
   <div class="container">
     <div class="page-header">
       <div class="page-header-row">
-        <div><h1>My Schedule</h1><p class="text-muted">Your assigned and completed volunteer gigs</p></div>
+        <div>
+          <h1>My Schedule</h1>
+          <p class="text-muted">Click any date to see your assigned and completed gigs</p>
+        </div>
         <a href="/gigs" class="btn btn-primary">Find More Gigs</a>
       </div>
     </div>
-    <div id="content"><div style="text-align:center;padding:3rem"><div class="spinner"></div></div></div>
+
+    <div id="pageBody">
+      <div style="text-align:center;padding:3rem"><div class="spinner"></div></div>
+    </div>
   </div>
 </div>
 
@@ -40,108 +109,266 @@
 <script>
 API.requireAuth('volunteer');
 
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DOW    = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const DAY_NUM = { sun:0,mon:1,tue:2,wed:3,thu:4,fri:5,sat:6,
+                  sunday:0,monday:1,tuesday:2,wednesday:3,thursday:4,friday:5,saturday:6 };
+
 const STATUS_STYLE = {
-  accepted:   { bg:'#dbeafe', color:'#1e40af', label:'Assigned' },
-  inProgress: { bg:'#e0f2fe', color:'#0369a1', label:'In Progress' },
-  completed:  { bg:'#fef3c7', color:'#92400e', label:'Pending Org Approval' },
-  approved:   { bg:'#dcfce7', color:'#166534', label:'Approved' },
-  rejected:   { bg:'#fee2e2', color:'#991b1b', label:'Rejected' },
+  accepted:   { bg:'#e6f0ff', color:'#0066ff',  label:'Upcoming',           dotClass:'dot-active'   },
+  inProgress: { bg:'#e6f0ff', color:'#0066ff',  label:'In Progress',        dotClass:'dot-active'   },
+  completed:  { bg:'#fff1e0', color:'#8a6a00',  label:'Pending Approval',   dotClass:'dot-pending'  },
+  approved:   { bg:'#effff6', color:'#00a344',  label:'Approved',           dotClass:'dot-approved' },
+  rejected:   { bg:'#ffe8ed', color:'#d91f45',  label:'Rejected',           dotClass:'dot-rejected' },
 };
 
-const TIME_LABELS = { morning:'Morning', afternoon:'Afternoon', evening:'Evening', flexible:'Flexible' };
+const STATUS_CARD_CLASS = {
+  accepted:'status-active', inProgress:'status-active',
+  completed:'status-pending', approved:'status-approved', rejected:'status-rejected',
+};
 
 const SVG = {
-  cal: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
-  clk: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
-  pin: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
-  rec: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`,
+  cal: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+  clk: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+  pin: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+  rec: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`,
 };
 
-function formatDays(days) {
-  if (!days || !days.length) return '';
-  if (days.length === 1) return days[0];
-  return days.slice(0, -1).join(', ') + ' & ' + days[days.length - 1];
+let allTasks = [], year = new Date().getFullYear(), month = new Date().getMonth() + 1, sel = null;
+
+/* ── Build a map of { 'YYYY-MM-DD': [tasks…] } for the current month ── */
+function buildCalData(tasks, yr, mo) {
+  const data = {};
+  const mStart = new Date(yr, mo - 1, 1);
+  const mEnd   = new Date(yr, mo, 0);
+
+  tasks.forEach(t => {
+    const g = t.gig || {};
+    if (!g.startDate) return;
+
+    const rawStart = g.startDate.split('T')[0];
+    const rawEnd   = g.endDate ? g.endDate.split('T')[0] : rawStart;
+    const gStart   = new Date(rawStart + 'T12:00:00');
+    const gEnd     = new Date(rawEnd   + 'T12:00:00');
+
+    const addKey = k => {
+      if (!data[k]) data[k] = [];
+      if (!data[k].find(x => x.id === t.id)) data[k].push(t);
+    };
+
+    if (g.isRecurring && g.recurrenceDays && g.recurrenceDays.length) {
+      /* Map day names to numbers, tolerating 'Monday', 'Mon', 'monday' etc. */
+      const recNums = g.recurrenceDays
+        .map(d => DAY_NUM[d.toLowerCase()] ?? DAY_NUM[d.toLowerCase().substring(0,3)])
+        .filter(n => n !== undefined);
+
+      let cur = new Date(Math.max(gStart.getTime(), mStart.getTime()));
+      const end = new Date(Math.min(gEnd.getTime(), mEnd.getTime()));
+      while (cur <= end) {
+        if (recNums.includes(cur.getDay())) {
+          addKey(cur.toISOString().split('T')[0]);
+        }
+        cur.setDate(cur.getDate() + 1);
+      }
+    } else {
+      /* Non-recurring: show on start date if in this month, or first overlap day */
+      if (gStart >= mStart && gStart <= mEnd) {
+        addKey(rawStart);
+      } else if (gEnd >= mStart && gStart <= mEnd) {
+        /* Gig started before month but end is within — show on 1st of month */
+        addKey(`${yr}-${String(mo).padStart(2,'0')}-01`);
+      }
+    }
+  });
+  return data;
 }
 
-function shiftCard(t) {
-  const g  = t.gig || {};
-  const st = STATUS_STYLE[t.status] || { bg:'#f3f4f6', color:'#374151', label: t.status };
-  const cat = g.category || {};
-  const org = g.org?.orgName || '';
+/* ── Render the calendar grid ── */
+function renderGrid(calData) {
+  const first = new Date(year, month - 1, 1).getDay();
+  const days  = new Date(year, month, 0).getDate();
+  const td    = new Date();
+  const isToday = d => td.getFullYear() === year && td.getMonth() + 1 === month && td.getDate() === d;
 
-  const dateStr = g.startDate
-    ? fmt.date(g.startDate) + (g.endDate && g.endDate !== g.startDate ? ' – ' + fmt.date(g.endDate) : '')
-    : null;
+  let html = DOW.map(d => `<div class="cal-dow">${d}</div>`).join('');
+  for (let i = 0; i < first; i++) html += '<div class="cal-cell empty"></div>';
 
-  const timeLabel = g.timeOfDay && g.timeOfDay !== 'flexible'
-    ? (g.startTime ? `${g.startTime}${g.endTime ? ' – ' + g.endTime : ''}` : TIME_LABELS[g.timeOfDay] || g.timeOfDay)
-    : null;
+  for (let d = 1; d <= days; d++) {
+    const k    = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const list = calData[k] || [];
+    const cls  = ['cal-cell', isToday(d)?'today':'', sel===k?'selected':''].filter(Boolean).join(' ');
 
-  const locStr = g.locationType === 'remote' ? 'Remote'
-    : (g.locationAddress || (g.locationType === 'in-person' ? 'In-Person' : null));
+    let dotsHtml = '';
+    if (list.length) {
+      const dots = list.slice(0,5).map(t => {
+        const dc = (STATUS_STYLE[t.status] || {}).dotClass || 'dot-active';
+        return `<div class="cal-dot ${dc}"></div>`;
+      }).join('');
+      dotsHtml = `<div class="cal-dots">${dots}</div><div class="cal-cnt">${list.length} gig${list.length>1?'s':''}</div>`;
+    }
 
-  const recStr = g.isRecurring && g.recurrenceType
-    ? (g.recurrenceDays?.length ? formatDays(g.recurrenceDays) : g.recurrenceType.charAt(0).toUpperCase() + g.recurrenceType.slice(1))
-    : null;
+    html += `<div class="${cls}" onclick="selectDate('${k}')">
+      <div class="cal-dn">${d}</div>
+      ${dotsHtml}
+    </div>`;
+  }
 
-  const hours = g.hoursPerOccurrence || g.estimatedHours;
+  document.getElementById('calGrid').innerHTML = html;
+}
 
-  return `<div class="shift-card">
-    <div class="shift-top">
-      <div>
-        <div class="shift-title">${g.title || '—'}</div>
-        <div class="shift-org">${org}${cat.name ? ` · <span class="cat-tag" style="background:${cat.colorHex||'#2563eb'}22;color:${cat.colorHex||'#2563eb'}">${cat.name}</span>` : ''}</div>
+/* ── Detail panel ── */
+function selectDate(k) {
+  sel = k;
+  const calData = buildCalData(allTasks, year, month);
+  renderGrid(calData);
+
+  const list = calData[k] || [];
+  document.getElementById('detailEmpty').style.display   = list.length ? 'none' : '';
+  document.getElementById('detailContent').style.display = list.length ? '' : 'none';
+  if (!list.length) return;
+
+  document.getElementById('detailDate').textContent =
+    new Date(k + 'T12:00:00').toLocaleDateString('en-CA', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+
+  document.getElementById('detailShifts').innerHTML = list.map(t => {
+    const g   = t.gig || {};
+    const st  = STATUS_STYLE[t.status] || { bg:'#f3f4f6', color:'#374151', label:t.status, dotClass:'dot-active' };
+    const cat = g.category || {};
+    const org = g.org?.orgName || '';
+
+    const dateStr = g.startDate
+      ? fmt.date(g.startDate) + (g.endDate && g.endDate !== g.startDate ? ' – ' + fmt.date(g.endDate) : '')
+      : null;
+
+    const timeLabel = g.timeOfDay && g.timeOfDay !== 'flexible'
+      ? (g.startTime ? `${g.startTime}${g.endTime ? ' – ' + g.endTime : ''}` : g.timeOfDay)
+      : null;
+
+    const locStr = g.locationType === 'remote' ? 'Remote'
+      : (g.locationAddress || (g.locationType === 'in-person' ? 'In-Person' : null));
+
+    const hours = g.hoursPerOccurrence || g.estimatedHours;
+
+    const catHtml = cat.name
+      ? ` · <span class="cat-tag" style="background:${cat.colorHex||'#0066ff'}22;color:${cat.colorHex||'#0066ff'}">${cat.name}</span>`
+      : '';
+
+    const recLabel = g.isRecurring && g.recurrenceDays?.length
+      ? g.recurrenceDays.slice(0,3).join(', ') + (g.recurrenceDays.length > 3 ? '…' : '')
+      : null;
+
+    return `<div class="shift-card ${STATUS_CARD_CLASS[t.status]||''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.75rem;margin-bottom:0.5rem">
+        <div style="min-width:0">
+          <div class="shift-title">${g.title||'—'}</div>
+          <div class="shift-org">${org}${catHtml}</div>
+        </div>
+        <span class="status-pill" style="background:${st.bg};color:${st.color};flex-shrink:0">${st.label}</span>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.4rem;flex-shrink:0">
-        <span class="status-pill" style="background:${st.bg};color:${st.color}">${st.label}</span>
+      <div class="shift-meta">
+        ${dateStr   ? `<div class="shift-meta-row">${SVG.cal} ${dateStr}</div>` : ''}
+        ${timeLabel ? `<div class="shift-meta-row">${SVG.clk} ${timeLabel}</div>` : ''}
+        ${recLabel  ? `<div class="shift-meta-row" style="color:#00a344;font-weight:500">${SVG.rec} ${recLabel}</div>` : ''}
+        ${locStr    ? `<div class="shift-meta-row">${SVG.pin} ${locStr}</div>` : ''}
+        ${hours     ? `<div class="shift-meta-row">${SVG.clk} ${hours} hr${hours!==1?'s':''}/session</div>` : ''}
+      </div>
+      <div style="margin-top:0.625rem">
         <a href="/gigs/${g.id}" class="btn btn-sm btn-secondary">View Gig</a>
       </div>
-    </div>
-    <div class="shift-details">
-      ${dateStr  ? `<div class="shift-detail-row">${SVG.cal} ${dateStr}</div>` : ''}
-      ${timeLabel ? `<div class="shift-detail-row">${SVG.clk} ${timeLabel}</div>` : ''}
-      ${recStr   ? `<div class="shift-detail-row" style="color:#16a34a;font-weight:500">${SVG.rec} ${recStr}</div>` : ''}
-      ${locStr   ? `<div class="shift-detail-row">${SVG.pin} ${locStr}</div>` : ''}
-      ${hours    ? `<div class="shift-detail-row">${SVG.clk} ${hours} hr${hours !== 1 ? 's' : ''}/session</div>` : ''}
-    </div>
-  </div>`;
+    </div>`;
+  }).join('');
 }
 
+/* ── Month navigation ── */
+function changeMonth(delta) {
+  month += delta;
+  if (month > 12) { month = 1; year++; }
+  if (month < 1)  { month = 12; year--; }
+  sel = null;
+  document.getElementById('detailEmpty').style.display   = '';
+  document.getElementById('detailContent').style.display = 'none';
+  refreshCalendar();
+}
+
+function refreshCalendar() {
+  document.getElementById('monthLabel').textContent = `${MONTHS[month-1]} ${year}`;
+  const calData = buildCalData(allTasks, year, month);
+  renderGrid(calData);
+}
+
+/* ── Initial load ── */
 async function load() {
   try {
     const { data } = await API.get('/volunteers/me/dashboard');
-    const tasks = (data.tasks || []).filter(t => ['accepted','inProgress','completed','approved'].includes(t.status));
+    allTasks = (data.tasks || []).filter(t =>
+      ['accepted','inProgress','completed','approved','rejected'].includes(t.status)
+    );
 
-    if (!tasks.length) {
-      document.getElementById('content').innerHTML = `<div class="empty-state">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:block;margin:0 auto 1rem;opacity:0.35"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <p>No assigned gigs yet.</p>
-        <a href="/gigs" class="btn btn-primary" style="margin-top:0.75rem">Find Volunteer Gigs</a>
-      </div>`;
+    if (!allTasks.length) {
+      document.getElementById('pageBody').innerHTML = `
+        <div class="empty-page">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:block;margin:0 auto 1rem;opacity:0.3">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <p style="font-size:1rem;font-weight:600;margin-bottom:0.25rem">No gigs on your schedule yet</p>
+          <p style="font-size:0.875rem">Apply for a volunteer opportunity and it will appear here.</p>
+          <a href="/gigs" class="btn btn-primary" style="margin-top:1rem">Browse Opportunities</a>
+        </div>`;
       return;
     }
 
-    const active    = tasks.filter(t => t.status === 'accepted' || t.status === 'inProgress');
-    const pending   = tasks.filter(t => t.status === 'completed');
-    const done      = tasks.filter(t => t.status === 'approved');
+    /* Inject the calendar structure */
+    document.getElementById('pageBody').innerHTML = `
+      <div class="cal-layout">
+        <!-- Calendar card -->
+        <div class="card" style="padding:1.25rem;padding-bottom:0">
+          <div class="cal-nav">
+            <button class="btn btn-secondary btn-sm" onclick="changeMonth(-1)">&#8249; Prev</button>
+            <span class="cal-label" id="monthLabel"></span>
+            <button class="btn btn-secondary btn-sm" onclick="changeMonth(1)">Next &#8250;</button>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+          <!-- Legend -->
+          <div class="cal-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#0066ff"></div> Upcoming / Active</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#ff8a00"></div> Pending Approval</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#00a344"></div> Approved</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#ff4f6d"></div> Rejected</div>
+          </div>
+        </div>
 
-    let html = '';
-    if (active.length) {
-      html += `<div class="section-head">Upcoming / Active (${active.length})</div>`;
-      html += active.map(shiftCard).join('');
-    }
-    if (pending.length) {
-      html += `<div class="section-head">Pending Org Approval (${pending.length})</div>`;
-      html += pending.map(shiftCard).join('');
-    }
-    if (done.length) {
-      html += `<div class="section-head">Completed (${done.length})</div>`;
-      html += done.map(shiftCard).join('');
-    }
+        <!-- Detail panel -->
+        <div class="card detail-panel" style="padding:1.25rem">
+          <div id="detailEmpty" class="empty-panel">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:block;margin:0 auto 0.75rem;opacity:0.35">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <p style="margin:0;font-size:0.875rem">Click a date to see your gigs</p>
+          </div>
+          <div id="detailContent" style="display:none">
+            <div id="detailDate" style="font-size:1rem;font-weight:700;color:var(--color-navy);margin-bottom:1rem;padding-bottom:0.625rem;border-bottom:1px solid var(--border)"></div>
+            <div id="detailShifts" style="max-height:65vh;overflow-y:auto;padding-right:2px"></div>
+          </div>
+        </div>
+      </div>`;
 
-    document.getElementById('content').innerHTML = html;
-  } catch(e) {
-    document.getElementById('content').innerHTML = `<div class="empty-state">${e.message}</div>`;
+    refreshCalendar();
+
+    /* Auto-select today if it has gigs */
+    const todayKey = new Date().toISOString().split('T')[0];
+    const calData = buildCalData(allTasks, year, month);
+    if (calData[todayKey]) selectDate(todayKey);
+
+  } catch (e) {
+    if (e.__authRedirect) return;
+    document.getElementById('pageBody').innerHTML =
+      `<div class="empty-page"><p style="color:var(--danger)">${e.message}</p></div>`;
   }
 }
 

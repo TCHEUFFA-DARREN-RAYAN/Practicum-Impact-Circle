@@ -113,7 +113,7 @@ function render() {
         <div style="display:flex;flex-direction:column;gap:0.3rem;margin-top:0.5rem;font-size:0.8rem;color:var(--text-muted)">
           ${dateStr      ? `<span style="display:flex;align-items:center;gap:0.35rem">${SVG.cal} ${dateStr}</span>` : ''}
           ${timeLabel    ? `<span style="display:flex;align-items:center;gap:0.35rem">${SVG.clk} ${timeLabel}</span>` : ''}
-          ${recStr       ? `<span style="display:flex;align-items:center;gap:0.35rem;color:#16a34a;font-weight:500">${SVG.rec} ${recStr}</span>` : ''}
+          ${recStr       ? `<span style="display:flex;align-items:center;gap:0.35rem;color:#00a344;font-weight:500">${SVG.rec} ${recStr}</span>` : ''}
           ${locStr       ? `<span style="display:flex;align-items:center;gap:0.35rem">${SVG.pin} ${locStr}</span>` : ''}
           ${hours        ? `<span style="display:flex;align-items:center;gap:0.35rem">${SVG.clk} ${hours} hr${hours!==1?'s':''}/session</span>` : ''}
           <span style="display:flex;align-items:center;gap:0.35rem">${SVG.cal} Applied: ${fmt.date(a.createdAt)}</span>

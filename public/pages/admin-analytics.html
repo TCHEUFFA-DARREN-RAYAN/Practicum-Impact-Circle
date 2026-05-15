@@ -28,20 +28,12 @@
     }
     .kpi-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .kpi-icon svg { width: 22px; height: 22px; }
-    .ki-blue   { background: #dbeafe; color: #1e40af; }
-    .ki-green  { background: #dcfce7; color: #16a34a; }
-    .ki-purple { background: #ede9fe; color: #7c3aed; }
-    .ki-amber  { background: #fef3c7; color: #d97706; }
-    .ki-red    { background: #fee2e2; color: #dc2626; }
-    .ki-sky    { background: #e0f2fe; color: #0891b2; }
-    .ki-teal   { background: #ccfbf1; color: #0f766e; }
-    .ki-orange { background: #ffedd5; color: #ea580c; }
     .kpi-body { flex: 1; min-width: 0; }
     .kpi-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.3rem; }
     .kpi-value { font-size: 2.1rem; font-weight: 800; color: var(--text); line-height: 1; letter-spacing: -0.04em; }
-    .kpi-value.warn   { color: #d97706; }
+    .kpi-value.warn   { color: #8a6a00; }
     .kpi-value.danger { color: #dc2626; }
-    .kpi-value.good   { color: #16a34a; }
+    .kpi-value.good   { color: #00a344; }
     .kpi-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.3rem; }
 
     /* ── Section ── */
@@ -74,10 +66,10 @@
     .breakdown-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
     .breakdown-row:last-child { border-bottom: none; }
     .breakdown-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .bd-green  { background: #16a34a; }
-    .bd-amber  { background: #d97706; }
+    .bd-green  { background: #00a344; }
+    .bd-amber  { background: #ff8a00; }
     .bd-red    { background: #dc2626; }
-    .bd-blue   { background: #2563eb; }
+    .bd-blue   { background: #0066ff; }
     .bd-grey   { background: #94a3b8; }
     .breakdown-name  { font-size: 0.8rem; color: var(--text); flex: 1; }
     .breakdown-count { font-size: 0.875rem; font-weight: 700; color: var(--text); min-width: 36px; text-align: right; }
@@ -107,13 +99,13 @@
     .top-org-row { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
     .top-org-row:last-child { border-bottom: none; }
     .top-org-rank { width: 24px; height: 24px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; color: var(--text-muted); flex-shrink: 0; }
-    .top-org-rank.gold   { background: #fef3c7; color: #92400e; }
+    .top-org-rank.gold   { background: #fff9d6; color: #8a6a00; }
     .top-org-rank.silver { background: #f1f5f9; color: #475569; }
-    .top-org-rank.bronze { background: #ffedd5; color: #9a3412; }
+    .top-org-rank.bronze { background: #fff1e0; color: #c2410c; }
     .top-org-name { font-size: 0.875rem; font-weight: 600; color: var(--text); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .top-org-hours { font-size: 0.875rem; font-weight: 700; color: #0f766e; min-width: 56px; text-align: right; }
+    .top-org-hours { font-size: 0.875rem; font-weight: 700; color: #00838f; min-width: 56px; text-align: right; }
     .top-org-bar-wrap { width: 100px; height: 6px; background: var(--border); border-radius: 3px; flex-shrink: 0; }
-    .top-org-bar { height: 100%; border-radius: 3px; background: #0d9488; }
+    .top-org-bar { height: 100%; border-radius: 3px; background: #00b8d9; }
 
     /* ── KPI target bars ── */
     .target-row { margin-bottom: 1.125rem; }
@@ -301,8 +293,8 @@ async function exportCSV() {
       <div class="breakdown-group">
         <div class="breakdown-label">Volunteers (${d.volunteers.total})</div>
         ${[
-          { dot:'bd-green', name:'Verified', val: d.volunteers.verified, max: volTotal, color:'#16a34a' },
-          { dot:'bd-amber', name:'Pending', val: d.volunteers.pending, max: volTotal, color:'#d97706' },
+          { dot:'bd-green', name:'Verified', val: d.volunteers.verified, max: volTotal, color:'#00a344' },
+          { dot:'bd-amber', name:'Pending', val: d.volunteers.pending, max: volTotal, color:'#ff8a00' },
           { dot:'bd-red',   name:'Rejected', val: d.volunteers.rejected, max: volTotal, color:'#dc2626' },
         ].map(r => `
           <div class="breakdown-row">
@@ -315,8 +307,8 @@ async function exportCSV() {
       <div class="breakdown-group">
         <div class="breakdown-label">Organizations (${d.orgs.total})</div>
         ${[
-          { dot:'bd-green', name:'Verified', val: d.orgs.verified, max: orgTotal, color:'#16a34a' },
-          { dot:'bd-amber', name:'Pending review', val: d.orgs.pending, max: orgTotal, color:'#d97706' },
+          { dot:'bd-green', name:'Verified', val: d.orgs.verified, max: orgTotal, color:'#00a344' },
+          { dot:'bd-amber', name:'Pending review', val: d.orgs.pending, max: orgTotal, color:'#ff8a00' },
         ].map(r => `
           <div class="breakdown-row">
             <div class="breakdown-dot ${r.dot}"></div>
@@ -333,8 +325,8 @@ async function exportCSV() {
     const gigTotal = d.gigs.total || 1;
     document.getElementById('gigEcosystem').innerHTML = `
       ${[
-        { dot:'bd-green', name:'Open — accepting applicants', val: d.gigs.open, max: gigTotal, color:'#16a34a' },
-        { dot:'bd-blue',  name:'Closed / Filled', val: d.gigs.closed, max: gigTotal, color:'#2563eb' },
+        { dot:'bd-green', name:'Open — accepting applicants', val: d.gigs.open, max: gigTotal, color:'#00a344' },
+        { dot:'bd-blue',  name:'Closed / Filled', val: d.gigs.closed, max: gigTotal, color:'#0066ff' },
         { dot:'bd-grey',  name:'Cancelled', val: d.gigs.cancelled, max: gigTotal, color:'#94a3b8' },
       ].map(r => `
         <div class="breakdown-row">
@@ -346,10 +338,10 @@ async function exportCSV() {
       <div style="margin-top:1.125rem;padding-top:0.875rem;border-top:1px solid var(--border)">
         <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:0.375rem">
           <span style="font-size:0.82rem;font-weight:600;color:var(--text)">Fill Rate</span>
-          <span style="font-size:0.82rem;font-weight:700;color:${fillRate >= 50 ? '#16a34a' : '#d97706'}">${fillRate}% <span style="font-weight:400;color:var(--text-muted)">/ 75% target</span></span>
+          <span style="font-size:0.82rem;font-weight:700;color:${fillRate >= 50 ? '#00a344' : '#ff8a00'}">${fillRate}% <span style="font-weight:400;color:var(--text-muted)">/ 75% target</span></span>
         </div>
         <div style="height:8px;background:var(--border);border-radius:4px">
-          <div style="width:${Math.min(100, fillRate)}%;height:100%;background:${fillRate >= 50 ? '#16a34a' : '#d97706'};border-radius:4px;transition:width 0.5s"></div>
+          <div style="width:${Math.min(100, fillRate)}%;height:100%;background:${fillRate >= 50 ? '#00a344' : '#ff8a00'};border-radius:4px;transition:width 0.5s"></div>
         </div>
         <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.375rem">
           Applications: ${d.applications.total} total · ${d.applications.approved} approved · ${d.applications.rejected} rejected
@@ -361,18 +353,18 @@ async function exportCSV() {
     const pipeTotal = tasks.approved + tasks.rejected + tasks.pending;
     document.getElementById('taskPipeline').innerHTML = `
       <div class="pipeline">
-        <div class="pipeline-step" style="background:#f0fdf4;border-color:#bbf7d0">
-          <div class="pipeline-num" style="color:#16a34a">${tasks.pending}</div>
+        <div class="pipeline-step" style="background:#effff6;border-color:rgba(0,200,83,0.25)">
+          <div class="pipeline-num" style="color:#00a344">${tasks.pending}</div>
           <div class="pipeline-lbl">Submitted &amp; Pending</div>
         </div>
         <div class="pipeline-arrow">→</div>
-        <div class="pipeline-step" style="background:#eff6ff;border-color:#bfdbfe">
-          <div class="pipeline-num" style="color:#1e40af">${tasks.approved}</div>
+        <div class="pipeline-step" style="background:#e6f0ff;border-color:rgba(0,102,255,0.2)">
+          <div class="pipeline-num" style="color:#0066ff">${tasks.approved}</div>
           <div class="pipeline-lbl">Approved</div>
         </div>
         <div class="pipeline-arrow">→</div>
-        <div class="pipeline-step" style="background:#fef3c7;border-color:#fde68a">
-          <div class="pipeline-num" style="color:#92400e">${tasks.autoApproved}</div>
+        <div class="pipeline-step" style="background:#fff9d6;border-color:rgba(255,214,0,0.35)">
+          <div class="pipeline-num" style="color:#8a6a00">${tasks.autoApproved}</div>
           <div class="pipeline-lbl">Auto-Approved</div>
         </div>
         <div class="pipeline-arrow">→</div>
@@ -381,8 +373,8 @@ async function exportCSV() {
           <div class="pipeline-lbl">Rejected</div>
         </div>
       </div>
-      <div style="margin-top:1rem;padding:0.875rem;background:${autoRate >= 10 ? '#fff1f2' : '#f0fdf4'};border-radius:8px;border:1px solid ${autoRate >= 10 ? '#fecdd3' : '#bbf7d0'}">
-        <div style="font-size:0.82rem;font-weight:600;color:${autoRate >= 10 ? '#be123c' : '#166534'}">
+      <div style="margin-top:1rem;padding:0.875rem;background:${autoRate >= 10 ? '#ffe8ed' : '#effff6'};border-radius:8px;border:1px solid ${autoRate >= 10 ? 'rgba(255,79,109,0.25)' : 'rgba(0,200,83,0.25)'}">
+        <div style="font-size:0.82rem;font-weight:600;color:${autoRate >= 10 ? '#d91f45' : '#00a344'}">
           ${autoRate >= 10
             ? `⚠ Auto-approval rate is ${autoRate}% — above the 10% target. Encourage organizations to review task submissions promptly.`
             : `✓ Auto-approval rate is ${autoRate}% — within the acceptable range (&lt;10%). Organizations are responding to task submissions on time.`}
@@ -487,7 +479,7 @@ async function exportCSV() {
 
     document.getElementById('kpiTargets').innerHTML = targets.map(t => {
       const ok = t.higher ? t.value >= t.target : t.value < t.target;
-      const color = ok ? '#16a34a' : t.higher ? '#d97706' : '#dc2626';
+      const color = ok ? '#00a344' : t.higher ? '#ff8a00' : '#dc2626';
       return `
         <div class="target-row">
           <div class="target-header">
