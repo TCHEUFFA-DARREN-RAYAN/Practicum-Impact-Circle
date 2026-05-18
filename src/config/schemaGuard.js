@@ -120,6 +120,11 @@ const COLUMN_MIGRATIONS = [
     column: 'attendedAt',
     ddl: 'ALTER TABLE `Tasks` ADD COLUMN `attendedAt` DATETIME NULL',
   },
+  {
+    table: 'Attendances',
+    column: 'currentSessionStartedAt',
+    ddl: 'ALTER TABLE `Attendances` ADD COLUMN `currentSessionStartedAt` DATETIME NULL',
+  },
 ];
 
 async function assertUserResetColumns(sequelize) {

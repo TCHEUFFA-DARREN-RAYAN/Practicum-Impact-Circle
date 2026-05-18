@@ -217,7 +217,7 @@ function renderTabContent(g, tab) {
       const vp = v.volunteerProfile || {};
       const name = `${vp.firstName||v.firstName||''} ${vp.lastName||v.lastName||''}`.trim() || v.email || 'Volunteer';
       const avatar = v.avatarUrl || vp.avatarUrl;
-      const hrs = a.hoursWorked != null ? `${parseFloat(a.hoursWorked).toFixed(1)}h` : (a.checkOutAt ? '' : 'In progress');
+      const hrs = a.hoursWorked != null ? fmt.hoursMin(a.hoursWorked) : (a.checkOutAt ? '' : 'In progress');
       const checkinTime = fmtTime(a.checkInAt);
       const checkoutTime = a.checkOutAt ? fmtTime(a.checkOutAt) : 'Pending checkout';
       return `
@@ -354,7 +354,7 @@ function render() {
     if (totalApps > 0) statsHtml += `<span class="stat-chip">${totalApps} applicant${totalApps !== 1 ? 's' : ''}</span>`;
     if (approvedCount > 0) statsHtml += `<span class="stat-chip success">${approvedCount} approved</span>`;
     statsHtml += `<span class="stat-chip">${checkedIn.length} checked in</span>`;
-    if (totalHours > 0) statsHtml += `<span class="stat-chip">${totalHours.toFixed(1)}h logged</span>`;
+    if (totalHours > 0) statsHtml += `<span class="stat-chip">${fmt.hoursMin(totalHours)} logged</span>`;
     if (noShows > 0) statsHtml += `<span class="stat-chip danger">${noShows} no-show${noShows !== 1 ? 's' : ''}</span>`;
 
     const panelOpen = openGigId === g.id;
@@ -416,7 +416,7 @@ async function load() {
     document.getElementById('summaryStrip').innerHTML = [
       { val: gigsData.length, lbl: 'Gigs' },
       { val: totalAttend, lbl: 'Total check-ins' },
-      { val: totalHours.toFixed(1), lbl: 'Hours tracked' },
+      { val: fmt.hoursMin(totalHours), lbl: 'Hours tracked' },
       { val: totalNoShow, lbl: 'No-shows' },
     ].map(x => `<div class="s-box"><div class="s-val">${x.val}</div><div class="s-lbl">${x.lbl}</div></div>`).join('');
 

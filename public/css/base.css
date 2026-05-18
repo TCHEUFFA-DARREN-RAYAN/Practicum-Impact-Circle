@@ -1399,6 +1399,56 @@ body.page-theme-csr {
   --primary-light: #f3e8ff;
   --shadow-button: 0 10px 25px rgba(142, 36, 170, 0.25);
 }
+/* ===== Mobile / responsive helpers — apply consistently across pages ===== */
+@media (max-width: 768px) {
+  /* Page header rows should always stack vertically on phones */
+  .page-header-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .page-header-row > div:first-child { width: 100%; }
+  .page-header-row .btn { width: 100%; justify-content: center; }
+  .page-header-row > div:last-of-type { flex-wrap: wrap; }
+
+  /* Containers tighter on phones */
+  .container { padding: 0 0.875rem !important; }
+  .container-sm { padding: 0 0.875rem !important; }
+
+  /* Filter bars wrap cleanly */
+  .filter-bar { gap: 0.4rem; }
+  .filter-bar input[type="search"] { margin-left: 0 !important; width: 100%; min-width: 0 !important; }
+
+  /* Any nested 2-column .row2 grids collapse to one column */
+  .row2 { grid-template-columns: 1fr !important; }
+
+  /* Modals don't fight the edges */
+  .modal { max-width: calc(100vw - 1rem) !important; margin: 0.5rem auto; }
+  .modal-body { padding: 1rem !important; }
+}
+
+/* Wrap any table in `<div class="responsive-table">` to scroll horizontally on phones */
+.responsive-table {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.responsive-table table { min-width: 560px; }
+
+/* Tight phones: 1-column grids regardless of minmax */
+@media (max-width: 540px) {
+  .kpi-grid,
+  .gigs-grid,
+  .gig-grid,
+  .stat-grid,
+  .summary-strip { grid-template-columns: 1fr !important; }
+  .detail-grid { grid-template-columns: 1fr !important; }
+  .cal-layout { grid-template-columns: 1fr !important; }
+
+  /* Tap targets at least 44px tall */
+  .btn-sm { min-height: 38px; }
+  .btn { min-height: 44px; }
+}
+
 body.page-theme-opps {
   --primary: var(--color-primary);
   --accent: var(--color-cyan);

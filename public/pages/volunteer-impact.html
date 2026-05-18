@@ -93,7 +93,7 @@ async function load() {
               <div class="att-row-title">${escHtml(a.gig?.title || 'Session')}</div>
               <div class="att-row-meta">${escHtml(a.gig?.org?.orgName || '')} · ${fmtDate(a.checkInAt)} · ${fmtTime(a.checkInAt)}${a.checkOutAt ? ' – ' + fmtTime(a.checkOutAt) : ' · still checked in'}</div>
             </div>
-            <div class="att-row-h">${a.hoursWorked != null ? a.hoursWorked.toFixed(2) + 'h' : '—'}</div>
+            <div class="att-row-h">${a.hoursWorked != null ? fmt.hoursMin(a.hoursWorked) : '—'}</div>
           </div>`).join('') : '<p class="text-muted" style="text-align:center;padding:1rem;margin:0">Check in to a gig via QR code to log your first session.</p>'}
       </div>
     `;

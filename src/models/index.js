@@ -288,9 +288,17 @@ const Attendance = sequelize.define('Attendance', {
   id:            { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   gigId:        { type: DataTypes.INTEGER, allowNull: false },
   volunteerId:  { type: DataTypes.INTEGER, allowNull: false },
+  /* First-ever check-in for this (gigId, volunteerId). Display-only after the
+     first session; subsequent check-ins reuse this row instead of creating a
+     duplicate, so this timestamp stays anchored to the original arrival. */
   checkInAt:    { type: DataTypes.DATE, allowNull: false },
+  /* Most recent check-out. Reset to null when the volunteer resumes. */
   checkOutAt:   { type: DataTypes.DATE, allowNull: true },
+  /* Accumulated hours across ALL sessions for this (gigId, volunteerId). */
   hoursWorked:  { type: DataTypes.FLOAT, allowNull: true },
+  /* When the *current* open session began. NULL while checked out.
+     On check-out we use (now - currentSessionStartedAt) for the delta. */
+  currentSessionStartedAt: { type: DataTypes.DATE, allowNull: true },
   autoCheckedOut: { type: DataTypes.BOOLEAN, defaultValue: false },
 });
 

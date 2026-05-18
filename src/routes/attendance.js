@@ -114,7 +114,14 @@ router.get('/checkin/:token', optionalAuth, async (req, res, next) => {
 
 /**
  * POST /api/attendance/checkin/:token
- * Volunteer checks in to event via QR code
+ * Volunteer checks in to an event via QR code.
+ *
+ * - First time for this (gig, volunteer): create a new Attendance row.
+ * - Already checked in (open session): 409.
+ * - Came back after a previous check-out: REUSE the existing row — clear
+ *   checkOutAt, set currentSessionStartedAt = now. The original checkInAt
+ *   stays anchored to the very first arrival, and hoursWorked carries over
+ *   so we just keep accumulating on the next check-out.
  */
 router.post('/checkin/:token', requireAuth, requireRole('volunteer'), async (req, res, next) => {
   try {
@@ -125,29 +132,76 @@ router.post('/checkin/:token', requireAuth, requireRole('volunteer'), async (req
     const gig = await Gig.findByPk(qrRecord.gigId);
     if (!gig) return res.status(404).json({ success: false, message: 'Event not found.' });
 
-    const existing = await Attendance.findOne({
-      where: { gigId: gig.id, volunteerId: req.user.id, checkOutAt: null },
-    });
-    if (existing) return res.status(409).json({ success: false, message: 'You are already checked in to this event.' });
+    const now = new Date();
 
-    const attendance = await Attendance.create({
-      gigId: gig.id,
-      volunteerId: req.user.id,
-      checkInAt: new Date(),
+    /* Check-in is allowed in the window [ start - 1 hour , end of event ].
+       Some volunteers arrive a little early; before that we lock them out
+       so people can't accidentally check in on the wrong day. After the
+       event ends, the auto-checkout has likely already fired so a new
+       check-in shouldn't create a new row. */
+    const startBoundary = new Date(`${gig.startDate}T${gig.startTime || '00:00'}:00`);
+    startBoundary.setHours(startBoundary.getHours() - 1);
+    const endBoundary = new Date(`${gig.endDate}T${gig.endTime || '23:59:59'}`);
+
+    if (now < startBoundary) {
+      const fmt = startBoundary.toLocaleString('en-CA', { dateStyle: 'medium', timeStyle: 'short' });
+      return res.status(400).json({
+        success: false,
+        message: `Check-in opens at ${fmt} (1 hour before the gig starts). Please come back closer to the start time.`,
+      });
+    }
+    if (now > endBoundary) {
+      return res.status(400).json({
+        success: false,
+        message: 'This gig has already ended — check-in is no longer available.',
+      });
+    }
+
+    const existing = await Attendance.findOne({
+      where: { gigId: gig.id, volunteerId: req.user.id },
     });
+
+    let attendance;
+    let resumed = false;
+    if (existing && !existing.checkOutAt) {
+      return res.status(409).json({ success: false, message: 'You are already checked in to this event.' });
+    } else if (existing) {
+      /* Resume an earlier session: keep original checkInAt + hoursWorked,
+         clear checkOutAt, mark when this new session started. */
+      await existing.update({
+        checkOutAt: null,
+        currentSessionStartedAt: now,
+        autoCheckedOut: false,
+      });
+      attendance = existing;
+      resumed = true;
+    } else {
+      attendance = await Attendance.create({
+        gigId: gig.id,
+        volunteerId: req.user.id,
+        checkInAt: now,
+        currentSessionStartedAt: now,
+      });
+    }
 
     const org = await Organization.findByPk(gig.orgId);
     if (org) {
-      await createNotification(org.userId, `Volunteer checked in to "${gig.title}"`, 'general', `/org/attendance/${gig.id}`);
+      const verb = resumed ? 'returned for another session at' : 'checked in to';
+      await createNotification(org.userId, `Volunteer ${verb} "${gig.title}"`, 'general', `/org/attendance/${gig.id}`);
     }
 
-    res.status(201).json({ success: true, message: 'Successfully checked in!', data: { attendance } });
+    res.status(201).json({
+      success: true,
+      message: resumed ? 'Welcome back! Session resumed.' : 'Successfully checked in!',
+      data: { attendance, resumed },
+    });
   } catch (err) { next(err); }
 });
 
 /**
  * POST /api/attendance/checkout/:gigId
- * Volunteer manually checks out
+ * Volunteer manually checks out. Adds (now - currentSessionStartedAt) to
+ * the existing hoursWorked total instead of overwriting it.
  */
 router.post('/checkout/:gigId', requireAuth, requireRole('volunteer'), async (req, res, next) => {
   try {
@@ -157,10 +211,23 @@ router.post('/checkout/:gigId', requireAuth, requireRole('volunteer'), async (re
     if (!attendance) return res.status(404).json({ success: false, message: 'No active check-in found.' });
 
     const checkOutAt = new Date();
-    const hoursWorked = parseFloat(((checkOutAt - new Date(attendance.checkInAt)) / 3600000).toFixed(2));
-    await attendance.update({ checkOutAt, hoursWorked });
+    const sessionStart = attendance.currentSessionStartedAt
+      ? new Date(attendance.currentSessionStartedAt)
+      : new Date(attendance.checkInAt);
+    const sessionHours = (checkOutAt - sessionStart) / 3600000;
+    const totalHours = parseFloat(((parseFloat(attendance.hoursWorked) || 0) + sessionHours).toFixed(2));
 
-    res.json({ success: true, message: 'Successfully checked out!', data: { attendance, hoursWorked } });
+    await attendance.update({
+      checkOutAt,
+      hoursWorked: totalHours,
+      currentSessionStartedAt: null,
+    });
+
+    res.json({
+      success: true,
+      message: 'Successfully checked out!',
+      data: { attendance, hoursWorked: totalHours, sessionHours: parseFloat(sessionHours.toFixed(2)) },
+    });
   } catch (err) { next(err); }
 });
 

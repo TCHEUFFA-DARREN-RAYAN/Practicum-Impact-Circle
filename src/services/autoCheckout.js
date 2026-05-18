@@ -22,16 +22,24 @@ async function autoCheckoutExpiredAttendances() {
       }
 
       if (now > eventEnd) {
-        const hoursWorked = parseFloat(((eventEnd - new Date(attendance.checkInAt)) / 3600000).toFixed(2));
+        /* Use the current open session's start, falling back to the very first
+           check-in for legacy rows that pre-date currentSessionStartedAt. */
+        const sessionStart = attendance.currentSessionStartedAt
+          ? new Date(attendance.currentSessionStartedAt)
+          : new Date(attendance.checkInAt);
+        const sessionHours = Math.max(0, (eventEnd - sessionStart) / 3600000);
+        const totalHours = parseFloat(((parseFloat(attendance.hoursWorked) || 0) + sessionHours).toFixed(2));
+
         await attendance.update({
           checkOutAt: eventEnd,
-          hoursWorked: Math.max(hoursWorked, 0),
+          hoursWorked: totalHours,
+          currentSessionStartedAt: null,
           autoCheckedOut: true,
         });
 
         const profile = await VolunteerProfile.findOne({ where: { userId: attendance.volunteerId } });
-        if (profile && hoursWorked > 0) {
-          await profile.increment('totalVerifiedHours', { by: hoursWorked });
+        if (profile && sessionHours > 0) {
+          await profile.increment('totalVerifiedHours', { by: parseFloat(sessionHours.toFixed(2)) });
         }
       }
     }

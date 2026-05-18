@@ -141,7 +141,7 @@ async function doCheckOut(gigId) {
     });
     const data = await resp.json();
     if (data.success) {
-      Toast.success(`Checked out — ${data.data.hoursWorked}h logged`);
+      Toast.success(`Checked out — ${fmt.hoursMin(data.data.hoursWorked)} logged`);
       load();
     } else {
       Toast.error(data.message || 'Could not check out.');
@@ -168,7 +168,7 @@ function renderRows(rows) {
     const statusHtml = !a.checkOutAt
       ? '<span class="att-status open">Open</span>'
       : (a.autoCheckedOut ? '<span class="att-status auto">Auto checked out</span>' : '<span class="att-status done">Completed</span>');
-    const hours = a.hoursWorked != null ? a.hoursWorked.toFixed(2) : (a.checkOutAt ? '—' : '…');
+    const hours = a.hoursWorked != null ? fmt.hoursMin(a.hoursWorked) : (a.checkOutAt ? '—' : '…');
     return `
       <div class="att-card">
         <div class="att-main">
@@ -182,7 +182,7 @@ function renderRows(rows) {
           </div>
         </div>
         <div>
-          <div class="att-hours">${hours}${a.hoursWorked != null ? 'h' : ''}</div>
+          <div class="att-hours">${hours}</div>
           <div class="att-hours-lbl">${a.hoursWorked != null ? 'logged' : 'in progress'}</div>
         </div>
       </div>`;
