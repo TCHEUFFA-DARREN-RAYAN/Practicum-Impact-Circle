@@ -1,9 +1,11 @@
 const router = require('express').Router();
 const { Op } = require('sequelize');
-const QRCode = require('qrcode');
 const { requireAuth, requireRole, optionalAuth } = require('../middleware/auth');
 const { Gig, GigQrCode, Attendance, Organization, User, VolunteerProfile, Category, Task } = require('../models/index');
 const { createNotification } = require('../services/notifications');
+
+let QRCode;
+try { QRCode = require('qrcode'); } catch (_) { QRCode = null; }
 
 /**
  * GET /api/attendance/gig/:gigId/qr
@@ -24,7 +26,11 @@ router.get('/gig/:gigId/qr', requireAuth, requireRole('org'), async (req, res, n
 
     const baseUrl = process.env.PUBLIC_APP_URL || process.env.CLIENT_URL || `http://localhost:${process.env.PORT || 5000}`;
     const checkinUrl = `${baseUrl}/checkin/${qrRecord.token}`;
-    const qrDataUrl = await QRCode.toDataURL(checkinUrl, { width: 400, margin: 2 });
+
+    let qrDataUrl = null;
+    if (QRCode) {
+      qrDataUrl = await QRCode.toDataURL(checkinUrl, { width: 400, margin: 2 });
+    }
 
     res.json({
       success: true,

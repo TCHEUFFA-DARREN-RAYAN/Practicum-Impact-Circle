@@ -1,6 +1,6 @@
 const { DataTypes, Sequelize: Sq } = require('sequelize');
 const bcrypt = require('bcryptjs');
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 const { sequelize } = require('../config/db');
 
 /* ───────────────────────────────── USER ──────────────────────────────────── */
@@ -298,7 +298,7 @@ const Attendance = sequelize.define('Attendance', {
 const GigQrCode = sequelize.define('GigQrCode', {
   id:       { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   gigId:    { type: DataTypes.INTEGER, allowNull: false, unique: true },
-  token:    { type: DataTypes.STRING(64), allowNull: false, unique: true, defaultValue: () => uuidv4() },
+  token:    { type: DataTypes.STRING(64), allowNull: false, unique: true, defaultValue: () => crypto.randomUUID() },
   isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
 });
 
