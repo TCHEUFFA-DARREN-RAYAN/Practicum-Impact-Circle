@@ -24,6 +24,46 @@
     .status-msg.info { background: #dbeafe; color: #1e40af; }
     .login-prompt { margin-top: 20px; padding: 16px; background: #fef3c7; border-radius: 8px; color: #92400e; }
     .login-prompt a { color: #d97706; font-weight: 600; }
+
+    .leave-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 20px; padding: 10px 20px;
+      background: #fff; color: #475569; border: 1px solid #e2e8f0;
+      border-radius: 10px; font-size: 0.9rem; font-weight: 500;
+      cursor: pointer; text-decoration: none; transition: all 0.15s;
+    }
+    .leave-btn:hover { background: #f8fafc; color: #1e293b; border-color: #cbd5e1; }
+
+    /* Check-out confirmation modal */
+    .co-backdrop {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.55); z-index: 1000;
+      display: none; align-items: center; justify-content: center; padding: 1rem;
+    }
+    .co-backdrop.show { display: flex; }
+    .co-modal {
+      background: #fff; border-radius: 16px; max-width: 440px; width: 100%;
+      padding: 28px; text-align: center; box-shadow: 0 24px 64px rgba(15,23,42,0.25);
+    }
+    .co-icon {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: #fef2f2; color: #dc2626;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .co-title { font-size: 1.15rem; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
+    .co-body { font-size: 0.92rem; color: #475569; margin-bottom: 6px; line-height: 1.55; }
+    .co-elapsed { font-size: 0.82rem; color: #64748b; margin-bottom: 20px; font-style: italic; }
+    .co-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .co-btn {
+      padding: 12px 24px; border-radius: 10px;
+      font-size: 0.95rem; font-weight: 600; cursor: pointer;
+      border: none; transition: all 0.15s;
+    }
+    .co-btn-cancel { background: #f1f5f9; color: #334155; }
+    .co-btn-cancel:hover { background: #e2e8f0; }
+    .co-btn-confirm { background: #dc2626; color: #fff; }
+    .co-btn-confirm:hover { background: #b91c1c; }
+    .co-btn-confirm:disabled { background: #94a3b8; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -42,10 +82,36 @@
         </div>
         <div id="actionArea"></div>
         <div id="statusMsg"></div>
+        <div>
+          <a href="/volunteer-dashboard" class="leave-btn" id="leaveLink">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            Back to Dashboard
+          </a>
+        </div>
       </div>
       <div id="errorContent" style="display:none;">
         <h2 style="color:#dc2626;">Error</h2>
         <p id="errorMsg"></p>
+        <a href="/volunteer-dashboard" class="leave-btn" style="margin-top:16px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Back to Dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Check-out confirmation modal -->
+  <div class="co-backdrop" id="coModal">
+    <div class="co-modal">
+      <div class="co-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <div class="co-title">Check out early?</div>
+      <div class="co-body">Your hours will be calculated from check-in time until now. This can't be undone.</div>
+      <div class="co-elapsed" id="coElapsed"></div>
+      <div class="co-actions">
+        <button class="co-btn co-btn-cancel" type="button" onclick="cancelCheckOut()">Cancel</button>
+        <button class="co-btn co-btn-confirm" type="button" id="coConfirmBtn" onclick="confirmCheckOut()">Yes, check me out</button>
       </div>
     </div>
   </div>
@@ -83,9 +149,20 @@
         const actionArea = document.getElementById('actionArea');
 
         if (!user || !authToken) {
+          /* Stash the check-in URL so login / register pages can redirect back
+             after auth. ?redirect=... is the primary contract; the localStorage
+             fallback covers register flows that don't preserve the query string. */
+          const checkinPath = `/checkin/${token}`;
+          try { localStorage.setItem('ic_post_login_redirect', checkinPath); } catch {}
+          const enc = encodeURIComponent(checkinPath);
           actionArea.innerHTML = `
-            <div class="login-prompt">
-              <p>Please <a href="/login?redirect=/checkin/${token}">log in</a> to check in to this event.</p>
+            <div class="login-prompt" style="margin-bottom:16px">
+              <p style="margin-bottom:12px"><strong>Sign in to check in</strong></p>
+              <p style="margin:0;font-size:0.88rem">You need an ImpactCircle volunteer account to record your hours.</p>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px">
+              <a href="/login?redirect=${enc}" class="checkin-btn" style="text-decoration:none;font-size:0.95rem;padding:14px 28px">Log in</a>
+              <a href="/register-volunteer?redirect=${enc}" class="checkin-btn" style="text-decoration:none;font-size:0.95rem;padding:14px 28px;background:#fff;color:#16a34a;border:2px solid #16a34a">Create account</a>
             </div>`;
           return;
         }
@@ -131,6 +208,7 @@
         const data = await resp.json();
         const statusMsg = document.getElementById('statusMsg');
         if (data.success) {
+          checkInTimestamp = new Date(data.data.attendance.checkInAt).getTime();
           statusMsg.className = 'status-msg success';
           statusMsg.textContent = 'Successfully checked in! You will be automatically checked out at the end of the event.';
           document.getElementById('actionArea').innerHTML = `
@@ -145,7 +223,39 @@
       }
     }
 
-    async function checkOut(gigId) {
+    /* Pending check-out: opening the modal stores the gigId; confirmCheckOut
+       calls the API. Cancel just closes the modal — no API call is made. */
+    let pendingCheckoutGigId = null;
+    let checkInTimestamp = null;
+
+    function checkOut(gigId) {
+      pendingCheckoutGigId = gigId;
+      const elapsedEl = document.getElementById('coElapsed');
+      if (checkInTimestamp) {
+        const ms = Date.now() - checkInTimestamp;
+        const h = Math.floor(ms / 3600000);
+        const m = Math.floor((ms % 3600000) / 60000);
+        elapsedEl.textContent = `Time checked in so far: ${h}h ${m}m`;
+      } else {
+        elapsedEl.textContent = '';
+      }
+      const btn = document.getElementById('coConfirmBtn');
+      btn.disabled = false;
+      btn.textContent = 'Yes, check me out';
+      document.getElementById('coModal').classList.add('show');
+    }
+
+    function cancelCheckOut() {
+      pendingCheckoutGigId = null;
+      document.getElementById('coModal').classList.remove('show');
+    }
+
+    async function confirmCheckOut() {
+      if (!pendingCheckoutGigId) return;
+      const gigId = pendingCheckoutGigId;
+      const btn = document.getElementById('coConfirmBtn');
+      btn.disabled = true;
+      btn.textContent = 'Checking out...';
       try {
         const resp = await fetch(`/api/attendance/checkout/${gigId}`, {
           method: 'POST',
@@ -153,9 +263,11 @@
         });
         const data = await resp.json();
         const statusMsg = document.getElementById('statusMsg');
+        document.getElementById('coModal').classList.remove('show');
+        pendingCheckoutGigId = null;
         if (data.success) {
           statusMsg.className = 'status-msg success';
-          statusMsg.textContent = `Checked out! Hours logged: ${data.data.hoursWorked} hours.`;
+          statusMsg.textContent = `Checked out! Hours logged: ${fmt.hoursMin(data.data.hoursWorked)}.`;
           document.getElementById('actionArea').innerHTML = '<div class="status-msg success">Session complete. Thank you!</div>';
         } else {
           statusMsg.className = 'status-msg error';

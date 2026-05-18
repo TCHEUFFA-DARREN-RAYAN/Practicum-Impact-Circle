@@ -489,8 +489,32 @@
 
 <script src="/js/api.js"></script>
 <script>
+  /* If the user got here from a QR check-in or any other page that sets a
+     redirect, honour it after login (or immediately if already logged in). */
+  function getPostLoginRedirect() {
+    const q = new URLSearchParams(window.location.search).get('redirect');
+    if (q && q.startsWith('/')) return q;
+    try {
+      const stored = localStorage.getItem('ic_post_login_redirect');
+      if (stored && stored.startsWith('/')) return stored;
+    } catch {}
+    return null;
+  }
+  function consumeRedirect() {
+    try { localStorage.removeItem('ic_post_login_redirect'); } catch {}
+  }
+  function postAuthRedirect(user) {
+    const target = getPostLoginRedirect();
+    if (target) {
+      consumeRedirect();
+      window.location.href = target;
+    } else {
+      API.redirectByRole(user);
+    }
+  }
+
   // Already logged in → redirect immediately
-  if (API.isLoggedIn()) API.redirectByRole(API.getUser());
+  if (API.isLoggedIn()) postAuthRedirect(API.getUser());
 
   //  Image Slider 
   const SLIDES = [
@@ -580,7 +604,7 @@
       const { data } = await API.post('/auth/login', { email, password });
       API.setSession(data.token, data.user);
       Toast.success('Welcome back!');
-      setTimeout(() => API.redirectByRole(data.user), 800);
+      setTimeout(() => postAuthRedirect(data.user), 800);
     } catch (err) {
       document.getElementById('alertArea').innerHTML =
         `<div class="alert alert-danger">${err.message || 'Login failed. Please try again.'}</div>`;

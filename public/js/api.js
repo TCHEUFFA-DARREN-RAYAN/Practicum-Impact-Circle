@@ -107,6 +107,16 @@ const fmt = {
     return `${Math.floor(hrs / 24)}d ago`;
   },
   hours: (h) => h === 1 ? '1 hour' : `${h} hours`,
+  /* Human-friendly "Xh Ym" for QR-tracked durations. 0.06 → "3m", 1.5 → "1h 30m". */
+  hoursMin: (h) => {
+    if (h == null || isNaN(h)) return '—';
+    const totalMin = Math.round(parseFloat(h) * 60);
+    if (totalMin < 1) return '0m';
+    if (totalMin < 60) return `${totalMin}m`;
+    const hr = Math.floor(totalMin / 60);
+    const mn = totalMin % 60;
+    return mn ? `${hr}h ${mn}m` : `${hr}h`;
+  },
   points: (p) => `${p.toLocaleString()} pts`,
 };
 

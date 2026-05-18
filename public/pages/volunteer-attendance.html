@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Attendance | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    .summary-strip { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+    .s-box { background:#fff; border:1px solid var(--border); border-radius:12px; padding:0.875rem 1.25rem; flex:1; min-width:140px; }
+    .s-val { font-size:1.5rem; font-weight:800; color:var(--primary); }
+    .s-lbl { font-size:0.72rem; color:var(--text-muted); margin-top:0.1rem; text-transform:uppercase; letter-spacing:.04em; }
+
+    .active-checkin {
+      background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+      color: #fff; border-radius: 14px;
+      padding: 1.25rem 1.5rem; margin-bottom: 1.5rem;
+      display: flex; align-items: center; gap: 1rem;
+      box-shadow: 0 8px 24px rgba(22, 163, 74, 0.2); flex-wrap: wrap;
+    }
+    .ac-pulse {
+      width: 12px; height: 12px; border-radius: 50%; background: #fff;
+      box-shadow: 0 0 0 0 rgba(255,255,255,0.7);
+      animation: pulse 1.5s infinite; flex-shrink: 0;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.7); }
+      70% { box-shadow: 0 0 0 12px rgba(255,255,255,0); }
+      100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+    }
+    .ac-body { flex: 1; min-width: 0; }
+    .ac-title { font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.9; margin-bottom: 0.2rem; }
+    .ac-gig { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.1rem; }
+    .ac-meta { font-size: 0.82rem; opacity: 0.9; }
+    .ac-btn {
+      background: #fff; color: #166534; border: none;
+      padding: 0.625rem 1.25rem; border-radius: 999px;
+      font-size: 0.85rem; font-weight: 700; cursor: pointer;
+    }
+    .ac-btn:hover { background: #f0fdf4; }
+    .ac-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .att-card {
+      background: #fff; border: 1px solid var(--border); border-radius: 12px;
+      padding: 1rem 1.25rem; margin-bottom: 0.875rem;
+      display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap;
+    }
+    .att-main { flex: 1; min-width: 240px; }
+    .att-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.2rem; }
+    .att-org { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .att-times { font-size: 0.82rem; color: #475569; display: flex; gap: 1rem; flex-wrap: wrap; }
+    .att-times strong { color: var(--text); }
+    .att-hours {
+      font-size: 1.25rem; font-weight: 800; color: var(--primary);
+      flex-shrink: 0; text-align: right; min-width: 90px;
+    }
+    .att-hours-lbl { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; }
+    .att-status {
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      font-size: 0.72rem; font-weight: 700; margin-bottom: 0.4rem;
+    }
+    .att-status.open { background:#dcfce7; color:#166534; }
+    .att-status.done { background:#e0e7ff; color:#3730a3; }
+    .att-status.auto { background:#fef3c7; color:#92400e; }
+
+    .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside id="sidebar" class="sidebar"></aside>
+<div class="page-content">
+  <div class="container">
+    <div class="page-header">
+      <h1>My Attendance</h1>
+      <p class="text-muted">All gigs you've checked in to via QR code, with hours logged</p>
+    </div>
+
+    <div id="activeCheckin"></div>
+
+    <div class="summary-strip">
+      <div class="s-box"><div class="s-val" id="sSessions">0</div><div class="s-lbl">Sessions Attended</div></div>
+      <div class="s-box"><div class="s-val" id="sHours">0</div><div class="s-lbl">Total Hours (QR-verified)</div></div>
+      <div class="s-box"><div class="s-val" id="sGigs">0</div><div class="s-lbl">Unique Gigs</div></div>
+    </div>
+
+    <div id="attList">
+      <div style="text-align:center;padding:3rem"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/footer.js"></script>
+<script>
+API.requireAuth('volunteer');
+
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+}
+
+function fmtTime(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' });
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-CA', { year:'numeric', month:'short', day:'numeric' });
+}
+
+function renderActive(active) {
+  const container = document.getElementById('activeCheckin');
+  if (!active) { container.innerHTML = ''; return; }
+  const checkedInAt = new Date(active.checkInAt);
+  const elapsedMs = Date.now() - checkedInAt.getTime();
+  const elapsedH = Math.floor(elapsedMs / 3600000);
+  const elapsedM = Math.floor((elapsedMs % 3600000) / 60000);
+  const gigTitle = active.gig?.title || 'Volunteer session';
+  const orgName  = active.gig?.org?.orgName || '';
+  container.innerHTML = `
+    <div class="active-checkin">
+      <div class="ac-pulse"></div>
+      <div class="ac-body">
+        <div class="ac-title">Currently checked in</div>
+        <div class="ac-gig">${escHtml(gigTitle)}</div>
+        <div class="ac-meta">${escHtml(orgName)}${orgName ? ' · ' : ''}Since ${fmtTime(active.checkInAt)} (${elapsedH}h ${elapsedM}m elapsed)</div>
+      </div>
+      <button class="ac-btn" id="checkOutBtn" onclick="doCheckOut(${active.gigId})">Check Out</button>
+    </div>`;
+}
+
+async function doCheckOut(gigId) {
+  const btn = document.getElementById('checkOutBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Checking out...'; }
+  try {
+    const resp = await fetch(`/api/attendance/checkout/${gigId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${API.getToken()}` },
+    });
+    const data = await resp.json();
+    if (data.success) {
+      Toast.success(`Checked out — ${data.data.hoursWorked}h logged`);
+      load();
+    } else {
+      Toast.error(data.message || 'Could not check out.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Check Out'; }
+    }
+  } catch (e) {
+    Toast.error('Could not check out.');
+    if (btn) { btn.disabled = false; btn.textContent = 'Check Out'; }
+  }
+}
+
+function renderRows(rows) {
+  if (!rows.length) {
+    document.getElementById('attList').innerHTML = `
+      <div class="empty-state">
+        <p>No sessions logged yet.</p>
+        <p style="font-size:0.85rem">When you check in to a gig via QR code, your sessions will appear here.</p>
+      </div>`;
+    return;
+  }
+  document.getElementById('attList').innerHTML = rows.map(a => {
+    const gig = a.gig || {};
+    const orgName = gig.org?.orgName || '';
+    const statusHtml = !a.checkOutAt
+      ? '<span class="att-status open">Open</span>'
+      : (a.autoCheckedOut ? '<span class="att-status auto">Auto checked out</span>' : '<span class="att-status done">Completed</span>');
+    const hours = a.hoursWorked != null ? a.hoursWorked.toFixed(2) : (a.checkOutAt ? '—' : '…');
+    return `
+      <div class="att-card">
+        <div class="att-main">
+          ${statusHtml}
+          <div class="att-title">${escHtml(gig.title || 'Volunteer session')}</div>
+          <div class="att-org">${escHtml(orgName)}</div>
+          <div class="att-times">
+            <div><strong>Date:</strong> ${fmtDate(a.checkInAt)}</div>
+            <div><strong>Check-in:</strong> ${fmtTime(a.checkInAt)}</div>
+            <div><strong>Check-out:</strong> ${fmtTime(a.checkOutAt)}</div>
+          </div>
+        </div>
+        <div>
+          <div class="att-hours">${hours}${a.hoursWorked != null ? 'h' : ''}</div>
+          <div class="att-hours-lbl">${a.hoursWorked != null ? 'logged' : 'in progress'}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function load() {
+  try {
+    const { data } = await API.get('/attendance/my');
+    const rows = data.attendances || [];
+    renderActive(data.active);
+
+    const stats = data.stats || { totalSessions: 0, totalHours: 0 };
+    document.getElementById('sSessions').textContent = stats.totalSessions;
+    document.getElementById('sHours').textContent    = stats.totalHours;
+    document.getElementById('sGigs').textContent     = new Set(rows.map(a => a.gigId)).size;
+
+    renderRows(rows);
+  } catch (e) {
+    document.getElementById('attList').innerHTML = `<div class="empty-state">${escHtml(e.message || 'Could not load attendance.')}</div>`;
+  }
+}
+
+load();
+setInterval(() => { if (document.getElementById('activeCheckin').children.length) load(); }, 60000);
+</script>
+</body>
+</html>

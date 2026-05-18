@@ -6,23 +6,93 @@
   <title>My Applications | ImpactCircle</title>
   <link rel="stylesheet" href="/css/base.css">
   <style>
-    .app-card { border:1px solid var(--border); border-radius:12px; padding:1.25rem; background:#fff; display:flex; gap:1rem; align-items:flex-start; }
-    .app-card + .app-card { margin-top:0.875rem; }
-    .app-cat-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-top:5px; }
-    .app-title { font-weight:700; font-size:0.95rem; margin-bottom:0.2rem; }
-    .app-org { font-size:0.82rem; color:var(--text-muted); margin-bottom:0.5rem; }
-    .app-meta { display:flex; flex-wrap:wrap; gap:0.5rem; font-size:0.78rem; color:var(--text-muted); }
-    .empty-state { text-align:center; padding:4rem 1rem; color:var(--text-muted); }
+    .gig-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem; }
+    .gig-grid .gig-title {
+      white-space: normal; overflow: visible; display: block;
+      text-overflow: unset; line-height: 1.3;
+    }
+    .gig-grid .gig-card-top {
+      flex-direction: column; align-items: stretch; gap: 0.5rem;
+    }
+    .gig-grid .gig-card-top .cat-pill { align-self: flex-start; }
+    .gig-meta-item { font-size: 0.72rem !important; }
+
+    .page-content .gig-card {
+      overflow: hidden; padding: 0; display: flex;
+      flex-direction: column; height: 100%;
+    }
+    .gig-card-media {
+      height: 148px; overflow: hidden; flex-shrink: 0;
+      background: linear-gradient(135deg, #eaf4ff 0%, #e0f2fe 100%);
+      position: relative;
+    }
+    .gig-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .app-status-overlay {
+      position: absolute; top: 0.625rem; right: 0.625rem;
+      padding: 3px 12px; border-radius: 999px;
+      font-size: 0.72rem; font-weight: 700; color: #fff;
+      backdrop-filter: blur(4px); box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .app-status-overlay.s-pending  { background: rgba(245, 158, 11, 0.95); }
+    .app-status-overlay.s-approved { background: rgba(22, 163, 74, 0.95); }
+    .app-status-overlay.s-rejected { background: rgba(220, 38, 38, 0.95); }
+
+    .gig-card-body { padding: 1.15rem 1.25rem 0; flex: 1; display: flex; flex-direction: column; }
+    .gig-card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 0.5rem; margin-top: auto;
+      padding: 0.875rem 1.25rem 1.15rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .app-note {
+      font-size: 0.78rem; color: #555;
+      background: #f8fafc; padding: 0.5rem 0.75rem;
+      border-radius: 8px; margin-top: 0.6rem;
+      border-left: 3px solid var(--border);
+      font-style: italic;
+    }
+
+    .btn-scan {
+      background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+      color: #fff; border: none;
+      display: inline-flex; align-items: center; gap: 0.4rem;
+    }
+    .btn-scan:hover { background: linear-gradient(135deg, #15803d 0%, #14532d 100%); color: #fff; }
+    .btn-withdraw {
+      background: #fff; color: #dc2626; border: 1px solid #fecaca;
+    }
+    .btn-withdraw:hover { background: #fef2f2; border-color: #fca5a5; }
+
+    .footer-link {
+      font-size: 0.78rem; color: var(--text-muted);
+      text-decoration: none; padding: 0.35rem 0;
+    }
+    .footer-link:hover { color: var(--primary); }
+
+    .cat-pill { border-radius: 999px; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.65rem; }
+    .cat-pill-1 { background:#e6f0ff; color:#0066ff; }
+    .cat-pill-2 { background:#effff6; color:#00a344; }
+    .cat-pill-3 { background:#fff9d6; color:#8a6a00; }
+    .cat-pill-4 { background:#f3e8ff; color:#7e22ce; }
+    .cat-pill-5 { background:#e0f7fa; color:#0e7490; }
+    .cat-pill-6 { background:#fce7f3; color:#be185d; }
+    .cat-pill-7 { background:#fff1e0; color:#c2410c; }
+    .cat-pill-8 { background:#f0f9ff; color:#0369a1; }
+
     .filter-bar { display:flex; gap:0.625rem; flex-wrap:wrap; margin-bottom:1.25rem; }
     .filter-btn { padding:0.35rem 0.875rem; border-radius:20px; border:1px solid var(--border); font-size:0.82rem; cursor:pointer; background:#fff; transition:all 0.12s; font-weight:500; }
     .filter-btn.active { color:#fff; }
     .filter-btn[data-status=""].active  { background:#0066ff; border-color:#0066ff; }
     .filter-btn[data-status="pending"].active  { background:#f59e0b; border-color:#f59e0b; }
-    .filter-btn[data-status="pending"]:not(.active):hover { border-color:#f59e0b; color:#b45309; }
     .filter-btn[data-status="approved"].active { background:#22c55e; border-color:#22c55e; }
-    .filter-btn[data-status="approved"]:not(.active):hover { border-color:#22c55e; color:#16a34a; }
     .filter-btn[data-status="rejected"].active { background:#ef4444; border-color:#ef4444; }
-    .filter-btn[data-status="rejected"]:not(.active):hover { border-color:#ef4444; color:#dc2626; }
+
+    .empty-state { text-align:center; padding:4rem 1rem; color:var(--text-muted); grid-column: 1 / -1; }
+
+    @media (max-width: 600px) {
+      .gig-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -45,13 +115,14 @@
       <button class="filter-btn" data-status="rejected" onclick="setFilter(this,'rejected')">Rejected</button>
     </div>
 
-    <div id="list"><div style="text-align:center;padding:3rem"><div class="spinner"></div></div></div>
+    <div id="list" class="gig-grid"><div style="grid-column:1/-1;text-align:center;padding:3rem"><div class="spinner"></div></div></div>
   </div>
 </div>
 
 <script src="/js/api.js"></script>
 <script src="/js/nav.js"></script>
 <script src="/js/footer.js"></script>
+<script src="/js/qr-scanner.js"></script>
 <script>
 API.requireAuth('volunteer');
 let all = [], activeFilter = '';
@@ -61,6 +132,45 @@ function setFilter(btn, status) {
   btn.classList.add('active');
   activeFilter = status;
   render();
+}
+
+const TIME_LABELS = { morning:'Morning', afternoon:'Afternoon', evening:'Evening', flexible:'Flexible' };
+
+const SVG = {
+  cal:  `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+  clk:  `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+  pin:  `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+  bldg: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>`,
+  rec:  `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`,
+};
+
+const categoryColorMap = {};
+let colorIndex = 0;
+function getCatPillClass(catId) {
+  if (!categoryColorMap[catId]) {
+    colorIndex = (colorIndex % 8) + 1;
+    categoryColorMap[catId] = colorIndex;
+  }
+  return `cat-pill cat-pill-${categoryColorMap[catId]}`;
+}
+
+function gigPlaceholderImage(catName) {
+  const s = String(catName || '').toLowerCase();
+  const base = 'https://images.unsplash.com/photo-';
+  const q = '?w=800&h=480&fit=crop&auto=format&q=80';
+  if (/food|nutrition|hunger|meal/.test(s)) return base + '1488521787991-ed7bbaae773c' + q;
+  if (/environment|climate|nature|garden|green|planet|earth|disability|special/.test(s)) return base + '1441974231531-c6227db76b6e' + q;
+  if (/youth|child|student|school|education|tutor|learn/.test(s)) return base + '1527525443983-6e60c75fff46' + q;
+  if (/senior|elder|aging|older/.test(s)) return base + '1573496359142-b8d87734a5a2' + q;
+  if (/newcomer|immigrant|cultural|integration|refugee/.test(s)) return base + '1529156069898-49953e39b3ac' + q;
+  if (/women|woman|gender/.test(s)) return base + '1573497620053-ea30e8c2ccc8' + q;
+  if (/shelter|housing|home/.test(s)) return base + '1560518883-ce09059eeffa' + q;
+  if (/health|medical|wellness|care|palliative/.test(s)) return base + '1576091160399-112ba8d25d1d' + q;
+  return base + '1559027615-cd4628902d4a' + q;
+}
+
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
 }
 
 function render() {
@@ -73,21 +183,17 @@ function render() {
     </div>`;
     return;
   }
-  const STATUS_COLOR = { pending:'#f59e0b', approved:'#22c55e', rejected:'#ef4444' };
-  const TIME_LABELS  = { morning:'Morning', afternoon:'Afternoon', evening:'Evening', flexible:'Flexible' };
-  const SVG = {
-    cal: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
-    clk: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
-    pin: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
-    rec: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`,
-  };
 
   document.getElementById('list').innerHTML = list.map(a => {
-    const g   = a.gig || {};
+    const g = a.gig || {};
     const cat = g.category || {};
-    const org = g.org?.orgName || '—';
+    const catName = cat.name || 'General';
+    const orgName = g.org?.orgName || '';
+    const pillCls = getCatPillClass(cat.id || 'default');
+    const imgSrc = gigPlaceholderImage(catName);
 
-    const dateStr = g.startDate ? fmt.date(g.startDate) + (g.endDate && g.endDate !== g.startDate ? ' – ' + fmt.date(g.endDate) : '') : null;
+    const dateStr = g.startDate ? fmt.date(g.startDate) : null;
+    const dateEnd = g.endDate && g.endDate !== g.startDate ? ` – ${fmt.date(g.endDate)}` : '';
 
     const timeLabel = g.timeOfDay && g.timeOfDay !== 'flexible'
       ? (g.startTime ? `${g.startTime}${g.endTime ? ' – ' + g.endTime : ''}` : TIME_LABELS[g.timeOfDay] || g.timeOfDay)
@@ -103,32 +209,82 @@ function render() {
       : null;
 
     const hours = g.estimatedHours;
+    const statusCls = `s-${a.status}`;
+    const statusLbl = a.status.charAt(0).toUpperCase() + a.status.slice(1);
 
-    return `<div class="app-card">
-      <div class="app-cat-dot" style="background:${cat.colorHex||'var(--primary)'}"></div>
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap">
-          <div>
-            <div class="app-title">${g.title||'—'}</div>
-            <div class="app-org">${org}${cat.name ? ` · <span style="color:${cat.colorHex||'var(--primary)'};font-weight:600">${cat.name}</span>` : ''}</div>
-          </div>
-          <div style="text-align:right;flex-shrink:0">
-            <span class="badge" style="background:${STATUS_COLOR[a.status]||'var(--primary)'};color:#fff;display:inline-block">${a.status}</span>
-            <div style="margin-top:0.4rem"><a href="/gigs/${g.id}" class="btn btn-sm btn-secondary">View Gig</a></div>
-          </div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:0.3rem;margin-top:0.5rem;font-size:0.8rem;color:var(--text-muted)">
-          ${dateStr      ? `<span style="display:flex;align-items:center;gap:0.35rem">${SVG.cal} ${dateStr}</span>` : ''}
-          ${timeLabel    ? `<span style="display:flex;align-items:center;gap:0.35rem">${SVG.clk} ${timeLabel}</span>` : ''}
-          ${recStr       ? `<span style="display:flex;align-items:center;gap:0.35rem;color:#00a344;font-weight:500">${SVG.rec} ${recStr}</span>` : ''}
-          ${locStr       ? `<span style="display:flex;align-items:center;gap:0.35rem">${SVG.pin} ${locStr}</span>` : ''}
-          ${hours        ? `<span style="display:flex;align-items:center;gap:0.35rem">${SVG.clk} ${hours} hr${hours!==1?'s':''}/session</span>` : ''}
-          <span style="display:flex;align-items:center;gap:0.35rem">${SVG.cal} Applied: ${fmt.date(a.createdAt)}</span>
-        </div>
-        ${a.personalStatement ? `<p style="font-size:0.82rem;color:var(--text-muted);margin:0.625rem 0 0;line-height:1.5;border-left:3px solid var(--border);padding-left:0.625rem">${a.personalStatement.slice(0,200)}${a.personalStatement.length>200?'…':''}</p>` : ''}
+    /* Footer action varies by status:
+       - approved: green "Scan QR to Check In" button (opens camera scanner)
+       - pending : "Withdraw" button (removes application)
+       - rejected: muted "View Gig" link (no action available)               */
+    let footer = '';
+    if (a.status === 'approved') {
+      footer = `
+        <a href="/gigs/${g.id}" class="footer-link" onclick="event.stopPropagation()">View gig</a>
+        <button class="btn btn-sm btn-scan" onclick="event.stopPropagation();ImpactQR.open()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="17"/><line x1="17" y1="14" x2="17" y2="21"/><line x1="20" y1="14" x2="20" y2="17"/><line x1="14" y1="20" x2="17" y2="20"/></svg>
+          Scan QR to Check In
+        </button>`;
+    } else if (a.status === 'pending') {
+      footer = `
+        <a href="/gigs/${g.id}" class="footer-link" onclick="event.stopPropagation()">View gig</a>
+        <button class="btn btn-sm btn-withdraw" onclick="event.stopPropagation();withdrawApp(${a.id}, '${escHtml(g.title || '').replace(/'/g,"\\'")}')">
+          Withdraw
+        </button>`;
+    } else {
+      footer = `
+        <span></span>
+        <a href="/gigs/${g.id}" class="btn btn-sm btn-secondary" onclick="event.stopPropagation()">View Gig &rarr;</a>`;
+    }
+
+    /* Whole-card click goes to the gig only for rejected — for pending/approved
+       the card has its own primary action and we don't want misclicks. */
+    const cardClick = a.status === 'rejected' ? `onclick="goToGig('${g.id}')"` : '';
+
+    return `
+    <div class="gig-card" ${cardClick}>
+      <div class="gig-card-media">
+        <img src="${imgSrc}" alt="${escHtml(catName)}" loading="lazy" width="400" height="210">
+        <span class="app-status-overlay ${statusCls}">${statusLbl}</span>
       </div>
+      <div class="gig-card-body">
+        <div class="gig-card-top">
+          <span class="${pillCls}">${escHtml(catName)}</span>
+          <div>
+            <div class="gig-title">${escHtml(g.title || '—')}</div>
+            ${orgName ? `<div class="gig-org" style="display:flex;align-items:center;gap:0.3rem">${SVG.bldg} ${escHtml(orgName)}</div>` : ''}
+          </div>
+        </div>
+
+        <div class="gig-meta" style="margin-top:0.6rem;display:flex;flex-direction:column;gap:0.3rem">
+          ${dateStr   ? `<span class="gig-meta-item" style="display:flex;align-items:center;gap:0.35rem">${SVG.cal} ${dateStr}${dateEnd}</span>` : ''}
+          ${timeLabel ? `<span class="gig-meta-item" style="display:flex;align-items:center;gap:0.35rem">${SVG.clk} ${escHtml(timeLabel)}</span>` : ''}
+          ${recStr    ? `<span class="gig-meta-item" style="display:flex;align-items:center;gap:0.35rem;color:#00a344;font-weight:600">${SVG.rec} ${escHtml(recStr)}</span>` : ''}
+          ${locStr    ? `<span class="gig-meta-item" style="display:flex;align-items:center;gap:0.35rem">${SVG.pin} ${escHtml(locStr)}</span>` : ''}
+          ${hours     ? `<span class="gig-meta-item" style="display:flex;align-items:center;gap:0.35rem">${SVG.clk} ${hours} hr${hours!==1?'s':''}/session</span>` : ''}
+          <span class="gig-meta-item" style="display:flex;align-items:center;gap:0.35rem">${SVG.cal} Applied ${fmt.date(a.createdAt)}</span>
+        </div>
+
+        ${a.personalStatement ? `<div class="app-note">&ldquo;${escHtml(a.personalStatement.slice(0,140))}${a.personalStatement.length>140?'…':''}&rdquo;</div>` : ''}
+      </div>
+      <div class="gig-card-footer">${footer}</div>
     </div>`;
   }).join('');
+}
+
+function goToGig(id) {
+  window.location.href = '/gigs/' + id;
+}
+
+async function withdrawApp(appId, gigTitle) {
+  if (!confirm(`Withdraw your application for "${gigTitle}"? This can't be undone.`)) return;
+  try {
+    await API.delete(`/gigs/applications/${appId}`);
+    Toast.success('Application withdrawn.');
+    all = all.filter(a => a.id !== appId);
+    render();
+  } catch (e) {
+    Toast.error(e.message || 'Could not withdraw application.');
+  }
 }
 
 async function load() {

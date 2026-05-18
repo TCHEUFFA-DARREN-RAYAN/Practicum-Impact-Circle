@@ -652,7 +652,20 @@ async function handleContinue(btn) {
       await API.post('/volunteers/register/step/5', { consent: true });
 
       Toast.success('Welcome to ImpactCircle! Registration complete.');
-      setTimeout(() => window.location.href = '/volunteer-dashboard', 1200);
+      /* Honour ?redirect=… (e.g. coming from a QR check-in) or the localStorage
+         fallback we set on the check-in page. Falls back to dashboard. */
+      const qParam = new URLSearchParams(window.location.search).get('redirect');
+      let target = '/volunteer-dashboard';
+      if (qParam && qParam.startsWith('/')) {
+        target = qParam;
+      } else {
+        try {
+          const stored = localStorage.getItem('ic_post_login_redirect');
+          if (stored && stored.startsWith('/')) target = stored;
+        } catch {}
+      }
+      try { localStorage.removeItem('ic_post_login_redirect'); } catch {}
+      setTimeout(() => window.location.href = target, 1200);
 
     } catch (err) {
       // Duplicate email → send user back to step 0 so they can correct it

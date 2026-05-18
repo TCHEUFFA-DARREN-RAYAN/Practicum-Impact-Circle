@@ -241,19 +241,31 @@ router.get('/gig/:gigId/absentees', requireAuth, async (req, res, next) => {
 
 /**
  * GET /api/attendance/my
- * Get volunteer's own attendance history
+ * Get volunteer's own attendance history (with optional active-session lookup)
  */
 router.get('/my', requireAuth, requireRole('volunteer'), async (req, res, next) => {
   try {
     const attendances = await Attendance.findAll({
       where: { volunteerId: req.user.id },
       include: [{
-        model: Gig, as: 'gig', attributes: ['id', 'title', 'startDate', 'endDate'],
-        include: [{ model: Organization, as: 'org', attributes: ['orgName'] }],
+        model: Gig, as: 'gig', attributes: ['id', 'title', 'startDate', 'endDate', 'estimatedHours'],
+        include: [{ model: Organization, as: 'org', attributes: ['orgName', 'logoUrl'] }],
       }],
       order: [['checkInAt', 'DESC']],
     });
-    res.json({ success: true, data: { attendances } });
+
+    const active = attendances.find(a => !a.checkOutAt) || null;
+    const completed = attendances.filter(a => a.checkOutAt);
+    const totalHours = parseFloat(completed.reduce((s, a) => s + (a.hoursWorked || 0), 0).toFixed(2));
+
+    res.json({
+      success: true,
+      data: {
+        attendances,
+        active,
+        stats: { totalSessions: completed.length, totalHours },
+      },
+    });
   } catch (err) { next(err); }
 });
 

@@ -15,6 +15,12 @@
     .cat-bar-wrap { flex:1; height:8px; background:var(--border); border-radius:4px; overflow:hidden; }
     .cat-bar { height:100%; border-radius:4px; }
     .empty-state { text-align:center; padding:4rem 1rem; color:var(--text-muted); }
+    .att-row { display:flex; align-items:center; gap:1rem; padding:0.75rem 0; border-bottom:1px solid var(--border); }
+    .att-row:last-child { border-bottom:none; }
+    .att-row-info { flex:1; min-width:0; }
+    .att-row-title { font-size:0.9rem; font-weight:600; margin-bottom:0.15rem; }
+    .att-row-meta { font-size:0.78rem; color:var(--text-muted); }
+    .att-row-h { font-size:0.95rem; font-weight:700; color:var(--primary); flex-shrink:0; }
   </style>
 </head>
 <body>
@@ -39,19 +45,30 @@
 <script>
 API.requireAuth('volunteer');
 
+function escHtml(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+function fmtDate(d) { return d ? new Date(d).toLocaleDateString('en-CA', { year:'numeric', month:'short', day:'numeric' }) : '—'; }
+function fmtTime(d) { return d ? new Date(d).toLocaleTimeString('en-CA', { hour:'2-digit', minute:'2-digit' }) : '—'; }
+
 async function load() {
   try {
-    const { data } = await API.get('/volunteers/me/dashboard');
-    const stats = data.stats || {};
-    const catHours = Array.isArray(data.categoryHours) ? data.categoryHours : [];
+    const [dashRes, attRes] = await Promise.all([
+      API.get('/volunteers/me/dashboard'),
+      API.get('/attendance/my').catch(() => ({ data: { attendances: [], stats: { totalSessions: 0, totalHours: 0 } } })),
+    ]);
+    const stats = dashRes.data.stats || {};
+    const catHours = Array.isArray(dashRes.data.categoryHours) ? dashRes.data.categoryHours : [];
     const maxHours = catHours.reduce((m,c) => Math.max(m, c.hours||0), 1);
+    const attendances = attRes.data.attendances || [];
+    const attStats = attRes.data.stats || { totalSessions: 0, totalHours: 0 };
+    const recentAtt = attendances.slice(0, 5);
 
     document.getElementById('content').innerHTML = `
       <div class="stat-grid">
         <div class="stat-box"><div class="stat-num">${(stats.totalVerifiedHours||0).toFixed(1)}</div><div class="stat-lbl">Total Hours Contributed</div></div>
+        <div class="stat-box"><div class="stat-num">${attStats.totalSessions}</div><div class="stat-lbl">Sessions Attended (QR)</div></div>
+        <div class="stat-box"><div class="stat-num">${attStats.totalHours.toFixed(1)}</div><div class="stat-lbl">Hours via QR Check-in</div></div>
         <div class="stat-box"><div class="stat-num">${stats.approvedCount||0}</div><div class="stat-lbl">Gigs Completed</div></div>
         <div class="stat-box"><div class="stat-num">${stats.gigCount||0}</div><div class="stat-lbl">Gigs Applied</div></div>
-        <div class="stat-box"><div class="stat-num">${catHours.length}</div><div class="stat-lbl">Impact Categories</div></div>
       </div>
 
       <div class="card" style="padding:1.5rem;margin-bottom:1.25rem">
@@ -59,14 +76,28 @@ async function load() {
         ${catHours.length ? catHours.map(c => `
           <div class="cat-row">
             <div class="cat-dot" style="background:${c.category&&c.category.colorHex||'var(--primary)'}"></div>
-            <div style="min-width:140px;font-size:0.875rem;font-weight:600">${c.category&&c.category.name||'—'}</div>
+            <div style="min-width:140px;font-size:0.875rem;font-weight:600">${escHtml(c.category&&c.category.name||'—')}</div>
             <div class="cat-bar-wrap"><div class="cat-bar" style="width:${Math.round((c.hours/maxHours)*100)}%;background:${c.category&&c.category.colorHex||'var(--primary)'}"></div></div>
             <div style="min-width:50px;text-align:right;font-size:0.875rem;font-weight:700;color:var(--text)">${c.hours}h</div>
           </div>`).join('') : '<p class="text-muted" style="text-align:center;padding:1rem">Complete your first gig to see your impact here!</p>'}
       </div>
 
+      <div class="card" style="padding:1.5rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.875rem">
+          <h3 style="margin:0;font-size:1rem">Recent Attended Sessions</h3>
+          <a href="/volunteer/attendance" class="btn btn-ghost btn-sm" style="font-size:0.78rem">View all →</a>
+        </div>
+        ${recentAtt.length ? recentAtt.map(a => `
+          <div class="att-row">
+            <div class="att-row-info">
+              <div class="att-row-title">${escHtml(a.gig?.title || 'Session')}</div>
+              <div class="att-row-meta">${escHtml(a.gig?.org?.orgName || '')} · ${fmtDate(a.checkInAt)} · ${fmtTime(a.checkInAt)}${a.checkOutAt ? ' – ' + fmtTime(a.checkOutAt) : ' · still checked in'}</div>
+            </div>
+            <div class="att-row-h">${a.hoursWorked != null ? a.hoursWorked.toFixed(2) + 'h' : '—'}</div>
+          </div>`).join('') : '<p class="text-muted" style="text-align:center;padding:1rem;margin:0">Check in to a gig via QR code to log your first session.</p>'}
+      </div>
     `;
-  } catch(e) { document.getElementById('content').innerHTML=`<div class="empty-state">${e.message}</div>`; }
+  } catch(e) { document.getElementById('content').innerHTML=`<div class="empty-state">${escHtml(e.message)}</div>`; }
 }
 
 load();

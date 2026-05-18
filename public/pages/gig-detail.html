@@ -6,9 +6,31 @@
   <title>Gig Detail | ImpactCircle</title>
   <link rel="stylesheet" href="/css/base.css">
   <style>
+    .gig-hero {
+      width: 100%; height: 240px; border-radius: 14px;
+      overflow: hidden; margin-bottom: 1.25rem;
+      background: linear-gradient(135deg, #eaf4ff 0%, #e0f2fe 100%);
+      position: relative;
+    }
+    .gig-hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .gig-hero-overlay {
+      position: absolute; left: 1.25rem; bottom: 1rem; right: 1.25rem;
+      display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;
+    }
+    .gig-hero-overlay .badge,
+    .gig-hero-overlay .cat-pill { backdrop-filter: blur(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.18); }
+
+    .back-link {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-size: 0.85rem; color: var(--text-muted); text-decoration: none;
+      margin-bottom: 1rem; transition: color 0.12s;
+    }
+    .back-link:hover { color: var(--primary); }
+
     @media (max-width: 768px) {
       .grid { grid-template-columns: 1fr !important; }
       .container { padding: 0 1rem; }
+      .gig-hero { height: 180px; border-radius: 12px; }
     }
   </style>
 </head>
@@ -17,14 +39,11 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <aside id="sidebar" class="sidebar"></aside>
 <div class="page-content">
-  <div class="container" style="max-width:900px">
-    <nav style="font-size:0.8125rem;color:var(--text-muted);margin-bottom:1.25rem;display:flex;align-items:center;gap:0.5rem">
-      <a href="/" style="color:var(--text-muted);text-decoration:none" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">Home</a>
-      <span>›</span>
-      <a href="/gigs" style="color:var(--text-muted);text-decoration:none" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">Browse Gigs</a>
-      <span>›</span>
-      <span id="breadcrumbTitle" style="color:var(--text)">Loading…</span>
-    </nav>
+  <div class="container" style="max-width:980px">
+    <a href="/gigs" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Browse Gigs
+    </a>
     <div id="gigContent"><div class="loading-overlay"><div class="spinner spinner-lg"></div></div></div>
   </div>
 </div>
@@ -54,6 +73,18 @@
 const gigId = window.location.pathname.split('/').pop();
 
 const TIME_LABELS = { morning: 'Morning', afternoon: 'Afternoon', evening: 'Evening', flexible: 'Flexible' };
+
+function gigHeroImage(catName) {
+  const s = String(catName || '').toLowerCase();
+  const u = 'https://images.unsplash.com/photo-';
+  const q = '?w=1200&h=480&fit=crop&auto=format&q=80';
+  if (/food|nutrition|hunger|meal/.test(s)) return u + '1488521787991-ed7bbaae773c' + q;
+  if (/environment|climate|nature|garden|green|disability|special/.test(s)) return u + '1441974231531-c6227db76b6e' + q;
+  if (/youth|child|student|school|education/.test(s)) return u + '1527525443983-6e60c75fff46' + q;
+  if (/senior|elder|aging|older/.test(s)) return u + '1573496359142-b8d87734a5a2' + q;
+  if (/health|medical|wellness|care|palliative/.test(s)) return u + '1576091160399-112ba8d25d1d' + q;
+  return u + '1559027615-cd4628902d4a' + q;
+}
 
 function formatDays(days) {
   if (!days || !days.length) return '';
@@ -88,7 +119,6 @@ async function load() {
     const { gig } = gigRes.data;
     const appData = appRes?.data;
 
-    document.getElementById('breadcrumbTitle').textContent = gig.title || 'Gig Detail';
     document.title = `${gig.title} | ImpactCircle`;
 
     const isVerifiedVolunteer = isVolunteer && user.verificationStatus === 'verified';
@@ -132,22 +162,25 @@ async function load() {
     }
     if (isVolunteer && gig.verifiedOnly) applyHtml += `<div class="form-hint" style="text-align:center;margin-top:0.5rem">Requires Verified Volunteer badge</div>`;
 
+    const heroImg = gigHeroImage(gig.category?.name);
     document.getElementById('gigContent').innerHTML = `
-      <div style="margin-bottom:1.5rem">
-        <a href="/gigs" class="btn btn-ghost btn-sm" style="padding-left:0">← Back to Gigs</a>
+      <div class="gig-hero">
+        <img src="${heroImg}" alt="" loading="lazy">
+        <div class="gig-hero-overlay">
+          <span class="cat-pill" style="background:${gig.category?.colorHex || '#0066ff'};color:#fff">${gig.category?.icon || ''} ${gig.category?.name || 'General'}</span>
+          <span class="badge" style="background:${gig.status === 'open' ? '#16a34a' : '#64748b'};color:#fff">${gig.status}</span>
+          ${gig.isRecurring ? '<span class="badge" style="background:rgba(255,255,255,0.9);color:#00a344">Recurring</span>' : ''}
+        </div>
       </div>
       <div class="grid" style="grid-template-columns:2fr 1fr;gap:1.5rem;align-items:start">
         <div>
           <div class="card mb-4">
-            <div style="margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center">
-              <span class="cat-pill" style="background:${gig.category?.colorHex || '#0066ff'}22;color:${gig.category?.colorHex || '#0066ff'}">${gig.category?.icon || ''} ${gig.category?.name || 'General'}</span>
-              <span class="badge ${gig.status === 'open' ? 'badge-open' : 'badge-closed'}">${gig.status}</span>
-              ${gig.isRecurring ? '<span class="badge" style="background:#effff6;color:#00a344">Recurring</span>' : ''}
+            <h1 style="font-size:1.65rem;margin-bottom:0.5rem;line-height:1.25">${gig.title}</h1>
+            <div style="color:var(--text-muted);font-size:0.875rem;margin-bottom:0.5rem">${gig.org?.orgName || ''}</div>
+            ${gig.timeOfDay || gig.verifiedOnly ? `<div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:0.5rem">
               ${gig.timeOfDay ? `<span class="badge" style="background:#fef9c3;color:#854d0e">${TIME_LABELS[gig.timeOfDay] || gig.timeOfDay}</span>` : ''}
               ${gig.verifiedOnly ? '<span class="verified-lock"> Verified volunteers only</span>' : ''}
-            </div>
-            <h1 style="font-size:1.5rem;margin-bottom:0.5rem">${gig.title}</h1>
-            <div style="color:var(--text-muted);font-size:0.875rem;margin-bottom:0.5rem">${gig.org?.orgName || ''}</div>
+            </div>` : ''}
             ${gig.isRecurring && gig.recurrenceType ? `
               <div style="display:flex;align-items:center;gap:0.4rem;font-size:0.84rem;color:#00a344;margin-bottom:1rem;font-weight:600">
                 ${DI.rec}

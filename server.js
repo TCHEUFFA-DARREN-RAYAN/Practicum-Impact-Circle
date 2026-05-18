@@ -88,6 +88,7 @@ const pages = [
   ['/volunteer/matches', 'pages/gig-list.html'],
   ['/volunteer/schedule', 'pages/volunteer-schedule.html'],
   ['/volunteer/impact', 'pages/volunteer-impact.html'],
+  ['/volunteer/attendance', 'pages/volunteer-attendance.html'],
   ['/messages', 'pages/messages.html'],
 
   // ── Organization dashboard (logged in) ──

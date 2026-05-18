@@ -81,7 +81,7 @@
           <td>${a.volunteer?.email || ''}</td>
           <td>${new Date(a.checkInAt).toLocaleString()}</td>
           <td>${a.checkOutAt ? new Date(a.checkOutAt).toLocaleString() : '<span class="badge badge-green">Active</span>'}</td>
-          <td>${a.hoursWorked || '—'}</td>
+          <td>${a.hoursWorked != null ? fmt.hoursMin(a.hoursWorked) : '—'}</td>
           <td>${a.autoCheckedOut ? 'Yes' : 'No'}</td>
         </tr>`;
       }).join('') || '<tr><td colspan="6" style="text-align:center;color:#94a3b8;">No records.</td></tr>';

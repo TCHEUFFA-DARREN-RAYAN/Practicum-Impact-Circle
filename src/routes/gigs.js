@@ -244,8 +244,10 @@ router.post('/:id/apply', requireAuth, requireRole('volunteer'), [
 
     if (gig.maxVolunteers) {
       const approvedCount = await Application.count({ where: { gigId: gig.id, status: 'approved' } });
-      if (approvedCount >= gig.maxVolunteers)
+      if (approvedCount >= gig.maxVolunteers) {
+        if (gig.status === 'open') await gig.update({ status: 'closed' });
         return res.status(400).json({ success: false, message: `This gig has reached its volunteer limit (${gig.maxVolunteers}).` });
+      }
     }
 
     if (gig.verifiedOnly) {
@@ -264,6 +266,47 @@ router.post('/:id/apply', requireAuth, requireRole('volunteer'), [
     if (org) await createNotification(org.userId, `New application received for "${gig.title}"`, 'application', '/org-dashboard');
 
     res.status(201).json({ success: true, message: 'Application submitted.', data: { application } });
+  } catch (err) { next(err); }
+});
+
+/* DELETE /api/gigs/applications/:appId
+   Volunteer withdraws their OWN application. Pending → deleted outright.
+   Approved → also deleted, plus we tear down the linked Task and re-open the
+   gig if it was auto-closed at max capacity. Rejected can't be withdrawn —
+   the org's decision is already on the record. */
+router.delete('/applications/:appId', requireAuth, requireRole('volunteer'), async (req, res, next) => {
+  try {
+    const app = await Application.findByPk(req.params.appId, {
+      include: [{ model: Gig, as: 'gig' }],
+    });
+    if (!app) return res.status(404).json({ success: false, message: 'Application not found.' });
+    if (app.volunteerId !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'You can only withdraw your own application.' });
+    }
+    if (app.status === 'rejected') {
+      return res.status(400).json({ success: false, message: 'A rejected application cannot be withdrawn.' });
+    }
+
+    const wasApproved = app.status === 'approved';
+    const gigId = app.gigId;
+
+    await Task.destroy({ where: { applicationId: app.id } });
+    await app.destroy();
+    if (app.gig) await app.gig.decrement('applicantCount').catch(() => {});
+
+    if (wasApproved && app.gig?.maxVolunteers && app.gig.status === 'closed') {
+      const approvedCount = await Application.count({ where: { gigId, status: 'approved' } });
+      if (approvedCount < app.gig.maxVolunteers) {
+        await Gig.update({ status: 'open' }, { where: { id: gigId } });
+      }
+    }
+
+    if (app.gig) {
+      const org = await Organization.findByPk(app.gig.orgId);
+      if (org) await createNotification(org.userId, `A volunteer withdrew from "${app.gig.title}"`, 'application', '/org-dashboard');
+    }
+
+    res.json({ success: true, message: 'Application withdrawn.' });
   } catch (err) { next(err); }
 });
 

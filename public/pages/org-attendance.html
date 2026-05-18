@@ -222,7 +222,7 @@ async function selectGig(gigId) {
       <td style="color:var(--text-muted)">${a.volunteer?.email || ''}</td>
       <td>${checkin}</td>
       <td>${checkout}</td>
-      <td>${a.hoursWorked != null ? a.hoursWorked + 'h' : '—'}</td>
+      <td>${a.hoursWorked != null ? fmt.hoursMin(a.hoursWorked) : '—'}</td>
       <td>${statusChip}</td>
     </tr>`;
   }).join('') : `<tr><td colspan="6" class="empty-table">No one has checked in yet. Share the QR code or link above.</td></tr>`;
