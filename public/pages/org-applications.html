@@ -6,24 +6,67 @@
   <title>Volunteer Applications | ImpactCircle</title>
   <link rel="stylesheet" href="/css/base.css">
   <style>
-    .app-card { border:1px solid var(--border); border-radius:12px; padding:1.125rem; background:#fff; margin-bottom:0.875rem; display:flex; gap:1rem; align-items:flex-start; }
-    .vol-av { width:44px; height:44px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:700; color:#fff; overflow:hidden; flex-shrink:0; }
-    .vol-av img { width:100%; height:100%; object-fit:cover; }
-    .filter-bar { display:flex; gap:0.625rem; flex-wrap:wrap; margin-bottom:1.25rem; }
-    .filter-btn { padding:0.35rem 0.875rem; border-radius:20px; border:1px solid var(--border); font-size:0.82rem; cursor:pointer; background:#fff; transition:all 0.12s; }
-    .filter-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
-    .empty-state { text-align:center; padding:4rem 1rem; color:var(--text-muted); }
-    .action-btns { display:flex; gap:0.375rem; flex-wrap:wrap; }
-    .decide-modal-backdrop {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      z-index: 2000;
-      align-items: center;
-      justify-content: center;
+    /* Gig rows */
+    .gig-row {
+      border:1px solid var(--border); border-radius:12px; background:#fff;
+      margin-bottom:0.875rem; overflow:hidden;
     }
-    .decide-modal-backdrop.is-open { display: flex; }
+    .gig-row-header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:1rem 1.25rem; cursor:pointer; gap:1rem; flex-wrap:wrap;
+      transition:background 0.12s;
+    }
+    .gig-row-header:hover { background:#f8fafc; }
+    .gig-row-header.open { background:#f0f6ff; }
+    .gig-row-info { flex:1; min-width:0; }
+    .gig-row-title { font-weight:700; font-size:0.95rem; margin-bottom:0.25rem; }
+    .gig-row-meta { font-size:0.8rem; color:var(--text-muted); display:flex; gap:0.75rem; flex-wrap:wrap; }
+    .gig-row-badges { display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; }
+    .badge { font-size:0.75rem; font-weight:600; padding:3px 10px; border-radius:20px; }
+    .badge-pending  { background:#fef9c3; color:#854d0e; }
+    .badge-total    { background:#eff6ff; color:#1d4ed8; }
+    .badge-approved { background:#dcfce7; color:#166534; }
+    .chevron { transition:transform 0.2s; flex-shrink:0; }
+    .gig-row-header.open .chevron { transform:rotate(180deg); }
+
+    /* Applications panel */
+    .apps-panel { display:none; border-top:1px solid var(--border); padding:1.25rem; }
+    .apps-panel.open { display:block; }
+
+    .filter-bar { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem; align-items:center; }
+    .filter-btn { padding:0.3rem 0.75rem; border-radius:20px; border:1px solid var(--border); font-size:0.8rem; cursor:pointer; background:#fff; transition:all 0.12s; }
+    .filter-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+
+    /* Application card */
+    .app-card {
+      border:1px solid var(--border); border-radius:10px; padding:1rem;
+      background:#fafcff; margin-bottom:0.75rem; display:flex; gap:1rem; align-items:flex-start;
+    }
+    .vol-av {
+      width:42px; height:42px; border-radius:50%; background:var(--primary);
+      display:flex; align-items:center; justify-content:center;
+      font-size:1rem; font-weight:700; color:#fff; overflow:hidden; flex-shrink:0;
+    }
+    .vol-av img { width:100%; height:100%; object-fit:cover; }
+    .app-body { flex:1; min-width:0; }
+    .app-name { font-weight:700; font-size:0.9rem; margin-bottom:0.2rem; }
+    .app-meta { font-size:0.78rem; color:var(--text-muted); margin-bottom:0.5rem; display:flex; gap:0.625rem; flex-wrap:wrap; }
+    .vol-stats { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.625rem; }
+    .vs-chip { font-size:0.73rem; font-weight:600; padding:2px 8px; border-radius:20px;
+      background:#f1f5f9; color:#475569; }
+    .vs-chip.ok { background:#dcfce7; color:#166534; }
+    .vs-chip.warn { background:#fef9c3; color:#854d0e; }
+    .app-note { font-size:0.82rem; color:#555; background:#f8fafc; padding:0.5rem 0.75rem;
+      border-radius:8px; margin-bottom:0.625rem; border-left:3px solid var(--border); }
+    .app-actions { display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem; }
+    .status-badge { display:inline-block; padding:2px 10px; border-radius:20px; font-size:0.75rem; font-weight:700; }
+    .status-pending  { background:#fef9c3; color:#854d0e; }
+    .status-approved { background:#dcfce7; color:#166534; }
+    .status-rejected { background:#fee2e2; color:#991b1b; }
+
+    .empty-state { text-align:center; padding:2rem 1rem; color:var(--text-muted); }
+    .global-filter { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.25rem; align-items:center; }
+    .global-filter input { margin-left:auto; padding:0.375rem 0.75rem; border:1px solid var(--border); border-radius:8px; font-size:0.875rem; min-width:180px; }
   </style>
 </head>
 <body>
@@ -33,29 +76,16 @@
 <div class="page-content">
   <div class="container">
     <div class="page-header">
-      <div class="page-header-row">
-        <div><h1>Volunteer Applications</h1><p class="text-muted" id="subtitle">Loading...</p></div>
-      </div>
+      <h1>Volunteer Applications</h1>
+      <p class="text-muted">Select a gig to review its applications</p>
     </div>
 
-    <div class="filter-bar">
-      <button class="filter-btn active" onclick="setF(this,'')">All</button>
-      <button class="filter-btn" onclick="setF(this,'pending')">Pending</button>
-      <button class="filter-btn" onclick="setF(this,'approved')">Approved</button>
-      <button class="filter-btn" onclick="setF(this,'rejected')">Rejected</button>
+    <div class="global-filter">
+      <input type="search" id="gigSearch" placeholder="Search gigs..." oninput="renderGigs()">
     </div>
 
-    <div id="list"><div style="text-align:center;padding:3rem"><div class="spinner"></div></div></div>
-  </div>
-</div>
-
-<div id="decideModal" class="decide-modal-backdrop">
-  <div class="card" style="padding:1.5rem;width:100%;max-width:400px">
-    <h3 id="decideTitle" style="margin-bottom:0.5rem"></h3>
-    <p id="decideBody" style="font-size:0.875rem;color:var(--text-muted);margin-bottom:1.25rem"></p>
-    <div style="display:flex;gap:0.5rem;justify-content:flex-end">
-      <button class="btn btn-secondary" onclick="closeDecide()">Cancel</button>
-      <button class="btn btn-primary" id="decideConfirm">Confirm</button>
+    <div id="gigList">
+      <div style="text-align:center;padding:3rem"><div class="spinner"></div></div>
     </div>
   </div>
 </div>
@@ -65,148 +95,185 @@
 <script src="/js/footer.js"></script>
 <script>
 API.requireAuth('org');
-let all = [], filterStatus = '';
 
-function setF(btn, s) {
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  filterStatus=s; render();
+let gigsData = [];
+let openGigId = null;
+
+/* Build initials avatar */
+function initials(name) {
+  return (name || '?').split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase();
 }
 
-let pendingDecide = null;
+/* Render gig list */
+function renderGigs() {
+  const q = (document.getElementById('gigSearch').value || '').toLowerCase();
+  let list = gigsData;
+  if (q) list = list.filter(g => (g.title || '').toLowerCase().includes(q));
 
-function openDecide(appId, action) {
-  pendingDecide = { appId, action };
-  document.getElementById('decideTitle').textContent = action === 'approved' ? 'Approve Application' : 'Reject Application';
-  document.getElementById('decideBody').textContent = action === 'approved'
-    ? 'The volunteer will be notified and added to this gig.'
-    : 'The volunteer will be notified that their application was not accepted.';
-  document.getElementById('decideConfirm').className = `btn btn-${action==='approved'?'primary':'danger'}`;
-  document.getElementById('decideConfirm').textContent = action === 'approved' ? 'Approve' : 'Reject';
-  document.getElementById('decideModal').classList.add('is-open');
-}
-
-function closeDecide() {
-  document.getElementById('decideModal').classList.remove('is-open');
-  pendingDecide=null;
-}
-
-document.getElementById('decideConfirm').addEventListener('click', async () => {
-  if (!pendingDecide) return;
-  const { appId, action } = pendingDecide;
-  const btn = document.getElementById('decideConfirm');
-  btn.disabled = true;
-  btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block"></div>';
-  try {
-    await API.patch(`/gigs/applications/${appId}/decide`, { decision: action });
-    Toast.success(action === 'approved' ? 'Application approved!' : 'Application rejected.');
-    /* Optimistic update: mutate local state immediately */
-    const appIdx = all.findIndex(a => a.id === appId);
-    if (appIdx !== -1) all[appIdx].status = action;
-    closeDecide();
-    render();
-    /* Background refresh to sync latest state */
-    load();
-  } catch(e) {
-    btn.disabled = false;
-    btn.textContent = action === 'approved' ? 'Approve' : 'Reject';
-    Toast.error(e.message);
-  }
-});
-
-function render() {
-  const list = filterStatus ? all.filter(a=>a.status===filterStatus) : all;
-  document.getElementById('subtitle').textContent = `${all.length} total application${all.length!==1?'s':''}`;
   if (!list.length) {
-    document.getElementById('list').innerHTML = `<div class="empty-state"><p>No applications found.</p></div>`;
+    document.getElementById('gigList').innerHTML = '<div class="empty-state">No gigs found.</div>';
     return;
   }
-  document.getElementById('list').innerHTML = list.map(a => {
-    const v = a.volunteer || {};
-    const vp = v.volunteerProfile || {};
-    const name = [vp.firstName,vp.lastName].filter(Boolean).join(' ')||v.email||'—';
-    const g = a.gig || {};
-    const avHtml = v.avatarUrl&&v.id
-      ? `<div class="vol-av"><img src="/api/uploads/${v.id}/${v.avatarUrl}" alt="${name}"></div>`
-      : `<div class="vol-av">${(name[0]||'?').toUpperCase()}</div>`;
-    const skills = Array.isArray(vp.skills)?vp.skills:[];
-    const SC = { pending:'#f59e0b', approved:'#22c55e', rejected:'#ef4444' };
-    return `<div class="app-card">
-      ${avHtml}
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:700">${name}</div>
-        <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.35rem">${v.email||''}${g.title?` · For: <strong>${g.title}</strong>`:''}</div>
-        ${skills.length?`<div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-bottom:0.4rem">${skills.slice(0,5).map(s=>`<span class="badge badge-primary" style="font-size:0.7rem">${s}</span>`).join('')}</div>`:''}
-        ${a.personalStatement?`<p style="font-size:0.82rem;color:var(--text-muted);margin:0.25rem 0;line-height:1.5">${a.personalStatement.slice(0,160)}${a.personalStatement.length>160?'…':''}</p>`:''}
-        <div style="font-size:0.75rem;color:var(--text-muted)">Applied ${fmt.date(a.createdAt)}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem;font-size:0.78rem">
-          ${v.id && vp.resumeUrl
-            ? `<button class="btn btn-sm btn-primary" onclick="downloadDoc('${v.id}','${vp.resumeUrl}','Resume')">&#x2193; Resume</button>`
-            : `<span style="color:var(--text-muted);padding:0.25rem 0.5rem;border:1px dashed var(--border);border-radius:6px;font-size:0.75rem">No resume</span>`}
-          ${v.id && vp.govId
-            ? `<button class="btn btn-sm btn-primary" onclick="downloadDoc('${v.id}','${vp.govId}','Gov ID')">&#x2193; Gov ID</button>`
-            : `<span style="color:var(--text-muted);padding:0.25rem 0.5rem;border:1px dashed var(--border);border-radius:6px;font-size:0.75rem">No ID</span>`}
-          ${v.id && vp.backgroundCheck
-            ? `<button class="btn btn-sm btn-primary" onclick="downloadDoc('${v.id}','${vp.backgroundCheck}','Background Check')">&#x2193; Bg Check</button>`
-            : `<span style="color:var(--text-muted);padding:0.25rem 0.5rem;border:1px dashed var(--border);border-radius:6px;font-size:0.75rem">No bg check</span>`}
+
+  document.getElementById('gigList').innerHTML = list.map(g => {
+    const pending  = (g.applications || []).filter(a => a.status === 'pending').length;
+    const approved = (g.applications || []).filter(a => a.status === 'approved').length;
+    const total    = (g.applications || []).length;
+    const isOpen   = openGigId === g.id;
+    return `
+    <div class="gig-row" id="gig-row-${g.id}">
+      <div class="gig-row-header${isOpen ? ' open' : ''}" onclick="toggleGig(${g.id})">
+        <div class="gig-row-info">
+          <div class="gig-row-title">${g.title}</div>
+          <div class="gig-row-meta">
+            ${g.startDate ? `<span>${new Date(g.startDate + 'T00:00:00').toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'})}</span>` : ''}
+            ${g.locationAddress || g.locationType === 'remote' ? `<span>${g.locationType === 'remote' ? 'Remote' : g.locationAddress}</span>` : ''}
+          </div>
         </div>
-        <div class="action-btns" style="margin-top:0.5rem">
-          ${a.status==='pending'?`<button class="btn btn-sm btn-primary" onclick="openDecide(${a.id},'approved')">Approve</button><button class="btn btn-sm btn-danger" onclick="openDecide(${a.id},'rejected')">Reject</button>`:''}
-          <button class="btn btn-sm btn-secondary" onclick="startChat(${v.id})">Message</button>
+        <div class="gig-row-badges">
+          <span class="badge badge-total">${total} total</span>
+          ${pending  > 0 ? `<span class="badge badge-pending">${pending} pending</span>` : ''}
+          ${approved > 0 ? `<span class="badge badge-approved">${approved} approved</span>` : ''}
         </div>
+        <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
-      <span class="badge" style="background:${SC[a.status]||'var(--primary)'};color:#fff;flex-shrink:0">${a.status}</span>
+      <div class="apps-panel${isOpen ? ' open' : ''}" id="panel-${g.id}">
+        ${renderAppsPanel(g)}
+      </div>
     </div>`;
   }).join('');
 }
 
-async function downloadDoc(userId, filename, label) {
+function renderAppsPanel(g) {
+  const apps = g.applications || [];
+  if (!apps.length) return '<div class="empty-state">No applications for this gig yet.</div>';
+
+  const fBtns = ['all','pending','approved','rejected'].map(s =>
+    `<button class="filter-btn${s==='all'?' active':''}" onclick="filterApps(${g.id},'${s}',this)">${s.charAt(0).toUpperCase()+s.slice(1)}</button>`
+  ).join('');
+
+  const cards = apps.map(a => renderAppCard(a, g.id)).join('');
+  return `
+    <div class="filter-bar" id="filter-bar-${g.id}">${fBtns}</div>
+    <div id="apps-${g.id}">${cards}</div>`;
+}
+
+function renderAppCard(a, gigId) {
+  const v   = a.volunteer || {};
+  const vp  = v.volunteerProfile || {};
+  const name = `${v.firstName || ''} ${v.lastName || ''}`.trim() || v.email || 'Volunteer';
+  const avatarSrc = v.avatarUrl || vp.avatarUrl;
+
+  const chips = [];
+  if (vp.verifiedHours  != null) chips.push(`<span class="vs-chip ok">${vp.verifiedHours}h verified</span>`);
+  if (vp.points         != null) chips.push(`<span class="vs-chip">${vp.points} pts</span>`);
+  if (vp.country)                chips.push(`<span class="vs-chip">${vp.country}</span>`);
+  if (vp.backgroundCheck === 'verified') chips.push(`<span class="vs-chip ok">BG checked</span>`);
+  else if (vp.backgroundCheck === 'pending') chips.push(`<span class="vs-chip warn">BG pending</span>`);
+  if (vp.languages && vp.languages.length) chips.push(`<span class="vs-chip">${vp.languages.slice(0,2).join(', ')}</span>`);
+  if (vp.skills && vp.skills.length) chips.push(`<span class="vs-chip">${vp.skills.slice(0,2).join(', ')}</span>`);
+
+  let actionBtns = '';
+  if (a.status === 'pending') {
+    actionBtns = `
+      <button class="btn btn-sm btn-primary" onclick="decide(${a.id},'approved',${gigId})">Approve</button>
+      <button class="btn btn-sm btn-danger"  onclick="decide(${a.id},'rejected',${gigId})">Reject</button>`;
+  } else if (a.status === 'approved') {
+    actionBtns = `
+      <button class="btn btn-sm btn-secondary" onclick="decide(${a.id},'pending',${gigId})">Move to Pending</button>
+      <button class="btn btn-sm btn-danger"    onclick="decide(${a.id},'rejected',${gigId})">Revoke Approval</button>`;
+  } else if (a.status === 'rejected') {
+    actionBtns = `
+      <button class="btn btn-sm btn-secondary" onclick="decide(${a.id},'pending',${gigId})">Reconsider</button>`;
+  }
+
+  return `
+  <div class="app-card" id="app-${a.id}" data-status="${a.status}">
+    <div class="vol-av">
+      ${avatarSrc ? `<img src="${avatarSrc}" alt="${name}">` : initials(name)}
+    </div>
+    <div class="app-body">
+      <div class="app-name">${name}
+        <span class="status-badge status-${a.status}" style="margin-left:0.5rem">${a.status.charAt(0).toUpperCase()+a.status.slice(1)}</span>
+      </div>
+      <div class="app-meta">
+        <span>${v.email || ''}</span>
+        ${a.appliedAt ? `<span>Applied ${new Date(a.appliedAt).toLocaleDateString()}</span>` : ''}
+      </div>
+      ${chips.length ? `<div class="vol-stats">${chips.join('')}</div>` : ''}
+      ${a.coverLetter ? `<div class="app-note">${a.coverLetter}</div>` : ''}
+      <div class="app-actions">${actionBtns}</div>
+    </div>
+  </div>`;
+}
+
+function filterApps(gigId, status, btn) {
+  document.querySelectorAll(`#filter-bar-${gigId} .filter-btn`).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll(`#apps-${gigId} .app-card`).forEach(card => {
+    card.style.display = (status === 'all' || card.dataset.status === status) ? '' : 'none';
+  });
+}
+
+function toggleGig(gigId) {
+  if (openGigId === gigId) {
+    openGigId = null;
+  } else {
+    openGigId = gigId;
+  }
+  renderGigs();
+}
+
+async function decide(appId, decision, gigId) {
   try {
-    const headers = {};
-    const token = API.getToken ? API.getToken() : localStorage.getItem('token');
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    const res = await fetch(`/api/uploads/${userId}/${filename}`, { headers });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      Toast.error(err.message || `${label} file is not available on the server.`);
-      return;
-    }
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  } catch(e) {
-    Toast.error(`Could not download ${label}.`);
+    await API.patch(`/gigs/applications/${appId}/decide`, { decision });
+    await loadGig(gigId);
+    renderGigs();
+  } catch (e) {
+    alert(e.message || 'Could not update application.');
   }
 }
 
-async function startChat(userId) {
+async function loadGig(gigId) {
   try {
-    const r = await API.post('/messages/conversations', { partnerId: userId });
-    window.location.href = `/messages?conv=${r.data.conversationId}`;
-  } catch(e) { Toast.error(e.message); }
+    const { data } = await API.get(`/orgs/me/applications?gigId=${gigId}`);
+    const idx = gigsData.findIndex(g => g.id === gigId);
+    if (idx !== -1 && data.applications) {
+      gigsData[idx].applications = data.applications;
+    }
+  } catch {}
 }
 
 async function load() {
-  document.getElementById('subtitle').textContent = 'Loading…';
   try {
     const { data } = await API.get('/orgs/me/applications');
-    all = data.applications || [];
-    const gid = new URLSearchParams(window.location.search).get('gig');
-    if (gid) {
-      const id = parseInt(gid, 10);
-      if (!Number.isNaN(id)) all = all.filter(a => (a.gig && a.gig.id === id) || parseInt(a.gigId, 10) === id);
-    }
-    all.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    render();
+    /* Group by gig */
+    const gigMap = {};
+    (data.applications || []).forEach(a => {
+      const gig = a.gig || {};
+      if (!gigMap[gig.id]) {
+        gigMap[gig.id] = { ...gig, applications: [] };
+      }
+      gigMap[gig.id].applications.push(a);
+    });
+
+    const today = new Date().toISOString().slice(0, 10);
+    gigsData = Object.values(gigMap).sort((a, b) => {
+      const aActive = !a.endDate || a.endDate >= today;
+      const bActive = !b.endDate || b.endDate >= today;
+      if (aActive !== bActive) return aActive ? -1 : 1;
+      return (b.applications.filter(x => x.status === 'pending').length) -
+             (a.applications.filter(x => x.status === 'pending').length);
+    });
+
+    /* Auto-open if a specific gig was linked */
+    const params = new URLSearchParams(location.search);
+    const linked = params.get('gig');
+    if (linked) openGigId = parseInt(linked);
+
+    renderGigs();
   } catch (e) {
-    document.getElementById('list').innerHTML = `<div class="empty-state">${e.message || 'Could not load applications.'}</div>`;
-    document.getElementById('subtitle').textContent = '';
+    document.getElementById('gigList').innerHTML = `<div class="empty-state">${e.message || 'Could not load applications.'}</div>`;
   }
 }
 

@@ -203,17 +203,36 @@ router.get('/me/volunteers', requireAuth, requireRole('org'), async (req, res, n
     const org = await Organization.findOne({ where: { userId: req.user.id } });
     if (!org) return res.status(404).json({ success: false, message: 'Organization not found.' });
 
+    const today = new Date().toISOString().slice(0, 10);
+
+    /* All approved/active tasks for this org */
     const tasks = await Task.findAll({
-      where: { orgId: org.id, status: ['approved', 'inProgress', 'completed'] },
+      where: { orgId: org.id, status: ['approved', 'accepted', 'inProgress', 'completed'] },
       include: [
-        { model: Gig, as: 'gig', attributes: ['id', 'title', 'estimatedHours'] },
+        { model: Gig, as: 'gig', attributes: ['id', 'title', 'estimatedHours', 'endDate'] },
         {
           model: User, as: 'volunteer', attributes: ['id', 'email'],
-          include: [{ model: VolunteerProfile, as: 'volunteerProfile', attributes: ['firstName', 'lastName', 'phone', 'totalVerifiedHours', 'skills'] }],
+          include: [{
+            model: VolunteerProfile, as: 'volunteerProfile',
+            attributes: ['firstName', 'lastName', 'phone', 'totalVerifiedHours', 'totalPoints', 'skills', 'languages', 'country', 'backgroundCheckStatus'],
+          }],
         },
       ],
       order: [['createdAt', 'DESC']],
     });
+
+    /* Attendance records grouped by volunteer for this org's gigs */
+    const gigIds = [...new Set(tasks.map(t => t.gigId))];
+    let attendanceRecords = [];
+    if (gigIds.length) {
+      const { Attendance: Att } = require('../models/index');
+      attendanceRecords = await Att.findAll({ where: { gigId: gigIds } });
+    }
+    const attByVol = {};
+    for (const a of attendanceRecords) {
+      if (!attByVol[a.volunteerId]) attByVol[a.volunteerId] = [];
+      attByVol[a.volunteerId].push(a);
+    }
 
     /* Group by volunteer */
     const map = {};
@@ -223,17 +242,33 @@ router.get('/me/volunteers', requireAuth, requireRole('org'), async (req, res, n
         map[vid] = { volunteer: t.volunteer, tasks: [], totalHours: 0, isActive: false, lastActive: null };
       }
       map[vid].tasks.push(t);
-      if (t.status === 'approved') map[vid].totalHours += (t.gig?.estimatedHours || 0);
+      if (['approved', 'completed'].includes(t.status)) map[vid].totalHours += (t.gig?.estimatedHours || 0);
       if (t.status === 'inProgress') map[vid].isActive = true;
       const lat = t.verifiedAt || t.submittedAt || t.createdAt;
       if (!map[vid].lastActive || (lat && new Date(lat) > new Date(map[vid].lastActive))) map[vid].lastActive = lat;
     }
 
-    const volunteers = Object.values(map).map(v => ({
-      ...v,
-      sessionCount: v.tasks.length,
-      isRecurring: v.tasks.length >= 2,
-    }));
+    const volunteers = Object.values(map).map(v => {
+      const vid = v.volunteer.id;
+      const volAtt = attByVol[vid] || [];
+      /* Actual QR-tracked hours */
+      const qrHours = volAtt.reduce((s, a) => s + (parseFloat(a.hoursWorked) || 0), 0);
+      /* No-shows: past gigs where volunteer had an approved task but zero attendance */
+      const noShowCount = v.tasks.filter(t => {
+        const gig = t.gig;
+        if (!gig || !gig.endDate || gig.endDate >= today) return false;
+        if (!['approved', 'completed'].includes(t.status)) return false;
+        return !volAtt.some(a => String(a.gigId) === String(gig.id));
+      }).length;
+
+      return {
+        ...v,
+        sessionCount: v.tasks.length,
+        isRecurring: v.tasks.length >= 2,
+        qrHours: parseFloat(qrHours.toFixed(2)),
+        noShowCount,
+      };
+    });
 
     res.json({ success: true, data: { volunteers } });
   } catch (err) { next(err); }

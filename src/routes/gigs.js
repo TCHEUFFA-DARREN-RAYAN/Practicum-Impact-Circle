@@ -253,7 +253,7 @@ router.get('/applications/:appId', requireAuth, requireRole('org'), async (req, 
 });
 
 router.patch('/applications/:appId/decide', requireAuth, requireRole('org'), [
-  body('decision').isIn(['approved', 'rejected']).withMessage('Decision must be approved or rejected.'),
+  body('decision').isIn(['approved', 'rejected', 'pending']).withMessage('Decision must be approved, rejected, or pending.'),
 ], validate, async (req, res, next) => {
   try {
     const app = await Application.findByPk(req.params.appId, {
@@ -265,14 +265,21 @@ router.patch('/applications/:appId/decide', requireAuth, requireRole('org'), [
     if (!org || org.id !== app.gig.orgId) return res.status(403).json({ success: false, message: 'Not authorized.' });
 
     const { decision, reason } = req.body;
-    await app.update({ status: decision, decisionReason: reason || null, decidedAt: new Date() });
+    const prevStatus = app.status;
+    await app.update({
+      status: decision,
+      decisionReason: decision === 'pending' ? null : (reason || null),
+      decidedAt: decision === 'pending' ? null : new Date(),
+    });
 
-    if (decision === 'approved') {
-      await Task.create({
-        applicationId: app.id, gigId: app.gigId,
-        volunteerId: app.volunteerId, orgId: org.id, status: 'accepted',
-      });
-
+    if (decision === 'approved' && prevStatus !== 'approved') {
+      const existingTask = await Task.findOne({ where: { applicationId: app.id } });
+      if (!existingTask) {
+        await Task.create({
+          applicationId: app.id, gigId: app.gigId,
+          volunteerId: app.volunteerId, orgId: org.id, status: 'accepted',
+        });
+      }
       if (app.gig.maxVolunteers) {
         const approvedCount = await Application.count({ where: { gigId: app.gigId, status: 'approved' } });
         if (approvedCount >= app.gig.maxVolunteers) {
@@ -281,8 +288,16 @@ router.patch('/applications/:appId/decide', requireAuth, requireRole('org'), [
       }
     }
 
+    /* Reverted back to pending — remove task if not started */
+    if (decision === 'pending' && prevStatus === 'approved') {
+      await Task.destroy({ where: { applicationId: app.id, status: 'accepted' } });
+      if (app.gig.status === 'closed') {
+        await Gig.update({ status: 'open' }, { where: { id: app.gigId } });
+      }
+    }
+
     const volUser = await User.findByPk(app.volunteerId);
-    if (volUser) {
+    if (volUser && decision !== 'pending') {
       const tpl = templates.applicationDecision(volUser.email.split('@')[0], app.gig.title, decision === 'approved', reason);
       await sendEmail(volUser.email, tpl.subject, tpl.html);
       await createNotification(app.volunteerId, `Your application for "${app.gig.title}" was ${decision}.`, 'application', '/volunteer-dashboard');

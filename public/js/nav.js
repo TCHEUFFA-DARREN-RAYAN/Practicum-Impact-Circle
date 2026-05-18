@@ -40,7 +40,7 @@
       { label: 'Contact', href: '/contact' },
     ];
 
-    /* ── Desktop groups ── */
+    /*  Desktop groups  */
     const desktopHTML = NAV_GROUPS.map((g, i) => {
       const delay = `${150 + i * 60}ms`;
       if (g.href) {
@@ -63,7 +63,7 @@
         </div>`;
     }).join('');
 
-    /* ── Mobile menu ── */
+    /*  Mobile menu  */
     const mobileHTML = NAV_GROUPS.map(g => {
       if (g.href) {
         return `<a href="${g.href}" class="gm-link${currentPath === g.href ? ' active' : ''}">${g.label}</a>`;
@@ -81,7 +81,7 @@
         </div>`;
     }).join('');
 
-    /* ── Render ── */
+    /*  Render  */
     navEl.innerHTML = `
       <div class="glass-nav" id="glassNav">
         <div class="gn-orb gn-orb-l"></div>
@@ -171,7 +171,7 @@
      LOGGED-IN NAV  (solid bar + sidebar)
   ============================================================= */
 
-  /* ── Icon set (Feather-style SVG) ── */
+  /*  Icon set (Feather-style SVG)  */
   const IC = {
     dashboard:   `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>`,
     verify:      `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>`,
@@ -197,7 +197,7 @@
     briefcase:   `<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`,
   };
 
-  /* ── Sidebar links per role ── */
+  /*  Sidebar links per role  */
   const SIDEBAR_LINKS = {
     admin: [
       { href: '/admin',                 label: 'Admin Dashboard',          icon: 'dashboard'   },
@@ -224,7 +224,7 @@
     ],
     org: [
       { href: '/org-dashboard',         label: 'Organization Dashboard',   icon: 'dashboard'   },
-      { href: '/org/opportunities',     label: 'My Posted Gigs',           icon: 'briefcase'   },
+      { href: '/org/opportunities',     label: 'My Posted Gigs',           icon: 'briefcase', activeFor: ['/org/gigs/'] },
       { href: '/org-gig-create',        label: 'Post an Opportunity',      icon: 'plus'        },
       { href: '/gigs',                  label: 'All Gigs',                 icon: 'search'      },
       { href: '/org/applications',      label: 'Volunteer Applications',   icon: 'clipboard'   },
@@ -239,7 +239,7 @@
     ],
   };
 
-  /* ── Top-bar nav links per role ── */
+  /*  Top-bar nav links per role  */
   const navLinks = {
     volunteer: [
       { href: '/volunteer-dashboard', label: 'Dashboard'         },
@@ -257,7 +257,7 @@
     ],
   };
 
-  /* ── Build links & right-side HTML ── */
+  /*  Build links & right-side HTML  */
   const links    = navLinks[user.role] || [];
   const linksHTML = links
     .map(l => `<a href="${l.href}" class="${currentPath === l.href ? 'active' : ''}">${l.label}</a>`)
@@ -311,7 +311,7 @@
     </div>
     <div class="nav-mobile-menu" id="mobileMenu">${mobileHTML}</div>`;
 
-  /* ── Sidebar ── */
+  /*  Sidebar  */
   const sidebarEl = document.getElementById('sidebar');
   if (sidebarEl && user) {
     document.body.classList.add('has-sidebar');
@@ -320,7 +320,8 @@
       const exactDash = ['/admin', '/volunteer-dashboard', '/org-dashboard'];
       const isActive =
         currentPath === l.href ||
-        (!exactDash.includes(l.href) && l.href !== '/' && (currentPath === l.href || currentPath.startsWith(`${l.href}/`)));
+        (!exactDash.includes(l.href) && l.href !== '/' && currentPath.startsWith(`${l.href}/`)) ||
+        (l.activeFor && l.activeFor.some(p => currentPath.startsWith(p)));
       const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
       return `<a href="${l.href}" class="sidebar-link${isActive ? ' active' : ''}" title="${esc(l.label)}" aria-label="${esc(l.label)}">${IC[l.icon] || ''}<span class="sidebar-link-text">${l.label}</span></a>`;
     }).join('');
@@ -377,7 +378,7 @@
     });
   }
 
-  /* ── Hamburger ── */
+  /*  Hamburger  */
   const hamburger = document.getElementById('hamburger');
   hamburger?.addEventListener('click', () => {
     if (sidebarEl) {
@@ -397,7 +398,7 @@
     document.getElementById('sidebarBackdrop')?.classList.remove('open');
   });
 
-  /* ── Notifications ── */
+  /*  Notifications  */
   loadNotifications();
   setInterval(loadNotifications, 30000);
   document.getElementById('bellBtn')?.addEventListener('click', e => {

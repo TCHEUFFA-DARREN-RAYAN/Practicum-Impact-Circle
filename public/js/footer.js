@@ -1,7 +1,7 @@
 (() => {
   if (document.querySelector('.global-footer') || document.querySelector('.lp-footer')) return;
 
-  /* ── Slim footer for dashboard/logged-in pages (sidebar populated by nav.js) ── */
+  /*  Slim footer for dashboard/logged-in pages (sidebar populated by nav.js)  */
   if (document.body.classList.contains('has-sidebar')) {
     if (!document.getElementById('gf-slim-css')) {
       const s = document.createElement('style');
@@ -38,7 +38,7 @@
     return;
   }
 
-  /* ── Full public footer ── */
+  /*  Full public footer  */
   if (!document.getElementById('gf-css')) {
     const s = document.createElement('style');
     s.id = 'gf-css';
@@ -102,7 +102,7 @@
           <p class="gf-brand-desc">A verified volunteer, CSR, and community impact exchange platform for Greater Moncton, NB.</p>
           <div class="gf-social">
             <a href="https://www.linkedin.com" target="_blank" rel="noopener" title="LinkedIn">in</a>
-            <a href="https://x.com" target="_blank" rel="noopener" title="Twitter / X">𝕏</a>
+            <a href="https://x.com" target="_blank" rel="noopener" title="Twitter / X"></a>
             <a href="https://www.instagram.com" target="_blank" rel="noopener" title="Instagram">ig</a>
             <a href="mailto:info@impactcircle.ca" title="Email">@</a>
           </div>

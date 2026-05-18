@@ -23,7 +23,7 @@
       display: none;
     }
 
-    /* ── Split container ── */
+    /*  Split container  */
     .login-wrap {
       width: 100%;
       max-width: 960px;
@@ -37,7 +37,7 @@
       border: 1px solid #e2e8f0;
     }
 
-    /* ── Image Slider ── */
+    /*  Image Slider  */
     .slider-panel {
       position: relative;
       overflow: hidden;
@@ -81,7 +81,7 @@
     .slider-dot.active { background: #fff; }
     .slider-dot:hover:not(.active) { background: rgba(255,255,255,0.8); }
 
-    /* ── Form panel ── */
+    /*  Form panel  */
     .form-panel {
       color-scheme: light;
       background: #ffffff !important;
@@ -141,7 +141,7 @@
     }
     .forgot-link:hover { color: #0066ff; text-decoration: none; }
 
-    /* ── Login fields (flat, identical chrome — no nested borders) ── */
+    /*  Login fields (flat, identical chrome — no nested borders)  */
     #loginForm input.login-ctrl {
       width: 100%;
       box-sizing: border-box;
@@ -492,7 +492,7 @@
   // Already logged in → redirect immediately
   if (API.isLoggedIn()) API.redirectByRole(API.getUser());
 
-  // ─── Image Slider ───────────────────────────────────────────
+  //  Image Slider 
   const SLIDES = [
     'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=1200&auto=format&fit=crop&q=85',
     'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1200&auto=format&fit=crop&q=85',
@@ -534,7 +534,7 @@
 
   setInterval(() => goTo((current + 1) % SLIDES.length), 4000);
 
-  // ─── Form ───────────────────────────────────────────────────
+  //  Form 
   ['email', 'password'].forEach(id => {
     document.getElementById(id).addEventListener('input', function () {
       Validator.clearError(this);

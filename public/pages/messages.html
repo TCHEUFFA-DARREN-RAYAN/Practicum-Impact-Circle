@@ -32,7 +32,8 @@
     .chat-messages { flex:1; overflow-y:auto; padding:1rem 1.25rem; display:flex; flex-direction:column; gap:0.5rem; }
     .msg-row { display:flex; }
     .msg-row.mine { justify-content:flex-end; }
-    .msg-bubble { max-width:70%; padding:0.6rem 0.875rem; border-radius:14px; font-size:0.875rem; line-height:1.5; word-break:break-word; }
+    .msg-row > div { max-width:70%; min-width:0; }
+    .msg-bubble { padding:0.6rem 0.875rem; border-radius:14px; font-size:0.875rem; line-height:1.5; overflow-wrap:break-word; word-break:break-word; display:inline-block; max-width:100%; }
     .msg-row:not(.mine) .msg-bubble { background:#f1f5f9; color:var(--text); border-bottom-left-radius:4px; }
     .msg-row.mine .msg-bubble { background:var(--primary); color:#fff; border-bottom-right-radius:4px; }
     .msg-time { font-size:0.65rem; opacity:0.6; margin-top:2px; text-align:right; }

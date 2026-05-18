@@ -42,9 +42,9 @@
         <span id="gigCat" class="badge"></span>
       </div>
       <div class="gig-meta">
-        <span>📅 <span id="gigDates"></span></span>
-        <span>🕐 <span id="gigHours"></span></span>
-        <span>🏢 <span id="gigOrg"></span></span>
+        <span> <span id="gigDates"></span></span>
+        <span> <span id="gigHours"></span></span>
+        <span> <span id="gigOrg"></span></span>
       </div>
     </div>
 
@@ -122,9 +122,9 @@ function renderCards(list) {
       <div class="card-actions">
         ${resumeBtn}
         ${app.status === 'pending' ? `
-          <button class="btn btn-sm btn-success" onclick="decide(${app.id},'approved')">Approve ✓</button>
+          <button class="btn btn-sm btn-success" onclick="decide(${app.id},'approved')">Approve </button>
           <button class="btn btn-sm btn-danger" onclick="decide(${app.id},'rejected')">Reject</button>
-        ` : `<span class="badge ${statusMap[app.status]||'badge-primary'}" style="font-size:0.75rem;align-self:center">${app.status === 'approved' ? '✓ Approved' : '✗ Rejected'}</span>`}
+        ` : `<span class="badge ${statusMap[app.status]||'badge-primary'}" style="font-size:0.75rem;align-self:center">${app.status === 'approved' ? ' Approved' : ' Rejected'}</span>`}
       </div>
     </div>`;
   }).join('');

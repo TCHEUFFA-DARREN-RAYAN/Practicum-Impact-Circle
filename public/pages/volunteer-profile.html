@@ -109,7 +109,7 @@
       <!-- Alert area -->
       <div id="alertArea"></div>
 
-      <!-- ── Edit Profile Section ── -->
+      <!--  Edit Profile Section  -->
       <div class="card section-card">
         <div class="section-heading">Edit Profile</div>
         <form id="profileForm" novalidate>
@@ -176,7 +176,7 @@
         </form>
       </div>
 
-      <!-- ── Stats Section ── -->
+      <!--  Stats Section  -->
       <div class="card section-card">
         <div class="section-heading">Volunteer Stats</div>
         <div class="stat-row" id="statsRow">
@@ -203,7 +203,7 @@
         </div>
       </div>
 
-      <!-- ── Document Upload Section ── -->
+      <!--  Document Upload Section  -->
       <div class="card section-card">
         <div class="section-heading">Verification Documents</div>
         <p style="font-size:0.875rem;color:var(--text-muted);margin-bottom:1.25rem">
@@ -255,7 +255,7 @@
 <script>
   API.requireAuth('volunteer');
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
+  //  Helpers 
   function show(id)  { document.getElementById(id).classList.remove('hidden'); }
   function hide(id)  { document.getElementById(id).classList.add('hidden'); }
 
@@ -315,7 +315,7 @@
     `;
   }
 
-  // ── Load Profile ───────────────────────────────────────────────────────────
+  //  Load Profile 
   async function loadProfile() {
     hide('errorState');
     hide('mainContent');
@@ -382,7 +382,7 @@
     }
   }
 
-  // ── Avatar upload ──────────────────────────────────────────────────────────
+  //  Avatar upload 
   async function handleAvatarUpload(input) {
     if (!input.files[0]) return;
     const file = input.files[0];
@@ -415,7 +415,7 @@
 
   const NAME_REGEX = /^[a-zA-ZÀ-ÿ\s'\-]+$/;
 
-  // ── Save Profile ───────────────────────────────────────────────────────────
+  //  Save Profile 
   document.getElementById('profileForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     Validator.clearAll(document.getElementById('profileForm'));
@@ -496,7 +496,7 @@
     }
   });
 
-  // ── Upload Documents ───────────────────────────────────────────────────────
+  //  Upload Documents 
   // File name display
   document.getElementById('govIdFile').addEventListener('change', (e) => {
     document.getElementById('govIdName').textContent = e.target.files[0]?.name || '';
@@ -583,7 +583,7 @@
     }
   });
 
-  // ── Init ───────────────────────────────────────────────────────────────────
+  //  Init 
   loadProfile();
 </script>
 <script src="/js/footer.js"></script></body>

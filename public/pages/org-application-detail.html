@@ -120,13 +120,13 @@ async function load() {
           <textarea id="reason" rows="3" placeholder="Provide a reason (optional)…"></textarea>
         </div>
         <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
-          <button class="btn btn-success" onclick="decide('approved')">Approve ✓</button>
+          <button class="btn btn-success" onclick="decide('approved')">Approve </button>
           <button class="btn btn-danger" onclick="decide('rejected')">Reject</button>
         </div>
       </div>` : `
       <div class="card" style="background:${a.status === 'approved' ? '#f0fdf4' : '#fef2f2'}">
         <div style="font-size:0.9rem;font-weight:600;color:${a.status === 'approved' ? '#00a344' : '#dc2626'}">
-          ${a.status === 'approved' ? '✓ Application approved' : '✗ Application rejected'}
+          ${a.status === 'approved' ? ' Application approved' : ' Application rejected'}
         </div>
         ${a.decisionReason ? `<div style="font-size:0.85rem;color:var(--text-muted);margin-top:0.5rem">${a.decisionReason}</div>` : ''}
         ${a.decidedAt ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.25rem">${fmt.date(a.decidedAt)}</div>` : ''}

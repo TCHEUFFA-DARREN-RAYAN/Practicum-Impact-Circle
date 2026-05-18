@@ -7,7 +7,7 @@
   <title>Analytics | ImpactCircle</title>
   <link rel="stylesheet" href="/css/base.css">
   <style>
-    /* ── KPI cards ── */
+    /*  KPI cards  */
     .kpi-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -36,7 +36,7 @@
     .kpi-value.good   { color: #00a344; }
     .kpi-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.3rem; }
 
-    /* ── Section ── */
+    /*  Section  */
     .card-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 0.6rem; }
     .dash-section {
       background: var(--surface);
@@ -58,7 +58,7 @@
     .section-body { padding: 1.25rem; }
     .dash-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem; }
 
-    /* ── Funnel bars ── */
+    /*  Funnel bars  */
     .funnel-row { display: flex; align-items: center; gap: 0.875rem; padding: 0.625rem 0; border-bottom: 1px solid var(--border); }
     .funnel-row:last-child { border-bottom: none; }
     .funnel-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
@@ -73,7 +73,7 @@
     .funnel-bar-wrap { width: 90px; height: 6px; background: var(--border); border-radius: 3px; flex-shrink: 0; }
     .funnel-bar { height: 100%; border-radius: 3px; }
 
-    /* ── Gig table ── */
+    /*  Gig table  */
     .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .gig-table { width: 100%; border-collapse: collapse; min-width: 560px; }
     .gig-table th { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); padding: 0 0.75rem 0.75rem; text-align: left; border-bottom: 2px solid var(--border); }
@@ -86,7 +86,7 @@
     .sp-cancelled{ background: #f1f5f9; color: #64748b; }
     .cat-pill { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.15rem 0.5rem; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }
 
-    /* ── Alert callout ── */
+    /*  Alert callout  */
     .insight-box { padding: 1rem 1.125rem; border-radius: 10px; margin-top: 1rem; font-size: 0.82rem; line-height: 1.5; }
     .insight-box.warn { background: #fff9d6; border: 1px solid rgba(255,214,0,0.4); color: #8a6a00; }
     .insight-box.ok   { background: #effff6; border: 1px solid rgba(0,200,83,0.25); color: #00a344; }
@@ -221,7 +221,7 @@ API.requireAuth('org');
     document.getElementById('pageSubtitle').textContent =
       'Program performance · ' + now.toLocaleDateString('en-CA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-    /* ── KPI Row 1 ── */
+    /*  KPI Row 1  */
     document.getElementById('sGigs').textContent = d.gigs.total;
     document.getElementById('sGigsSub').textContent =
       `${d.gigs.open} open · ${d.gigs.closed} closed · ${d.gigs.cancelled} cancelled`;
@@ -232,7 +232,7 @@ API.requireAuth('org');
     document.getElementById('sHours').textContent =
       (d.org?.totalFacilitatedHours || 0).toFixed(1) + 'h';
 
-    /* ── KPI Row 2 ── */
+    /*  KPI Row 2  */
     document.getElementById('sPending').textContent = d.tasks.pending;
     document.getElementById('sApproved').textContent = d.tasks.approved;
     document.getElementById('sApprovedSub').textContent =
@@ -245,7 +245,7 @@ API.requireAuth('org');
     else if (autoRate >= 5) autoEl.classList.add('warn');
     else autoEl.classList.add('good');
 
-    /* ── Application Funnel ── */
+    /*  Application Funnel  */
     const apps = d.applications;
     const appTotal = apps.total || 1;
     document.getElementById('appFunnel').innerHTML = `
@@ -272,7 +272,7 @@ API.requireAuth('org');
           : `Acceptance rate: <strong>${apps.total ? Math.round((apps.approved/apps.total)*100) : 0}%</strong> — ${apps.approved} of ${apps.total} applicants approved.`}
       </div>`;
 
-    /* ── Task Health ── */
+    /*  Task Health  */
     const tasks = d.tasks;
     const taskReviewed = tasks.approved + tasks.rejected;
     document.getElementById('taskHealth').innerHTML = `
@@ -297,11 +297,11 @@ API.requireAuth('org');
         ${autoRate >= 10
           ? `⚠ Your auto-approval rate is ${autoRate}% — above the 10% target. ${tasks.autoApproved} of your approved tasks were auto-approved because you did not review them within 30 days. Review task submissions promptly to keep this below 10%.`
           : autoRate > 0
-            ? `✓ Auto-approval rate: ${autoRate}% — within target. ${tasks.autoApproved} task${tasks.autoApproved !== 1 ? 's' : ''} were auto-approved. Keep reviewing submissions within 30 days.`
-            : `✓ No tasks have been auto-approved. Great work reviewing submissions on time!`}
+            ? ` Auto-approval rate: ${autoRate}% — within target. ${tasks.autoApproved} task${tasks.autoApproved !== 1 ? 's' : ''} were auto-approved. Keep reviewing submissions within 30 days.`
+            : ` No tasks have been auto-approved. Great work reviewing submissions on time!`}
       </div>`;
 
-    /* ── Per-Gig Table ── */
+    /*  Per-Gig Table  */
     const perGig = d.perGig || [];
     document.getElementById('gigTableBody').innerHTML = perGig.length === 0
       ? `<tr><td colspan="7" style="text-align:center;padding:2.5rem;color:var(--text-muted)">No gigs posted yet. <a href="/org-gig-create">Post your first gig →</a></td></tr>`

@@ -3,161 +3,270 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Attendance Tracking — ImpactCircle</title>
+  <title>Attendance Tracking | ImpactCircle</title>
   <link rel="stylesheet" href="/css/base.css">
   <style>
-    .page-container { max-width: 1100px; margin: 0 auto; padding: 24px; }
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-    .page-header h1 { font-size: 1.5rem; color: #1e293b; }
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .stat-card { background: #fff; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-    .stat-card .value { font-size: 1.8rem; font-weight: 700; color: #6366f1; }
-    .stat-card .label { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
-    .section { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-    .section h2 { font-size: 1.1rem; margin-bottom: 16px; color: #1e293b; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
-    th { background: #f8fafc; font-weight: 600; color: #475569; }
-    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
-    .badge-green { background: #dcfce7; color: #166534; }
-    .badge-red { background: #fef2f2; color: #991b1b; }
-    .badge-blue { background: #dbeafe; color: #1e40af; }
-    .qr-section { text-align: center; padding: 24px; }
-    .qr-section img { max-width: 250px; border-radius: 12px; border: 2px solid #e2e8f0; }
-    .qr-url { font-size: 0.8rem; color: #64748b; word-break: break-all; margin-top: 8px; }
-    .btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; }
-    .btn-primary { background: #6366f1; color: #fff; }
-    .btn-primary:hover { background: #4f46e5; }
-    .gig-select { padding: 10px 16px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.9rem; min-width: 200px; }
+    .filter-tabs { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+    .filter-tab { padding:0.4rem 1rem; border-radius:999px; font-size:0.85rem; font-weight:600; border:2px solid var(--border); background:white; cursor:pointer; transition:all 0.15s; color:var(--text); }
+    .filter-tab.active { border-color:var(--primary); background:var(--primary-light); color:var(--primary); }
+
+    /* Gig list */
+    .gig-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1rem; margin-bottom:1.5rem; }
+    .gig-att-card { border:1px solid var(--border); border-radius:12px; background:#fff; padding:1.125rem; cursor:pointer; transition:all 0.15s; }
+    .gig-att-card:hover { border-color:var(--primary); box-shadow:0 2px 12px rgba(99,102,241,0.08); }
+    .gig-att-card.selected { border-color:var(--primary); background:var(--primary-light); }
+    .gig-att-card.past { opacity:0.6; }
+    .gig-att-card-title { font-weight:700; font-size:0.9rem; margin-bottom:0.25rem; }
+    .gig-att-card-meta { font-size:0.78rem; color:var(--text-muted); margin-bottom:0.625rem; }
+    .gig-att-card-chips { display:flex; gap:0.375rem; flex-wrap:wrap; }
+    .chip-sm { font-size:0.72rem; font-weight:600; padding:2px 8px; border-radius:20px; background:#f1f5f9; color:#475569; }
+    .chip-green { background:#dcfce7; color:#166534; }
+    .chip-blue { background:#dbeafe; color:#1e40af; }
+    .chip-red { background:#fee2e2; color:#991b1b; }
+    .chip-purple { background:#ede9fe; color:#6d28d9; }
+
+    /* Stats row */
+    .stats-row { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .stat-box { background:#fff; border:1px solid var(--border); border-radius:10px; padding:0.875rem 1.25rem; flex:1; min-width:120px; text-align:center; }
+    .stat-box-val { font-size:1.5rem; font-weight:800; color:var(--primary); }
+    .stat-box-lbl { font-size:0.75rem; color:var(--text-muted); margin-top:0.125rem; }
+
+    /* QR section */
+    .qr-card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:1.25rem; display:flex; gap:1.5rem; align-items:flex-start; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .qr-img-wrap { flex-shrink:0; text-align:center; }
+    .qr-img-wrap img { width:160px; height:160px; border-radius:10px; border:1px solid var(--border); display:block; }
+    .qr-url-box { font-size:0.78rem; font-family:monospace; word-break:break-all; background:#f8fafc; border:1px solid var(--border); border-radius:6px; padding:0.5rem 0.75rem; margin-top:0.5rem; }
+    .qr-info { flex:1; min-width:220px; }
+    .qr-info h3 { margin:0 0 0.375rem; font-size:0.95rem; }
+    .qr-info p { font-size:0.82rem; color:var(--text-muted); margin:0 0 0.875rem; }
+
+    /* Attendance table */
+    .att-section { background:#fff; border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:1.25rem; }
+    .att-section-header { padding:0.875rem 1.25rem; border-bottom:1px solid var(--border); font-weight:700; font-size:0.9rem; display:flex; justify-content:space-between; align-items:center; }
+    .att-table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+    th { background:#f8fafc; font-weight:600; color:var(--text-muted); text-align:left; padding:0.625rem 1rem; border-bottom:1px solid var(--border); font-size:0.78rem; text-transform:uppercase; letter-spacing:0.04em; }
+    td { padding:0.75rem 1rem; border-bottom:1px solid var(--border); color:var(--text); }
+    tr:last-child td { border-bottom:none; }
+    .empty-table { text-align:center; padding:2.5rem; color:var(--text-muted); font-size:0.875rem; }
+
+    .detail-panel { display:none; }
+    .detail-panel.open { display:block; }
   </style>
 </head>
 <body>
-  <div id="nav-placeholder"></div>
-  <div class="page-container">
+<nav id="navbar"></nav>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside id="sidebar" class="sidebar"></aside>
+<div class="page-content">
+  <div class="container">
     <div class="page-header">
-      <h1>Attendance Tracking</h1>
-      <select class="gig-select" id="gigSelect" onchange="loadGigAttendance()">
-        <option value="">Select an event...</option>
-      </select>
-    </div>
-
-    <div id="content" style="display:none;">
-      <div class="stats-grid">
-        <div class="stat-card"><div class="value" id="statSignedUp">0</div><div class="label">Signed Up</div></div>
-        <div class="stat-card"><div class="value" id="statAttended">0</div><div class="label">Attended</div></div>
-        <div class="stat-card"><div class="value" id="statCheckedIn">0</div><div class="label">Currently In</div></div>
-        <div class="stat-card"><div class="value" id="statAbsent">0</div><div class="label">Absent</div></div>
-        <div class="stat-card"><div class="value" id="statHours">0</div><div class="label">Total Hours</div></div>
-      </div>
-
-      <div class="section qr-section">
-        <h2>QR Code for Check-in</h2>
-        <div id="qrCode"></div>
-        <p class="qr-url" id="qrUrl"></p>
-        <button class="btn btn-primary" id="toggleQrBtn" onclick="toggleQr()" style="margin-top:12px;">Toggle QR Active</button>
-      </div>
-
-      <div class="section">
-        <h2>Attendance Records</h2>
-        <table>
-          <thead><tr><th>Volunteer</th><th>Email</th><th>Check-in</th><th>Check-out</th><th>Hours</th><th>Status</th></tr></thead>
-          <tbody id="attendanceTable"></tbody>
-        </table>
-      </div>
-
-      <div class="section">
-        <h2>Absentees (Signed up but didn't attend)</h2>
-        <table>
-          <thead><tr><th>Volunteer</th><th>Email</th><th>Status</th></tr></thead>
-          <tbody id="absenteeTable"></tbody>
-        </table>
+      <div class="page-header-row">
+        <div>
+          <h1>Attendance Tracking</h1>
+          <p class="text-muted">Track volunteer check-ins for your events</p>
+        </div>
       </div>
     </div>
+
+    <!-- Filter tabs -->
+    <div class="filter-tabs">
+      <button class="filter-tab active" onclick="setFilter('active',this)">Active &amp; Upcoming</button>
+      <button class="filter-tab" onclick="setFilter('past',this)">Past</button>
+      <button class="filter-tab" onclick="setFilter('all',this)">All</button>
+    </div>
+
+    <!-- Gig cards -->
+    <div class="gig-grid" id="gigGrid">
+      <div style="grid-column:1/-1;text-align:center;padding:3rem"><div class="spinner"></div></div>
+    </div>
+
+    <!-- Detail panel (shown after selecting a gig) -->
+    <div class="detail-panel" id="detailPanel">
+
+      <!-- Stats -->
+      <div class="stats-row" id="statsRow"></div>
+
+      <!-- QR Code -->
+      <div class="qr-card" id="qrCard"></div>
+
+      <!-- Attendance records -->
+      <div class="att-section">
+        <div class="att-section-header">
+          <span>Check-in Records</span>
+          <span id="attCount" style="font-size:0.8rem;font-weight:400;color:var(--text-muted)"></span>
+        </div>
+        <div class="att-table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Check-in</th><th>Check-out</th><th>Hours</th><th>Status</th></tr></thead>
+            <tbody id="attTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Absentees -->
+      <div class="att-section">
+        <div class="att-section-header">
+          <span>No-shows (signed up but didn't attend)</span>
+          <span id="absentCount" style="font-size:0.8rem;font-weight:400;color:var(--text-muted)"></span>
+        </div>
+        <div class="att-table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Status</th></tr></thead>
+            <tbody id="absentTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /detail-panel -->
   </div>
+</div>
 
-  <script src="/js/api.js"></script>
-  <script src="/js/nav.js"></script>
-  <script>
-    const authToken = localStorage.getItem('ic_token');
-    const headers = { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' };
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/footer.js"></script>
+<script>
+API.requireAuth('org');
 
-    async function loadGigs() {
-      const resp = await fetch('/api/orgs/me/gigs-stats', { headers });
-      const data = await resp.json();
-      if (!data.success) return;
-      const select = document.getElementById('gigSelect');
-      data.data.gigs.forEach(g => {
-        const opt = document.createElement('option');
-        opt.value = g.id;
-        opt.textContent = `${g.title} (${g.startDate})${g.isPast ? ' [Past]' : ''}`;
-        select.appendChild(opt);
-      });
+let allGigs = [], currentFilter = 'active', selectedGigId = null;
 
-      const pathGigId = window.location.pathname.split('/org/attendance/')[1];
-      if (pathGigId) {
-        select.value = pathGigId;
-        loadGigAttendance();
-      }
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGigs();
+}
+
+function renderGigs() {
+  const today = new Date().toISOString().slice(0, 10);
+  let list = allGigs;
+  if (currentFilter === 'active') list = list.filter(g => g.endDate >= today && g.status !== 'cancelled');
+  if (currentFilter === 'past')   list = list.filter(g => g.endDate < today || g.status === 'cancelled');
+
+  if (!list.length) {
+    document.getElementById('gigGrid').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted)">No gigs found for this filter.</div>`;
+    return;
+  }
+
+  const today2 = new Date().toISOString().slice(0, 10);
+  document.getElementById('gigGrid').innerHTML = list.map(g => {
+    const isPast = g.endDate < today2;
+    const statusColor = g.status === 'open' ? 'chip-green' : g.status === 'cancelled' ? 'chip-red' : 'chip-blue';
+    return `
+    <div class="gig-att-card${isPast ? ' past' : ''}${selectedGigId === g.id ? ' selected' : ''}" onclick="selectGig(${g.id})">
+      <div class="gig-att-card-title">${g.title}</div>
+      <div class="gig-att-card-meta">📅 ${g.startDate}${g.endDate !== g.startDate ? ' → ' + g.endDate : ''}</div>
+      <div class="gig-att-card-chips">
+        <span class="chip-sm ${statusColor}">${g.status}</span>
+        <span class="chip-sm chip-blue">👥 ${g.applicantCount || 0} applicants</span>
+        ${g.attendanceCount > 0 ? `<span class="chip-sm chip-purple">✓ ${g.attendanceCount} checked in</span>` : ''}
+        ${isPast ? '<span class="chip-sm chip-red">Past</span>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function selectGig(gigId) {
+  selectedGigId = gigId;
+  renderGigs();
+  document.getElementById('detailPanel').classList.add('open');
+  document.getElementById('statsRow').innerHTML = '<div style="padding:1rem;color:var(--text-muted)">Loading...</div>';
+
+  const [attRes, qrRes] = await Promise.all([
+    API.get(`/orgs/me/attendance/${gigId}`),
+    API.get(`/attendance/gig/${gigId}/qr`),
+  ]);
+
+  const { attendances, absentees, stats, gig } = attRes.data;
+
+  // Stats
+  document.getElementById('statsRow').innerHTML = [
+    { val: stats.totalSignedUp,   lbl: 'Signed Up' },
+    { val: stats.totalAttended,   lbl: 'Attended' },
+    { val: stats.currentlyCheckedIn, lbl: 'Currently In' },
+    { val: stats.totalAbsent,     lbl: 'Absent' },
+    { val: stats.totalHours,      lbl: 'Total Hours' },
+  ].map(s => `<div class="stat-box"><div class="stat-box-val">${s.val}</div><div class="stat-box-lbl">${s.lbl}</div></div>`).join('');
+
+  // QR
+  const qr = qrRes.data;
+  document.getElementById('qrCard').innerHTML = `
+    <div class="qr-img-wrap">
+      ${qr.qrCode ? `<img src="${qr.qrCode}" alt="QR Code">` : '<div style="width:160px;height:160px;background:#f8fafc;border-radius:10px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.78rem;color:var(--text-muted);text-align:center;padding:0.5rem">Install qrcode package for image</div>'}
+      <div class="qr-url-box" style="max-width:160px">${qr.checkinUrl}</div>
+    </div>
+    <div class="qr-info">
+      <h3>QR Check-in Code</h3>
+      <p>Volunteers scan this QR code when they arrive. They see the event details and tap "Check In".<br>They are automatically checked out when the event ends.</p>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+        <button class="btn btn-sm btn-primary" onclick="copyUrl('${qr.checkinUrl}')">Copy Link</button>
+        <button class="btn btn-sm ${qr.isActive ? 'btn-secondary' : 'btn-primary'}" onclick="toggleQr(${gigId})">${qr.isActive ? 'Disable QR' : 'Enable QR'}</button>
+      </div>
+      <div style="margin-top:0.625rem">
+        <span class="chip-sm ${qr.isActive ? 'chip-green' : 'chip-red'}">${qr.isActive ? 'Active' : 'Disabled'}</span>
+      </div>
+    </div>`;
+
+  // Attendance table
+  document.getElementById('attCount').textContent = `${attendances.length} records`;
+  document.getElementById('attTable').innerHTML = attendances.length ? attendances.map(a => {
+    const vp = a.volunteer?.volunteerProfile;
+    const name = vp ? `${vp.firstName||''} ${vp.lastName||''}`.trim() : (a.volunteer?.email || 'Unknown');
+    const checkin = new Date(a.checkInAt).toLocaleString('en-CA', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+    const checkout = a.checkOutAt ? new Date(a.checkOutAt).toLocaleString('en-CA', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+    const statusChip = a.checkOutAt
+      ? (a.autoCheckedOut ? '<span class="chip-sm chip-blue">Auto-out</span>' : '<span class="chip-sm chip-green">Done</span>')
+      : '<span class="chip-sm chip-green">Active</span>';
+    return `<tr>
+      <td style="font-weight:600">${name}</td>
+      <td style="color:var(--text-muted)">${a.volunteer?.email || ''}</td>
+      <td>${checkin}</td>
+      <td>${checkout}</td>
+      <td>${a.hoursWorked != null ? a.hoursWorked + 'h' : '—'}</td>
+      <td>${statusChip}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="6" class="empty-table">No one has checked in yet. Share the QR code or link above.</td></tr>`;
+
+  // Absentees
+  document.getElementById('absentCount').textContent = `${absentees.length} volunteers`;
+  document.getElementById('absentTable').innerHTML = absentees.length ? absentees.map(a => {
+    const vp = a.volunteer?.volunteerProfile;
+    const name = vp ? `${vp.firstName||''} ${vp.lastName||''}`.trim() : (a.volunteer?.email || 'Unknown');
+    return `<tr>
+      <td style="font-weight:600">${name}</td>
+      <td style="color:var(--text-muted)">${a.volunteer?.email || ''}</td>
+      <td><span class="chip-sm chip-red">Absent</span></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="3" class="empty-table">No absentees — great attendance!</td></tr>`;
+}
+
+async function toggleQr(gigId) {
+  await API.patch(`/attendance/gig/${gigId}/qr/toggle`, {});
+  selectGig(gigId);
+}
+
+function copyUrl(url) {
+  navigator.clipboard.writeText(url).then(() => Toast.success('Link copied!'));
+}
+
+async function load() {
+  try {
+    const { data } = await API.get('/orgs/me/gigs-stats');
+    allGigs = data.gigs || [];
+    // Pre-select from URL if provided
+    const pathId = window.location.pathname.split('/org/attendance/')[1];
+    renderGigs();
+    if (pathId && pathId !== '0') {
+      selectedGigId = parseInt(pathId);
+      renderGigs();
+      selectGig(parseInt(pathId));
     }
+  } catch (e) {
+    document.getElementById('gigGrid').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted)">${e.message || 'Could not load gigs.'}</div>`;
+  }
+}
 
-    async function loadGigAttendance() {
-      const gigId = document.getElementById('gigSelect').value;
-      if (!gigId) { document.getElementById('content').style.display = 'none'; return; }
-
-      document.getElementById('content').style.display = 'block';
-
-      const [attResp, qrResp] = await Promise.all([
-        fetch(`/api/orgs/me/attendance/${gigId}`, { headers }),
-        fetch(`/api/attendance/gig/${gigId}/qr`, { headers }),
-      ]);
-
-      const attData = await attResp.json();
-      if (attData.success) {
-        const { attendances, absentees, stats } = attData.data;
-        document.getElementById('statSignedUp').textContent = stats.totalSignedUp;
-        document.getElementById('statAttended').textContent = stats.totalAttended;
-        document.getElementById('statCheckedIn').textContent = stats.currentlyCheckedIn;
-        document.getElementById('statAbsent').textContent = stats.totalAbsent;
-        document.getElementById('statHours').textContent = stats.totalHours;
-
-        const tbody = document.getElementById('attendanceTable');
-        tbody.innerHTML = attendances.map(a => {
-          const name = a.volunteer?.volunteerProfile ? `${a.volunteer.volunteerProfile.firstName || ''} ${a.volunteer.volunteerProfile.lastName || ''}` : 'Unknown';
-          const checkin = new Date(a.checkInAt).toLocaleString();
-          const checkout = a.checkOutAt ? new Date(a.checkOutAt).toLocaleString() : '—';
-          const status = a.checkOutAt ? (a.autoCheckedOut ? '<span class="badge badge-blue">Auto</span>' : '<span class="badge badge-green">Done</span>') : '<span class="badge badge-green">Active</span>';
-          return `<tr><td>${name}</td><td>${a.volunteer?.email || ''}</td><td>${checkin}</td><td>${checkout}</td><td>${a.hoursWorked || '—'}</td><td>${status}</td></tr>`;
-        }).join('') || '<tr><td colspan="6" style="text-align:center;color:#94a3b8;">No attendance records yet.</td></tr>';
-
-        const absTbody = document.getElementById('absenteeTable');
-        absTbody.innerHTML = absentees.map(a => {
-          const name = a.volunteer?.volunteerProfile ? `${a.volunteer.volunteerProfile.firstName || ''} ${a.volunteer.volunteerProfile.lastName || ''}` : 'Unknown';
-          return `<tr><td>${name}</td><td>${a.volunteer?.email || ''}</td><td><span class="badge badge-red">Absent</span></td></tr>`;
-        }).join('') || '<tr><td colspan="3" style="text-align:center;color:#94a3b8;">No absentees.</td></tr>';
-      }
-
-      const qrData = await qrResp.json();
-      if (qrData.success) {
-        if (qrData.data.qrCode) {
-          document.getElementById('qrCode').innerHTML = `<img src="${qrData.data.qrCode}" alt="QR Code">`;
-        } else {
-          document.getElementById('qrCode').innerHTML = `<p style="padding:16px;background:#f8fafc;border-radius:8px;font-family:monospace;font-size:0.85rem;word-break:break-all;">${qrData.data.checkinUrl}</p><p style="color:#64748b;font-size:0.8rem;margin-top:8px;">Install <code>qrcode</code> npm package to generate QR images. Share the URL above with volunteers.</p>`;
-        }
-        document.getElementById('qrUrl').textContent = qrData.data.checkinUrl;
-        document.getElementById('toggleQrBtn').textContent = qrData.data.isActive ? 'Disable QR' : 'Enable QR';
-      } else {
-        document.getElementById('qrCode').innerHTML = '<p style="color:#94a3b8;">Generate QR by selecting an event.</p>';
-      }
-    }
-
-    async function toggleQr() {
-      const gigId = document.getElementById('gigSelect').value;
-      if (!gigId) return;
-      await fetch(`/api/attendance/gig/${gigId}/qr/toggle`, { method: 'PATCH', headers });
-      loadGigAttendance();
-    }
-
-    loadGigs();
-  </script>
+load();
+</script>
 </body>
 </html>

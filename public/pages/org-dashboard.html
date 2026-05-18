@@ -7,7 +7,7 @@
   <meta name="description" content="Manage your volunteer gigs, review applicants, and verify task completions on ImpactCircle.">
   <link rel="stylesheet" href="/css/base.css">
   <style>
-    /* ── KPI cards ── */
+    /*  KPI cards  */
     .kpi-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -33,7 +33,7 @@
     .kpi-value.warn  { color: #8a6a00; }
     .kpi-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.3rem; }
 
-    /* ── Urgency card ── */
+    /*  Urgency card  */
     .urgent-banner {
       background: linear-gradient(135deg, var(--color-soft-yellow), #fff1e0);
       border: 1px solid rgba(255, 138, 0, 0.25);
@@ -49,7 +49,7 @@
     .urgent-banner .ub-text { font-size: 0.9rem; font-weight: 600; color: #071a3d; }
     .urgent-banner .ub-sub  { font-size: 0.8rem; color: #8a6a00; margin-top: 0.125rem; }
 
-    /* ── Tabs ── */
+    /*  Tabs  */
     .dash-tabs {
       display: flex;
       gap: 0;
@@ -81,14 +81,14 @@
       padding: 0 5px;
     }
 
-    /* ── Card label ── */
+    /*  Card label  */
     .card-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 0.5rem; }
 
-    /* ── Table ── */
+    /*  Table  */
     .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .table-wrapper table { min-width: 560px; }
 
-    /* ── Pending task card ── */
+    /*  Pending task card  */
     .pending-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -257,7 +257,7 @@
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('verifyModal')">Cancel</button>
       <button class="btn btn-danger" id="rejectBtn">Reject</button>
-      <button class="btn btn-success" id="approveBtn">Approve ✓</button>
+      <button class="btn btn-success" id="approveBtn">Approve </button>
     </div>
   </div>
 </div>
@@ -310,12 +310,12 @@ async function load() {
     document.getElementById('sHours').textContent  = typeof stats.totalFacilitatedHours === 'number'
       ? stats.totalFacilitatedHours.toFixed(1) : '0';
 
-    /* ── Verification warning ── */
+    /*  Verification warning  */
     const userFull = await API.get('/auth/me');
     if (userFull.data.user.verificationStatus !== 'verified') {
       document.getElementById('verifyWarning').innerHTML = `
         <div class="alert alert-warning mb-4">
-          ⏳ Your organization is pending admin verification. You cannot post gigs until approved.
+           Your organization is pending admin verification. You cannot post gigs until approved.
         </div>`;
       const postBtn = document.getElementById('postBtn');
       postBtn.style.opacity = '0.45';
@@ -324,7 +324,7 @@ async function load() {
       postBtn.removeAttribute('href');
     }
 
-    /* ── Urgent banner ── */
+    /*  Urgent banner  */
     if (pt.length > 0) {
       document.getElementById('urgentBanner').style.display = 'flex';
       document.getElementById('urgentText').textContent = `${pt.length} task completion${pt.length !== 1 ? 's' : ''} need${pt.length === 1 ? 's' : ''} your approval`;
@@ -333,13 +333,13 @@ async function load() {
       badge.style.display = 'inline-flex';
     }
 
-    /* ── Gigs table ── */
+    /*  Gigs table  */
     document.getElementById('gigsTable').innerHTML = gigs.length
       ? gigs.map(g => `
           <tr>
             <td>
               <div style="font-weight:600;font-size:0.875rem">${g.title}</div>
-              <div style="font-size:0.75rem;color:var(--text-muted)">${g.locationType === 'remote' ? '🌐 Remote' : '📍 ' + (g.locationAddress || 'In-person')}</div>
+              <div style="font-size:0.75rem;color:var(--text-muted)">${g.locationType === 'remote' ? ' Remote' : ' ' + (g.locationAddress || 'In-person')}</div>
             </td>
             <td>
               <span class="cat-pill" style="background:${g.category?.colorHex || '#0066ff'}22;color:${g.category?.colorHex || '#0066ff'};font-size:0.78rem">
@@ -361,7 +361,7 @@ async function load() {
            No gigs yet. <a href="/org-gig-create">Post your first gig →</a>
          </td></tr>`;
 
-    /* ── Pending tasks ── */
+    /*  Pending tasks  */
     document.getElementById('pendingList').innerHTML = pt.length
       ? pt.map(t => {
           const daysPending = Math.floor((Date.now() - new Date(t.submittedAt).getTime()) / 86400000);
@@ -377,18 +377,18 @@ async function load() {
                   &nbsp;·&nbsp; Submitted: ${fmt.fromNow(t.submittedAt)}
                 </div>
                 <div class="pending-countdown" style="${urgency}">
-                  ⏰ ${daysLeft === 0 ? 'Auto-approves today' : `Auto-approves in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`}
+                   ${daysLeft === 0 ? 'Auto-approves today' : `Auto-approves in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`}
                 </div>
               </div>
               <div class="pending-actions">
-                <button class="btn btn-success btn-sm" onclick="openVerify('${t.id}','${(t.gig?.title || '').replace(/'/g,"\\'")}','${t.volunteer?.email || ''}','approve')">Approve ✓</button>
+                <button class="btn btn-success btn-sm" onclick="openVerify('${t.id}','${(t.gig?.title || '').replace(/'/g,"\\'")}','${t.volunteer?.email || ''}','approve')">Approve </button>
                 <button class="btn btn-danger btn-sm"  onclick="openVerify('${t.id}','${(t.gig?.title || '').replace(/'/g,"\\'")}','${t.volunteer?.email || ''}','reject')">Reject</button>
               </div>
             </div>
           </div>`;
         }).join('')
       : `<div class="empty-state" style="padding:3rem 0">
-           <div class="empty-icon">✓</div>
+           <div class="empty-icon"></div>
            <h3>All caught up!</h3>
            <p>No pending task approvals right now.</p>
          </div>`;

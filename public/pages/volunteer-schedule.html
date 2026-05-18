@@ -6,15 +6,15 @@
   <title>My Schedule | ImpactCircle</title>
   <link rel="stylesheet" href="/css/base.css">
   <style>
-    /* ── Calendar layout ── */
+    /*  Calendar layout  */
     .cal-layout { display:grid; grid-template-columns:1fr 360px; gap:1.25rem; align-items:start; }
     @media(max-width:960px){ .cal-layout{ grid-template-columns:1fr; } }
 
-    /* ── Month nav ── */
+    /*  Month nav  */
     .cal-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
     .cal-label { font-size:1.1rem; font-weight:700; color:var(--color-navy); }
 
-    /* ── Grid ── */
+    /*  Grid  */
     .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
     .cal-dow { text-align:center; font-size:0.72rem; font-weight:700; color:var(--text-muted); padding:0.5rem 0; text-transform:uppercase; }
     .cal-cell {
@@ -38,7 +38,7 @@
     .cal-dot.dot-rejected { background:#ff4f6d; }
     .cal-cnt { font-size:0.65rem; color:var(--primary); font-weight:700; margin-top:2px; }
 
-    /* ── Legend ── */
+    /*  Legend  */
     .cal-legend {
       display:flex; flex-wrap:wrap; gap:0.875rem;
       padding:0.625rem 1rem; background:#f8fafc;
@@ -48,10 +48,10 @@
     .legend-item { display:flex; align-items:center; gap:0.4rem; font-size:0.72rem; font-weight:600; color:var(--text-muted); }
     .legend-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
 
-    /* ── Detail panel ── */
+    /*  Detail panel  */
     .detail-panel { position:sticky; top:1rem; }
 
-    /* ── Mobile detail drawer ── */
+    /*  Mobile detail drawer  */
     .detail-drawer {
       display:none;
       position:fixed; inset:0; z-index:400;
@@ -84,7 +84,7 @@
     }
     .drawer-body { overflow-y:auto; flex:1; }
 
-    /* ── Shift cards in detail ── */
+    /*  Shift cards in detail  */
     .shift-card {
       border:1px solid var(--border); border-radius:10px;
       padding:1rem 1.125rem; margin-bottom:0.875rem; background:#fff;
@@ -108,11 +108,11 @@
       border-radius:20px; font-size:0.7rem; font-weight:600;
     }
 
-    /* ── Empty states ── */
+    /*  Empty states  */
     .empty-panel { text-align:center; padding:2.5rem 1rem; color:var(--text-muted); }
     .empty-page  { text-align:center; padding:4rem 1rem; color:var(--text-muted); }
 
-    /* ── Mobile tweaks ── */
+    /*  Mobile tweaks  */
     @media(max-width:600px) {
       .cal-cell { min-height:52px; padding:0.25rem 0.3rem; border-radius:5px; }
       .cal-dn   { font-size:0.75rem; }
@@ -201,7 +201,7 @@ const SVG = {
 
 let allTasks = [], year = new Date().getFullYear(), month = new Date().getMonth() + 1, sel = null;
 
-/* ── Build a map of { 'YYYY-MM-DD': [tasks…] } for the current month ── */
+/*  Build a map of { 'YYYY-MM-DD': [tasks…] } for the current month  */
 function buildCalData(tasks, yr, mo) {
   const data = {};
   const mStart = new Date(yr, mo - 1, 1);
@@ -248,7 +248,7 @@ function buildCalData(tasks, yr, mo) {
   return data;
 }
 
-/* ── Render the calendar grid ── */
+/*  Render the calendar grid  */
 function renderGrid(calData) {
   const first = new Date(year, month - 1, 1).getDay();
   const days  = new Date(year, month, 0).getDate();
@@ -286,7 +286,7 @@ function closeDrawer() {
   document.body.style.overflow = '';
 }
 
-/* ── Detail panel / drawer ── */
+/*  Detail panel / drawer  */
 function selectDate(k) {
   sel = k;
   const calData = buildCalData(allTasks, year, month);
@@ -366,7 +366,7 @@ function buildShiftsHtml(list, _dateLabel) {
   }).join('');
 }
 
-/* ── Month navigation ── */
+/*  Month navigation  */
 function changeMonth(delta) {
   month += delta;
   if (month > 12) { month = 1; year++; }
@@ -385,7 +385,7 @@ function refreshCalendar() {
   renderGrid(calData);
 }
 
-/* ── Initial load ── */
+/*  Initial load  */
 async function load() {
   try {
     const { data } = await API.get('/volunteers/me/dashboard');
@@ -463,7 +463,7 @@ async function load() {
 
 load();
 
-/* ── Swipe-down to close drawer on mobile ── */
+/*  Swipe-down to close drawer on mobile  */
 (function() {
   let startY = 0, dragging = false;
   const sheet = () => document.querySelector('.drawer-sheet');

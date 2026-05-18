@@ -307,7 +307,7 @@
               <div id="bgCheckName" style="margin-top:0.5rem;font-size:0.8rem;color:var(--text-muted)"></div>
             </div>
           </div>
-          <div class="alert alert-info">ℹ️ Documents are stored securely and only reviewed by platform administrators.</div>
+          <div class="alert alert-info">ℹ Documents are stored securely and only reviewed by platform administrators.</div>
         </div>
 
         <!-- Step 5: Consent -->
@@ -351,7 +351,7 @@ const local = {
 };
 let skillsList = [], langsList = [], catList = [];
 
-// ── Render helpers ────────────────────────────────────────────
+//  Render helpers 
 function renderProgress() {
   document.getElementById('stepProgress').innerHTML =
     `<div class="steps-summary">Step ${currentStep + 1} of ${STEPS.length} - ${STEPS[currentStep]}</div>`;
@@ -368,11 +368,11 @@ function renderPanels() {
       else stateEl.textContent = '';
     }
     const indexEl = p.querySelector('.step-box-index');
-    if (indexEl) indexEl.textContent = i < currentStep ? '✓' : String(i + 1);
+    if (indexEl) indexEl.textContent = i < currentStep ? '' : String(i + 1);
     const prevBtn = p.querySelector('.step-prev-btn');
     if (prevBtn) prevBtn.style.display = i > 0 ? 'inline-flex' : 'none';
     const nextBtn = p.querySelector('.step-next-btn');
-    if (nextBtn) nextBtn.textContent = i === STEPS.length - 1 ? '✓ Complete Registration' : 'Continue →';
+    if (nextBtn) nextBtn.textContent = i === STEPS.length - 1 ? ' Complete Registration' : 'Continue →';
   });
 }
 
@@ -383,7 +383,7 @@ function showAlert(html) {
 }
 function clearAlert() { document.getElementById('alertArea').innerHTML = ''; }
 
-// ── Tag inputs ────────────────────────────────────────────────
+//  Tag inputs 
 function setupTagInput(inputId, wrapperId, list) {
   const input = document.getElementById(inputId);
   const wrapper = document.getElementById(wrapperId);
@@ -410,7 +410,7 @@ function removeTag(btn, listId) {
   tag.remove();
 }
 
-// ── Password toggles ─────────────────────────────────────────
+//  Password toggles 
 document.getElementById('togglePwd').addEventListener('click', () => {
   const el = document.getElementById('password');
   el.type = el.type === 'password' ? 'text' : 'password';
@@ -420,7 +420,7 @@ document.getElementById('toggleConfirmPwd').addEventListener('click', () => {
   el.type = el.type === 'password' ? 'text' : 'password';
 });
 
-// ── File inputs ───────────────────────────────────────────────
+//  File inputs 
 ['govId', 'bgCheck'].forEach(prefix => {
   document.getElementById(`${prefix}File`)?.addEventListener('change', e => {
     document.getElementById(`${prefix}Name`).textContent = e.target.files[0]?.name || '';
@@ -437,7 +437,7 @@ document.querySelectorAll('#govIdFile, #bgCheckFile').forEach(el => {
   });
 });
 
-// ── Category searchable dropdown (static list) ───────────────
+//  Category searchable dropdown (static list) 
 const CATEGORIES = [
   'Food Security & Nutrition', 'Newcomer & Cultural Integration', 'Shelter & Housing Support',
   'Youth & Children', 'Health & Palliative Care', 'Disability & Special Needs',
@@ -489,7 +489,7 @@ window.removeCatTag = function(btn) {
   tag.remove();
 };
 
-// ── Validation ────────────────────────────────────────────────
+//  Validation 
 const NAME_REGEX = /^[a-zA-ZÀ-ÿ\s'\-]+$/;
 
 function validate() {
@@ -564,7 +564,7 @@ document.querySelectorAll('#stepPanels input, #stepPanels textarea, #stepPanels 
   el.addEventListener('input', () => Validator.clearError(el));
 });
 
-// ── Main click handler ────────────────────────────────────────
+//  Main click handler 
 async function handleContinue(btn) {
   if (!validate()) return;
 
@@ -620,7 +620,7 @@ async function handleContinue(btn) {
     advance();
 
   } else if (currentStep === 5) {
-    // ── Final step: create everything now ──
+    //  Final step: create everything now 
     btn.disabled = true;
     btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px"></div> Creating your account…';
 
@@ -644,7 +644,7 @@ async function handleContinue(btn) {
           if (local.bgFile)  fd.append('backgroundCheck',  local.bgFile);
           await API.upload('/volunteers/register/step/4/documents', fd);
         } catch (uploadErr) {
-          showAlert(`<div class="alert alert-warning">⚠️ Document upload failed (${uploadErr.message}). You can upload them later from your profile.</div>`);
+          showAlert(`<div class="alert alert-warning">⚠ Document upload failed (${uploadErr.message}). You can upload them later from your profile.</div>`);
         }
       }
 
@@ -658,15 +658,15 @@ async function handleContinue(btn) {
       // Duplicate email → send user back to step 0 so they can correct it
       if (err.status === 409) {
         API.clearSession();
-        showAlert(`<div class="alert alert-danger">⚠️ That email address is already registered. <a href="/login">Sign in instead</a>, or go back to step 1 and use a different email.</div>`);
+        showAlert(`<div class="alert alert-danger">⚠ That email address is already registered. <a href="/login">Sign in instead</a>, or go back to step 1 and use a different email.</div>`);
         currentStep = 0;
         renderProgress();
         renderPanels();
       } else {
-        showAlert(`<div class="alert alert-danger">⚠️ ${err.message || 'Registration failed. Please try again.'}</div>`);
+        showAlert(`<div class="alert alert-danger">⚠ ${err.message || 'Registration failed. Please try again.'}</div>`);
       }
       btn.disabled = false;
-      btn.textContent = '✓ Complete Registration';
+      btn.textContent = ' Complete Registration';
     }
   }
 }
@@ -682,7 +682,7 @@ function advance() {
 
 setupTagInput('skillTag', 'skillsInput', skillsList);
 
-// ── Language searchable dropdown ──────────────────────────────
+//  Language searchable dropdown 
 const LANGUAGES = [
   'Afrikaans','Albanian','Amharic','Arabic','Armenian','Azerbaijani',
   'Basque','Belarusian','Bengali','Bosnian','Bulgarian','Catalan',
@@ -771,7 +771,7 @@ function initVerticalStepBoxes() {
     actions.className = 'step-action-row';
     actions.innerHTML = `
       <button type="button" class="btn btn-secondary step-prev-btn" data-step="${i}" style="${i === 0 ? 'display:none' : ''}">← Back</button>
-      <button type="button" class="btn btn-primary step-next-btn" data-step="${i}">${i === STEPS.length - 1 ? '✓ Complete Registration' : 'Continue →'}</button>
+      <button type="button" class="btn btn-primary step-next-btn" data-step="${i}">${i === STEPS.length - 1 ? ' Complete Registration' : 'Continue →'}</button>
     `;
     body.appendChild(actions);
 

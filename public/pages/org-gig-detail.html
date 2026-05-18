@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gig Details | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    .detail-grid { display:grid; grid-template-columns:1fr 340px; gap:1.5rem; align-items:start; }
+    @media(max-width:900px){ .detail-grid{ grid-template-columns:1fr; } }
+
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1.5rem; margin-bottom:1.25rem; }
+    .card h2 { font-size:1rem; font-weight:700; margin-bottom:1rem; padding-bottom:0.75rem; border-bottom:1px solid var(--border); }
+
+    .field-row { display:flex; flex-direction:column; gap:0.25rem; margin-bottom:1rem; }
+    .field-row label { font-size:0.78rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; }
+    .field-row input,
+    .field-row textarea,
+    .field-row select { padding:0.5rem 0.875rem; border:1px solid var(--border); border-radius:8px; font-size:0.875rem; font-family:inherit; width:100%; box-sizing:border-box; }
+    .field-row textarea { min-height:80px; resize:vertical; }
+    .field-row input:focus,
+    .field-row textarea:focus,
+    .field-row select:focus { outline:none; border-color:var(--primary); }
+
+    .row2 { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
+
+    .stat-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:0.75rem; margin-bottom:1rem; }
+    .stat-box { background:#f8fafc; border:1px solid var(--border); border-radius:10px; padding:0.875rem; text-align:center; }
+    .stat-box-val { font-size:1.5rem; font-weight:800; color:var(--primary); }
+    .stat-box-lbl { font-size:0.75rem; color:var(--text-muted); margin-top:0.15rem; }
+
+    .alert-success { background:#dcfce7; color:#166534; border-radius:8px; padding:0.75rem 1rem; font-size:0.875rem; margin-bottom:1rem; display:none; }
+    .alert-error   { background:#fee2e2; color:#991b1b; border-radius:8px; padding:0.75rem 1rem; font-size:0.875rem; margin-bottom:1rem; display:none; }
+
+    .page-back { display:inline-flex; align-items:center; gap:0.4rem; font-size:0.85rem; color:var(--text-muted); text-decoration:none; margin-bottom:1rem; transition:color 0.12s; }
+    .page-back:hover { color:var(--primary); }
+
+    .link-row { display:flex; gap:0.625rem; flex-wrap:wrap; }
+    .status-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.78rem; font-weight:700; }
+    .status-open       { background:rgba(22,163,74,0.12); color:#166534; }
+    .status-inProgress { background:rgba(37,99,235,0.12); color:#1d4ed8; }
+    .status-completed  { background:rgba(100,116,139,0.12); color:#475569; }
+    .status-cancelled  { background:rgba(220,38,38,0.12); color:#991b1b; }
+    .status-closed     { background:rgba(100,116,139,0.12); color:#475569; }
+    .status-draft      { background:rgba(202,138,4,0.12); color:#854d0e; }
+
+    .toggle-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem; font-size:0.875rem; }
+    .toggle-row label { font-weight:600; }
+  </style>
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside id="sidebar" class="sidebar"></aside>
+<div class="page-content">
+  <div class="container">
+    <a href="/org/opportunities" class="page-back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      My Posted Gigs
+    </a>
+
+    <div id="alertSuccess" class="alert-success"></div>
+    <div id="alertError"   class="alert-error"></div>
+
+    <div id="pageTitle" class="page-header" style="margin-bottom:1.25rem">
+      <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+        <h1 id="gigTitleDisplay">Loading...</h1>
+        <span id="statusBadge" class="status-badge"></span>
+      </div>
+      <p class="text-muted" id="gigSubtitle"></p>
+    </div>
+
+    <div class="detail-grid">
+
+      <!-- Left: edit form -->
+      <div>
+        <div class="card">
+          <h2>Gig Details</h2>
+          <div class="field-row">
+            <label>Title</label>
+            <input type="text" id="fTitle" placeholder="Gig title">
+          </div>
+          <div class="field-row">
+            <label>Description</label>
+            <textarea id="fDesc" rows="4" placeholder="Describe the volunteer opportunity..."></textarea>
+          </div>
+          <div class="row2">
+            <div class="field-row">
+              <label>Start Date</label>
+              <input type="date" id="fStart">
+            </div>
+            <div class="field-row">
+              <label>End Date</label>
+              <input type="date" id="fEnd">
+            </div>
+          </div>
+          <div class="row2">
+            <div class="field-row">
+              <label>Start Time</label>
+              <input type="time" id="fStartTime">
+            </div>
+            <div class="field-row">
+              <label>End Time</label>
+              <input type="time" id="fEndTime">
+            </div>
+          </div>
+          <div class="row2">
+            <div class="field-row">
+              <label>Estimated Hours / Session</label>
+              <input type="number" id="fHours" min="0.5" step="0.5" placeholder="e.g. 3">
+            </div>
+            <div class="field-row">
+              <label>Max Volunteers</label>
+              <input type="number" id="fMaxVol" min="1" step="1" placeholder="Leave blank for unlimited">
+            </div>
+          </div>
+          <div class="field-row">
+            <label>Location Type</label>
+            <select id="fLocType" onchange="toggleAddress()">
+              <option value="in-person">In-Person</option>
+              <option value="remote">Remote</option>
+              <option value="hybrid">Hybrid</option>
+            </select>
+          </div>
+          <div class="field-row" id="addrRow">
+            <label>Address</label>
+            <input type="text" id="fAddr" placeholder="Street, City, Province">
+          </div>
+          <div class="field-row">
+            <label>Status</label>
+            <select id="fStatus">
+              <option value="open">Open</option>
+              <option value="inProgress">In Progress</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="closed">Closed</option>
+              <option value="draft">Draft</option>
+            </select>
+          </div>
+          <div class="toggle-row">
+            <label for="fVerifiedOnly">Verified volunteers only</label>
+            <input type="checkbox" id="fVerifiedOnly" style="width:auto">
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="saveGig()" style="width:100%">Save Changes</button>
+      </div>
+
+      <!-- Right: stats + links -->
+      <div>
+        <div class="card">
+          <h2>Overview</h2>
+          <div class="stat-grid">
+            <div class="stat-box">
+              <div class="stat-box-val" id="sTotal">-</div>
+              <div class="stat-box-lbl">Total Applicants</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-box-val" id="sApproved">-</div>
+              <div class="stat-box-lbl">Approved</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-box-val" id="sAttended">-</div>
+              <div class="stat-box-lbl">Attended (QR)</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-box-val" id="sSpots">-</div>
+              <div class="stat-box-lbl">Spots Left</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Quick Links</h2>
+          <div class="link-row">
+            <a id="lnkApps"        href="#" class="btn btn-secondary" style="flex:1;text-align:center">Applicants</a>
+            <a id="lnkAttendance"  href="#" class="btn btn-secondary" style="flex:1;text-align:center">Attendance</a>
+          </div>
+        </div>
+
+        <div class="card" id="qrCard" style="display:none">
+          <h2>QR Check-in Code</h2>
+          <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.875rem">Volunteers scan this QR code to check in on-site.</p>
+          <div id="qrWrap" style="text-align:center">
+            <img id="qrImg" src="" alt="QR Code" style="max-width:200px;border-radius:8px;border:1px solid var(--border)">
+          </div>
+          <a id="qrLink" href="#" target="_blank" class="btn btn-secondary" style="display:block;text-align:center;margin-top:0.875rem;font-size:0.82rem">Open Check-in Page</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/footer.js"></script>
+<script>
+API.requireAuth('org');
+
+const gigId = location.pathname.split('/').pop();
+let gigData = null;
+
+function toggleAddress() {
+  const v = document.getElementById('fLocType').value;
+  document.getElementById('addrRow').style.display = v === 'remote' ? 'none' : '';
+}
+
+function showAlert(type, msg) {
+  const el = document.getElementById(type === 'success' ? 'alertSuccess' : 'alertError');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+
+function populateForm(g) {
+  document.getElementById('gigTitleDisplay').textContent = g.title || 'Gig Detail';
+  document.getElementById('gigSubtitle').textContent = g.category?.name || '';
+
+  const badge = document.getElementById('statusBadge');
+  const statusLabel = { open:'Open', inProgress:'In Progress', completed:'Completed', cancelled:'Cancelled', closed:'Closed', draft:'Draft' };
+  badge.textContent = statusLabel[g.status] || g.status || '';
+  badge.className   = `status-badge status-${g.status || 'open'}`;
+
+  document.getElementById('fTitle').value        = g.title || '';
+  document.getElementById('fDesc').value         = g.description || '';
+  document.getElementById('fStart').value        = g.startDate || '';
+  document.getElementById('fEnd').value          = g.endDate || '';
+  document.getElementById('fStartTime').value    = g.startTime || '';
+  document.getElementById('fEndTime').value      = g.endTime || '';
+  document.getElementById('fHours').value        = g.estimatedHours || '';
+  document.getElementById('fMaxVol').value       = g.maxVolunteers || '';
+  document.getElementById('fLocType').value      = g.locationType || 'in-person';
+  document.getElementById('fAddr').value         = g.locationAddress || '';
+  document.getElementById('fStatus').value       = g.status || 'open';
+  document.getElementById('fVerifiedOnly').checked = !!g.verifiedOnly;
+  toggleAddress();
+
+  /* Stats */
+  const total    = g.applicantCount || 0;
+  const approved = g.approvedApplicants || 0;
+  const attended = g.attendedCount || 0;
+  const spots    = g.maxVolunteers ? Math.max(0, g.maxVolunteers - approved) : null;
+  document.getElementById('sTotal').textContent    = total;
+  document.getElementById('sApproved').textContent = approved;
+  document.getElementById('sAttended').textContent = attended;
+  document.getElementById('sSpots').textContent    = spots !== null ? spots : 'Unlimited';
+
+  /* Links */
+  document.getElementById('lnkApps').href       = `/org/applications?gig=${g.id}`;
+  document.getElementById('lnkAttendance').href  = `/org/attendance/${g.id}`;
+
+  /* QR code */
+  if (g.qrCodeUrl || g.qrUrl) {
+    document.getElementById('qrCard').style.display = '';
+    document.getElementById('qrImg').src = g.qrCodeUrl || g.qrUrl;
+    document.getElementById('qrLink').href = `/checkin?gig=${g.id}`;
+  }
+}
+
+async function saveGig() {
+  const body = {
+    title:          document.getElementById('fTitle').value.trim(),
+    description:    document.getElementById('fDesc').value.trim(),
+    startDate:      document.getElementById('fStart').value || null,
+    endDate:        document.getElementById('fEnd').value || null,
+    startTime:      document.getElementById('fStartTime').value || null,
+    endTime:        document.getElementById('fEndTime').value || null,
+    estimatedHours: parseFloat(document.getElementById('fHours').value) || null,
+    maxVolunteers:  parseInt(document.getElementById('fMaxVol').value) || null,
+    locationType:   document.getElementById('fLocType').value,
+    locationAddress:document.getElementById('fAddr').value.trim() || null,
+    status:         document.getElementById('fStatus').value,
+    verifiedOnly:   document.getElementById('fVerifiedOnly').checked,
+  };
+
+  try {
+    await API.patch(`/gigs/${gigId}`, body);
+    showAlert('success', 'Gig saved successfully.');
+    document.getElementById('gigTitleDisplay').textContent = body.title;
+    const badge = document.getElementById('statusBadge');
+    const statusLabel = { open:'Open', inProgress:'In Progress', completed:'Completed', cancelled:'Cancelled', closed:'Closed', draft:'Draft' };
+    badge.textContent = statusLabel[body.status] || body.status;
+    badge.className   = `status-badge status-${body.status}`;
+  } catch (e) {
+    showAlert('error', e.message || 'Could not save gig.');
+  }
+}
+
+async function load() {
+  try {
+    const { data } = await API.get(`/gigs/${gigId}`);
+    gigData = data.gig || data;
+    populateForm(gigData);
+  } catch (e) {
+    document.getElementById('gigTitleDisplay').textContent = 'Error loading gig';
+    showAlert('error', e.message || 'Could not load gig details.');
+  }
+}
+
+load();
+</script>
+</body>
+</html>

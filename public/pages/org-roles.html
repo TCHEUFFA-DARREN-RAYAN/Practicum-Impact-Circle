@@ -3,171 +3,230 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Team Roles — ImpactCircle</title>
+  <title>Team &amp; Roles | ImpactCircle</title>
   <link rel="stylesheet" href="/css/base.css">
   <style>
-    .page-container { max-width: 1000px; margin: 0 auto; padding: 24px; }
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-    .page-header h1 { font-size: 1.5rem; color: #1e293b; }
-    .section { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-    .section h2 { font-size: 1.1rem; margin-bottom: 16px; color: #1e293b; }
-    .form-row { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-    .form-row input, .form-row select { padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; }
-    .form-row input { flex: 1; min-width: 200px; }
-    .btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; }
-    .btn-primary { background: #6366f1; color: #fff; }
-    .btn-primary:hover { background: #4f46e5; }
-    .btn-danger { background: #dc2626; color: #fff; }
-    .btn-danger:hover { background: #b91c1c; }
-    .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
-    .perm-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
-    .perm-chip { padding: 6px 12px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 20px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
-    .perm-chip.active { background: #6366f1; color: #fff; border-color: #6366f1; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
-    th { background: #f8fafc; font-weight: 600; color: #475569; }
-    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
-    .badge-green { background: #dcfce7; color: #166534; }
-    .badge-yellow { background: #fef3c7; color: #92400e; }
-    .badge-gray { background: #f1f5f9; color: #475569; }
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; }
+    @media(max-width:800px){ .two-col{ grid-template-columns:1fr; } }
+
+    .card { background:#fff; border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:1.25rem; }
+    .card-header { padding:1rem 1.25rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+    .card-header h2 { margin:0; font-size:0.95rem; font-weight:700; }
+    .card-body { padding:1.25rem; }
+
+    .form-row { display:flex; gap:0.625rem; flex-wrap:wrap; margin-bottom:1rem; }
+    .form-row input, .form-row select { padding:0.45rem 0.75rem; border:1px solid var(--border); border-radius:8px; font-size:0.875rem; }
+    .form-row input { flex:1; min-width:180px; }
+    .form-row select { flex:1; min-width:160px; }
+
+    .perm-grid { display:flex; flex-wrap:wrap; gap:0.5rem; margin:0.75rem 0 1rem; }
+    .perm-chip { padding:0.3rem 0.75rem; background:#f1f5f9; border:2px solid transparent; border-radius:20px; font-size:0.8rem; font-weight:600; cursor:pointer; transition:all 0.12s; color:#475569; }
+    .perm-chip.active { background:var(--primary-light); border-color:var(--primary); color:var(--primary); }
+
+    table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+    th { background:#f8fafc; font-weight:600; color:var(--text-muted); text-align:left; padding:0.625rem 1rem; border-bottom:1px solid var(--border); font-size:0.78rem; text-transform:uppercase; letter-spacing:0.04em; }
+    td { padding:0.75rem 1rem; border-bottom:1px solid var(--border); color:var(--text); }
+    tr:last-child td { border-bottom:none; }
+
+    .badge-perm { display:inline-block; padding:2px 8px; background:#ede9fe; color:#6d28d9; border-radius:20px; font-size:0.72rem; font-weight:600; margin:2px; }
+    .badge-status-active  { background:#dcfce7; color:#166534; }
+    .badge-status-invited { background:#fef3c7; color:#92400e; }
+    .badge-status-removed { background:#f1f5f9; color:#64748b; }
+    .empty-row { text-align:center; padding:2rem; color:var(--text-muted); font-size:0.875rem; }
+
+    .select-all-btn { font-size:0.78rem; color:var(--primary); background:none; border:none; cursor:pointer; padding:0; margin-bottom:0.25rem; display:inline-block; }
+    .select-all-btn:hover { text-decoration:underline; }
   </style>
 </head>
 <body>
-  <div id="nav-placeholder"></div>
-  <div class="page-container">
+<nav id="navbar"></nav>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside id="sidebar" class="sidebar"></aside>
+<div class="page-content">
+  <div class="container">
     <div class="page-header">
-      <h1>Team & Roles</h1>
-    </div>
-
-    <div class="section">
-      <h2>Create Role</h2>
-      <div class="form-row">
-        <input type="text" id="roleName" placeholder="Role name (e.g. Coordinator, Viewer)">
-        <button class="btn btn-primary" onclick="createRole()">Create Role</button>
-      </div>
-      <p style="font-size:0.85rem;color:#64748b;margin-bottom:8px;">Select permissions for the new role:</p>
-      <div class="perm-grid" id="permGrid"></div>
-    </div>
-
-    <div class="section">
-      <h2>Existing Roles</h2>
-      <table>
-        <thead><tr><th>Role Name</th><th>Permissions</th><th>Actions</th></tr></thead>
-        <tbody id="rolesTable"></tbody>
-      </table>
-    </div>
-
-    <div class="section">
-      <h2>Add Team Member</h2>
-      <div class="form-row">
-        <input type="email" id="memberEmail" placeholder="Email address">
-        <select id="memberRole"><option value="">Select role...</option></select>
-        <button class="btn btn-primary" onclick="addMember()">Add Member</button>
+      <div class="page-header-row">
+        <div>
+          <h1>Team &amp; Roles</h1>
+          <p class="text-muted">Create roles with specific permissions and manage your team members</p>
+        </div>
       </div>
     </div>
 
-    <div class="section">
-      <h2>Team Members</h2>
-      <table>
-        <thead><tr><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody id="membersTable"></tbody>
-      </table>
+    <div class="two-col">
+      <!-- Left: Create role + existing roles -->
+      <div>
+        <div class="card">
+          <div class="card-header"><h2>Create Role</h2></div>
+          <div class="card-body">
+            <div class="form-row">
+              <input type="text" id="roleName" placeholder="Role name (e.g. Coordinator)">
+            </div>
+            <p style="font-size:0.82rem;color:var(--text-muted);margin:0 0 0.25rem">Permissions (tabs this role can access):</p>
+            <button class="select-all-btn" onclick="selectAllPerms()">Select all</button>
+            <div class="perm-grid" id="permGrid"></div>
+            <button class="btn btn-primary" onclick="createRole()">Create Role</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2>Existing Roles</h2>
+            <span id="roleCount" style="font-size:0.8rem;color:var(--text-muted)"></span>
+          </div>
+          <table>
+            <thead><tr><th>Role Name</th><th>Permissions</th><th></th></tr></thead>
+            <tbody id="rolesTable">
+              <tr><td colspan="3" class="empty-row">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Right: Add member + member list -->
+      <div>
+        <div class="card">
+          <div class="card-header"><h2>Add Team Member</h2></div>
+          <div class="card-body">
+            <div class="form-row">
+              <input type="email" id="memberEmail" placeholder="Email address">
+            </div>
+            <div class="form-row">
+              <select id="memberRole">
+                <option value="">No role (view only)</option>
+              </select>
+              <button class="btn btn-primary" onclick="addMember()">Add Member</button>
+            </div>
+            <p style="font-size:0.78rem;color:var(--text-muted);margin:0">If the email belongs to an existing ImpactCircle user they'll be added immediately, otherwise they'll receive an invitation.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2>Team Members</h2>
+            <span id="memberCount" style="font-size:0.8rem;color:var(--text-muted)"></span>
+          </div>
+          <table>
+            <thead><tr><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead>
+            <tbody id="membersTable">
+              <tr><td colspan="4" class="empty-row">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
+</div>
 
-  <script src="/js/api.js"></script>
-  <script src="/js/nav.js"></script>
-  <script>
-    const authToken = localStorage.getItem('ic_token');
-    const headers = { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' };
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/footer.js"></script>
+<script>
+API.requireAuth('org');
 
-    const allPermissions = ['dashboard', 'gigs', 'applications', 'volunteers', 'attendance', 'analytics', 'announcements', 'settings', 'schedule', 'roles'];
-    let selectedPerms = [];
+const ALL_PERMS = ['dashboard','gigs','applications','volunteers','attendance','analytics','announcements','settings','schedule','roles'];
+let selectedPerms = [];
 
-    function renderPermGrid() {
-      const grid = document.getElementById('permGrid');
-      grid.innerHTML = allPermissions.map(p =>
-        `<span class="perm-chip ${selectedPerms.includes(p) ? 'active' : ''}" onclick="togglePerm('${p}')">${p}</span>`
-      ).join('');
-    }
+function renderPermGrid() {
+  document.getElementById('permGrid').innerHTML = ALL_PERMS.map(p =>
+    `<span class="perm-chip${selectedPerms.includes(p)?' active':''}" onclick="togglePerm('${p}')">${p}</span>`
+  ).join('');
+}
 
-    function togglePerm(p) {
-      if (selectedPerms.includes(p)) selectedPerms = selectedPerms.filter(x => x !== p);
-      else selectedPerms.push(p);
-      renderPermGrid();
-    }
+function togglePerm(p) {
+  selectedPerms = selectedPerms.includes(p) ? selectedPerms.filter(x => x !== p) : [...selectedPerms, p];
+  renderPermGrid();
+}
 
-    async function loadRoles() {
-      const resp = await fetch('/api/org-roles/roles', { headers });
-      const data = await resp.json();
-      if (!data.success) return;
+function selectAllPerms() {
+  selectedPerms = selectedPerms.length === ALL_PERMS.length ? [] : [...ALL_PERMS];
+  renderPermGrid();
+}
 
-      const tbody = document.getElementById('rolesTable');
-      tbody.innerHTML = data.data.roles.map(r => `
-        <tr>
-          <td>${r.name}</td>
-          <td>${(r.permissions || []).map(p => `<span class="badge badge-gray">${p}</span>`).join(' ')}</td>
-          <td><button class="btn btn-danger btn-sm" onclick="deleteRole(${r.id})">Delete</button></td>
-        </tr>
-      `).join('') || '<tr><td colspan="3" style="text-align:center;color:#94a3b8;">No roles created yet.</td></tr>';
+async function loadRoles() {
+  try {
+    const { data } = await API.get('/org-roles/roles');
+    const roles = data.roles || [];
+    document.getElementById('roleCount').textContent = `${roles.length} role${roles.length !== 1 ? 's' : ''}`;
+    document.getElementById('rolesTable').innerHTML = roles.length ? roles.map(r => `
+      <tr>
+        <td style="font-weight:600">${r.name}</td>
+        <td>${(r.permissions||[]).map(p => `<span class="badge-perm">${p}</span>`).join('') || '<span style="color:var(--text-muted);font-size:0.8rem">No permissions</span>'}</td>
+        <td><button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none" onclick="deleteRole(${r.id})">Delete</button></td>
+      </tr>`) .join('')
+      : '<tr><td colspan="3" class="empty-row">No roles created yet. Create one above.</td></tr>';
 
-      const select = document.getElementById('memberRole');
-      select.innerHTML = '<option value="">Select role...</option>' + data.data.roles.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
-    }
+    // Update member role select
+    const sel = document.getElementById('memberRole');
+    const curr = sel.value;
+    sel.innerHTML = '<option value="">No role (view only)</option>' +
+      roles.map(r => `<option value="${r.id}"${curr==r.id?' selected':''}>${r.name}</option>`).join('');
+  } catch (e) { Toast.error(e.message); }
+}
 
-    async function loadMembers() {
-      const resp = await fetch('/api/org-roles/members', { headers });
-      const data = await resp.json();
-      if (!data.success) return;
+async function loadMembers() {
+  try {
+    const { data } = await API.get('/org-roles/members');
+    const members = (data.members || []).filter(m => m.status !== 'removed');
+    document.getElementById('memberCount').textContent = `${members.length} member${members.length !== 1 ? 's' : ''}`;
+    document.getElementById('membersTable').innerHTML = members.length ? members.map(m => {
+      const statusCls = m.status === 'active' ? 'badge-status-active' : m.status === 'invited' ? 'badge-status-invited' : 'badge-status-removed';
+      return `<tr>
+        <td>${m.user?.email || m.inviteEmail || '—'}</td>
+        <td>${m.role?.name || '<span style="color:var(--text-muted)">No role</span>'}</td>
+        <td><span class="badge-perm ${statusCls}">${m.status}</span></td>
+        <td><button class="btn btn-sm btn-secondary" onclick="removeMember(${m.id})">Remove</button></td>
+      </tr>`;
+    }).join('')
+      : '<tr><td colspan="4" class="empty-row">No team members added yet.</td></tr>';
+  } catch (e) { Toast.error(e.message); }
+}
 
-      const tbody = document.getElementById('membersTable');
-      tbody.innerHTML = data.data.members.map(m => {
-        const statusBadge = m.status === 'active' ? '<span class="badge badge-green">Active</span>' :
-          m.status === 'invited' ? '<span class="badge badge-yellow">Invited</span>' : '<span class="badge badge-gray">Removed</span>';
-        return `<tr>
-          <td>${m.user?.email || m.inviteEmail}</td>
-          <td>${m.role?.name || 'No role'}</td>
-          <td>${statusBadge}</td>
-          <td><button class="btn btn-danger btn-sm" onclick="removeMember(${m.id})">Remove</button></td>
-        </tr>`;
-      }).join('') || '<tr><td colspan="4" style="text-align:center;color:#94a3b8;">No team members.</td></tr>';
-    }
-
-    async function createRole() {
-      const name = document.getElementById('roleName').value.trim();
-      if (!name) return alert('Enter a role name');
-      await fetch('/api/org-roles/roles', { method: 'POST', headers, body: JSON.stringify({ name, permissions: selectedPerms }) });
-      document.getElementById('roleName').value = '';
-      selectedPerms = [];
-      renderPermGrid();
-      loadRoles();
-    }
-
-    async function deleteRole(id) {
-      if (!confirm('Delete this role?')) return;
-      await fetch(`/api/org-roles/roles/${id}`, { method: 'DELETE', headers });
-      loadRoles();
-      loadMembers();
-    }
-
-    async function addMember() {
-      const email = document.getElementById('memberEmail').value.trim();
-      const roleId = document.getElementById('memberRole').value;
-      if (!email) return alert('Enter an email');
-      await fetch('/api/org-roles/members', { method: 'POST', headers, body: JSON.stringify({ email, roleId: roleId || null }) });
-      document.getElementById('memberEmail').value = '';
-      loadMembers();
-    }
-
-    async function removeMember(id) {
-      if (!confirm('Remove this member?')) return;
-      await fetch(`/api/org-roles/members/${id}`, { method: 'DELETE', headers });
-      loadMembers();
-    }
-
+async function createRole() {
+  const name = document.getElementById('roleName').value.trim();
+  if (!name) { Toast.error('Enter a role name.'); return; }
+  try {
+    await API.post('/org-roles/roles', { name, permissions: selectedPerms });
+    document.getElementById('roleName').value = '';
+    selectedPerms = [];
     renderPermGrid();
+    Toast.success(`Role "${name}" created.`);
+    loadRoles();
+  } catch (e) { Toast.error(e.message); }
+}
+
+async function deleteRole(id) {
+  if (!confirm('Delete this role? Team members with this role will lose it.')) return;
+  try {
+    await API.delete(`/org-roles/roles/${id}`);
     loadRoles();
     loadMembers();
-  </script>
+  } catch (e) { Toast.error(e.message); }
+}
+
+async function addMember() {
+  const email = document.getElementById('memberEmail').value.trim();
+  const roleId = document.getElementById('memberRole').value || null;
+  if (!email) { Toast.error('Enter an email address.'); return; }
+  try {
+    await API.post('/org-roles/members', { email, roleId });
+    document.getElementById('memberEmail').value = '';
+    Toast.success('Member added.');
+    loadMembers();
+  } catch (e) { Toast.error(e.message); }
+}
+
+async function removeMember(id) {
+  if (!confirm('Remove this member from your team?')) return;
+  try {
+    await API.delete(`/org-roles/members/${id}`);
+    loadMembers();
+  } catch (e) { Toast.error(e.message); }
+}
+
+renderPermGrid();
+loadRoles();
+loadMembers();
+</script>
 </body>
 </html>

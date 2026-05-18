@@ -6,15 +6,62 @@
   <title>My Posted Gigs | ImpactCircle</title>
   <link rel="stylesheet" href="/css/base.css">
   <style>
-    .gig-card { border:1px solid var(--border); border-radius:12px; padding:1.25rem; background:#fff; margin-bottom:1rem; }
-    .gig-header { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap; }
-    .gig-title { font-weight:700; font-size:0.95rem; margin-bottom:0.2rem; }
-    .gig-meta { display:flex; flex-wrap:wrap; gap:0.5rem; font-size:0.78rem; color:var(--text-muted); margin-top:0.5rem; }
-    .gig-actions { display:flex; gap:0.5rem; margin-top:0.875rem; }
-    .filter-bar { display:flex; gap:0.625rem; flex-wrap:wrap; margin-bottom:1.25rem; align-items:center; }
-    .filter-btn { padding:0.35rem 0.875rem; border-radius:20px; border:1px solid var(--border); font-size:0.82rem; cursor:pointer; background:#fff; transition:all 0.12s; }
+    .page-header-row { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem; }
+    .filter-bar { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.5rem; align-items:center; }
+    .filter-btn { padding:0.375rem 0.875rem; border-radius:20px; border:1px solid var(--border); font-size:0.82rem; cursor:pointer; background:#fff; transition:all 0.12s; }
     .filter-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
-    .empty-state { text-align:center; padding:4rem 1rem; color:var(--text-muted); }
+    .filter-bar input[type="search"] { margin-left:auto; padding:0.375rem 0.75rem; border:1px solid var(--border); border-radius:8px; font-size:0.875rem; min-width:160px; }
+
+    .gigs-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:1.25rem; }
+
+    .gig-card {
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:14px;
+      overflow:hidden;
+      transition:box-shadow 0.2s, transform 0.2s;
+      box-shadow:0 2px 8px rgba(0,0,0,0.05);
+    }
+    .gig-card:hover { box-shadow:0 10px 30px rgba(99,102,241,0.12); transform:translateY(-2px); }
+    .gig-card.is-past { opacity:0.72; }
+
+    .gig-card-media {
+      height:148px; overflow:hidden;
+      background:linear-gradient(135deg,#eaf4ff 0%,#e0f2fe 100%);
+      position:relative;
+    }
+    .gig-card-media img { width:100%; height:100%; object-fit:cover; display:block; }
+    .gig-card-status {
+      position:absolute; top:0.625rem; right:0.625rem;
+      padding:3px 10px; border-radius:20px; font-size:0.72rem; font-weight:700;
+      backdrop-filter:blur(4px);
+    }
+    .status-open       { background:rgba(22,163,74,0.88); color:#fff; }
+    .status-inProgress { background:rgba(37,99,235,0.88); color:#fff; }
+    .status-completed  { background:rgba(100,116,139,0.88); color:#fff; }
+    .status-cancelled  { background:rgba(220,38,38,0.88); color:#fff; }
+    .status-closed     { background:rgba(100,116,139,0.88); color:#fff; }
+    .status-draft      { background:rgba(202,138,4,0.88); color:#fff; }
+
+    .gig-card-body { padding:1.125rem 1.25rem 1.25rem; }
+    .gig-card-cat {
+      display:inline-block; font-size:0.72rem; font-weight:700;
+      padding:3px 10px; border-radius:20px; margin-bottom:0.5rem;
+    }
+    .gig-card-title { font-size:0.95rem; font-weight:700; color:var(--color-navy,#0f172a); margin-bottom:0.25rem; }
+    .gig-card-meta { font-size:0.8rem; color:var(--text-muted); margin-bottom:0.2rem;
+      display:flex; align-items:center; gap:0.35rem; }
+    .gig-card-meta svg { flex-shrink:0; }
+    .gig-card-stats { display:flex; gap:0.625rem; flex-wrap:wrap; margin:0.75rem 0; }
+    .stat-chip { font-size:0.75rem; font-weight:600; padding:3px 9px; border-radius:20px;
+      background:var(--primary-light,#eff6ff); color:var(--primary); }
+    .stat-chip.warn { background:#fef9c3; color:#854d0e; }
+    .stat-chip.success { background:#dcfce7; color:#166534; }
+
+    .gig-card-actions { display:flex; gap:0.5rem; flex-wrap:wrap; padding-top:0.875rem; border-top:1px solid var(--border); }
+    .gig-card-actions a { flex:1; text-align:center; font-size:0.8rem; }
+
+    .empty-state { text-align:center; padding:4rem 1rem; color:var(--text-muted); grid-column:1/-1; }
   </style>
 </head>
 <body>
@@ -25,21 +72,26 @@
   <div class="container">
     <div class="page-header">
       <div class="page-header-row">
-        <div><h1>My Posted Gigs</h1><p class="text-muted">All opportunities your organization has posted</p></div>
+        <div>
+          <h1>My Posted Gigs</h1>
+          <p class="text-muted">All opportunities your organization has posted</p>
+        </div>
         <a href="/org-gig-create" class="btn btn-primary">+ Post New Gig</a>
       </div>
     </div>
 
     <div class="filter-bar">
-      <button class="filter-btn active" data-s="" onclick="setF(this,'')">All</button>
-      <button class="filter-btn" data-s="open" onclick="setF(this,'open')">Open</button>
-      <button class="filter-btn" data-s="inProgress" onclick="setF(this,'inProgress')">In Progress</button>
-      <button class="filter-btn" data-s="completed" onclick="setF(this,'completed')">Completed</button>
-      <button class="filter-btn" data-s="cancelled" onclick="setF(this,'cancelled')">Cancelled</button>
-      <input type="search" id="searchBox" placeholder="Search..." oninput="render()" style="margin-left:auto;padding:0.375rem 0.75rem;border:1px solid var(--border);border-radius:8px;font-size:0.875rem">
+      <button class="filter-btn active" onclick="setF(this,'')">All</button>
+      <button class="filter-btn" onclick="setF(this,'open')">Open</button>
+      <button class="filter-btn" onclick="setF(this,'inProgress')">In Progress</button>
+      <button class="filter-btn" onclick="setF(this,'completed')">Completed</button>
+      <button class="filter-btn" onclick="setF(this,'cancelled')">Cancelled</button>
+      <input type="search" id="searchBox" placeholder="Search..." oninput="render()">
     </div>
 
-    <div id="list"><div style="text-align:center;padding:3rem"><div class="spinner"></div></div></div>
+    <div class="gigs-grid" id="list">
+      <div style="grid-column:1/-1;text-align:center;padding:3rem"><div class="spinner"></div></div>
+    </div>
   </div>
 </div>
 
@@ -50,13 +102,19 @@
 API.requireAuth('org');
 let all = [], filterStatus = '';
 
-const STATUS_STYLES = {
-  open:       'background:#effff6;color:#00a344',
-  inProgress: 'background:#e6f0ff;color:#0066ff',
-  completed:  'background:#f3f4f6;color:#374151',
-  cancelled:  'background:#fee2e2;color:#991b1b',
-  draft:      'background:#fff9d6;color:#8a6a00',
-};
+function gigImage(catName) {
+  const s = String(catName || '').toLowerCase();
+  const u = 'https://images.unsplash.com/photo-';
+  const q = '?w=600&h=300&fit=crop&auto=format&q=75';
+  if (/food|nutrition|hunger|meal/.test(s))              return u + '1488521787991-ed7bbaae773c' + q;
+  if (/environment|climate|nature|garden|green/.test(s)) return u + '1441974231531-c6227db76b6e' + q;
+  if (/youth|child|student|school|education/.test(s))    return u + '1527525443983-6e60c75fff46' + q;
+  if (/senior|elder|aging|older/.test(s))                return u + '1573496359142-b8d87734a5a2' + q;
+  if (/newcomer|immigrant|cultural|refugee/.test(s))     return u + '1529156069898-49953e39b3ac' + q;
+  if (/health|medical|wellness|care/.test(s))            return u + '1576091160399-112ba8d25d1d' + q;
+  if (/shelter|housing|home/.test(s))                    return u + '1560518883-ce09059eeffa' + q;
+  return u + '1559027615-cd4628902d4a' + q;
+}
 
 function setF(btn, s) {
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -66,52 +124,87 @@ function setF(btn, s) {
 }
 
 function render() {
-  const searchEl = document.getElementById('searchBox');
-  const q = ((searchEl && searchEl.value) || '').toLowerCase();
+  const q = (document.getElementById('searchBox').value || '').toLowerCase();
   let list = all;
   if (filterStatus) list = list.filter(g => g.status === filterStatus);
-  if (q) list = list.filter(g => (g.title||'').toLowerCase().includes(q));
+  if (q) list = list.filter(g => (g.title || '').toLowerCase().includes(q));
+
   if (!list.length) {
-    document.getElementById('list').innerHTML = `<div class="empty-state">
-      <p>No gigs found.</p>
-      <a href="/org-gig-create" class="btn btn-primary" style="margin-top:0.75rem">Post Your First Gig</a>
-    </div>`;
+    document.getElementById('list').innerHTML = `
+      <div class="empty-state">
+        <p>No gigs found.</p>
+        <a href="/org-gig-create" class="btn btn-primary" style="margin-top:0.75rem">Post Your First Gig</a>
+      </div>`;
     return;
   }
-  const today = new Date().toISOString().slice(0,10);
+
+  const today = new Date().toISOString().slice(0, 10);
+
   document.getElementById('list').innerHTML = list.map(g => {
-    const isPast = g.endDate < today;
-    const limitInfo = g.maxVolunteers ? `<span>🎯 ${g.applicantCount||0}/${g.maxVolunteers} volunteers</span>` : '';
-    const pastClass = isPast ? 'opacity:0.7;' : '';
+    const isPast    = g.endDate && g.endDate < today;
+    const catName   = g.category?.name || '';
+    const catColor  = g.category?.colorHex || '#6366f1';
+    const imgSrc    = gigImage(catName);
+    const total     = g.applicantCount || 0;
+    const approved  = g.approvedApplicants || 0;
+    const pending   = Math.max(0, total - approved);
+    const spotsLeft = g.maxVolunteers ? Math.max(0, g.maxVolunteers - approved) : null;
+
+    const fmt = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-CA', { year:'numeric', month:'short', day:'numeric' }) : '';
+    const dateStr = g.startDate
+      ? fmt(g.startDate) + (g.endDate && g.endDate !== g.startDate ? ' - ' + fmt(g.endDate) : '')
+      : '';
+
+    const statusClass = `status-${g.status || 'open'}`;
+    const statusLabel = { open:'Open', inProgress:'In Progress', completed:'Completed', cancelled:'Cancelled', closed:'Closed', draft:'Draft' }[g.status] || g.status;
+
     return `
-    <div class="gig-card" style="${pastClass}">
-      <div class="gig-header">
-        <div>
-          <div class="gig-title">${g.title} ${isPast ? '<span style="color:#94a3b8;font-weight:400;font-size:0.8rem">[Past]</span>' : ''}</div>
-          <div class="gig-meta">
-            <span>📅 ${fmt.date(g.startDate)} – ${fmt.date(g.endDate)}</span>
-            <span>⏱ ${g.estimatedHours||'?'}h total</span>
-            <span>👥 ${g.applicantCount != null ? g.applicantCount : 0} applicants</span>
-            ${limitInfo}
-            ${g.category?`<span style="background:${g.category.colorHex||'#6366f1'};color:#fff;padding:0.1rem 0.5rem;border-radius:20px;font-size:0.72rem">${g.category.name}</span>`:''}
-          </div>
+    <div class="gig-card${isPast ? ' is-past' : ''}">
+      <div class="gig-card-media">
+        <img src="${imgSrc}" alt="${catName}" loading="lazy">
+        <span class="gig-card-status ${statusClass}">${statusLabel}${isPast ? ' (Past)' : ''}</span>
+      </div>
+      <div class="gig-card-body">
+        ${catName ? `<span class="gig-card-cat" style="background:${catColor}22;color:${catColor}">${catName}</span>` : ''}
+        <div class="gig-card-title">${g.title}</div>
+        ${dateStr ? `<div class="gig-card-meta">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          ${dateStr}
+        </div>` : ''}
+        ${g.estimatedHours ? `<div class="gig-card-meta">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          ${g.estimatedHours}h per session
+        </div>` : ''}
+        ${g.locationType === 'remote' || g.locationAddress ? `<div class="gig-card-meta">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${g.locationType === 'remote' ? 'Remote' : (g.locationAddress || 'In-Person')}
+        </div>` : ''}
+        <div class="gig-card-stats">
+          <span class="stat-chip">${total} applicant${total !== 1 ? 's' : ''}</span>
+          ${pending > 0 ? `<span class="stat-chip warn">${pending} pending</span>` : ''}
+          ${approved > 0 ? `<span class="stat-chip success">${approved} approved</span>` : ''}
+          ${spotsLeft !== null ? `<span class="stat-chip">${spotsLeft} spots left</span>` : ''}
         </div>
-        <span class="badge" style="${STATUS_STYLES[g.status]||'background:#f3f4f6;color:#374151'}">${g.status}</span>
+        <div class="gig-card-actions">
+          <a href="/org/gigs/${g.id}" class="btn btn-sm btn-secondary">View &amp; Edit</a>
+          <a href="/org/applications?gig=${g.id}" class="btn btn-sm btn-secondary">Applicants</a>
+          <a href="/org/attendance/${g.id}" class="btn btn-sm btn-secondary">Attendance</a>
+        </div>
       </div>
-      <div class="gig-actions">
-        <a href="/gigs/${g.id}" class="btn btn-sm btn-secondary">View</a>
-        <a href="/org/applications?gig=${g.id}" class="btn btn-sm btn-secondary">Applicants</a>
-        <a href="/org/attendance/${g.id}" class="btn btn-sm btn-secondary">Attendance</a>
-      </div>
-    </div>
-  `}).join('');
+    </div>`;
+  }).join('');
 }
 
 async function load() {
   try {
-    const res = await API.get('/orgs/me/dashboard');
-    const data = res && res.data;
-    all = (data && Array.isArray(data.gigs)) ? data.gigs : [];
+    const { data } = await API.get('/orgs/me/gigs-stats');
+    const today = new Date().toISOString().slice(0, 10);
+    all = (data.gigs || []).sort((a, b) => {
+      const aActive = !a.endDate || a.endDate >= today;
+      const bActive = !b.endDate || b.endDate >= today;
+      if (aActive !== bActive) return aActive ? -1 : 1;
+      return new Date(b.startDate || 0) - new Date(a.startDate || 0);
+    });
     render();
   } catch (e) {
     document.getElementById('list').innerHTML = `<div class="empty-state">${(e && e.message) || 'Could not load gigs.'}</div>`;

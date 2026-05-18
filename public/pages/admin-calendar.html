@@ -128,7 +128,7 @@ function selectDate(k) {
       return `<div class="vol-row">${av}<div><div style="font-size:0.82rem;font-weight:600">${nm}</div><div style="font-size:0.75rem;color:var(--text-muted)">${v.email||''}</div></div></div>`;
     }).join('') : '<div style="font-size:0.82rem;color:var(--text-muted)">No volunteers assigned.</div>';
     const time = g.startTime&&g.endTime?`${g.startTime}–${g.endTime}`:'';
-    const fullBadge = g.isFull ? '<span class="full-badge">✓ Full</span>' : (g.maxVolunteers ? `<span style="font-size:0.7rem;color:var(--text-muted)">${g.acceptedCount}/${g.maxVolunteers}</span>` : '');
+    const fullBadge = g.isFull ? '<span class="full-badge"> Full</span>' : (g.maxVolunteers ? `<span style="font-size:0.7rem;color:var(--text-muted)">${g.acceptedCount}/${g.maxVolunteers}</span>` : '');
     return `<div class="shift-card${g.isFull?' full':''}">
       <div class="shift-title">${g.title}${fullBadge}</div>
       <div class="shift-org">${(g.org&&g.org.orgName)||'—'}${time?' · '+time:''}</div>

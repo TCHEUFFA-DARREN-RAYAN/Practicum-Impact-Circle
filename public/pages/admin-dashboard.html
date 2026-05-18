@@ -7,7 +7,7 @@
   <meta name="robots" content="noindex, nofollow">
   <link rel="stylesheet" href="/css/base.css">
   <style>
-    /* ── KPI cards ── */
+    /*  KPI cards  */
     .kpi-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -39,7 +39,7 @@
     .kpi-value.danger { color: #dc2626; }
     .kpi-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.3rem; }
 
-    /* ── Section row ── */
+    /*  Section row  */
     .dash-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -53,7 +53,7 @@
       margin-bottom: 1.25rem;
     }
 
-    /* ── Quick actions ── */
+    /*  Quick actions  */
     .action-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.875rem; }
     .action-card {
       background: var(--surface);
@@ -79,7 +79,7 @@
     .action-title { font-size: 0.875rem; font-weight: 700; color: var(--text); margin-bottom: 0.125rem; }
     .action-desc { font-size: 0.76rem; color: var(--text-muted); line-height: 1.4; }
 
-    /* ── Urgency badge on action card ── */
+    /*  Urgency badge on action card  */
     .action-badge {
       min-width: 22px; height: 22px; border-radius: 11px;
       background: #dc2626; color: white;
@@ -89,7 +89,7 @@
       flex-shrink: 0;
     }
 
-    /* ── Activity list ── */
+    /*  Activity list  */
     .activity-list { list-style: none; padding: 0; margin: 0; }
     .activity-item {
       display: flex; align-items: flex-start; gap: 0.75rem;
@@ -108,7 +108,7 @@
     .activity-text { font-size: 0.82rem; color: var(--text); line-height: 1.4; flex: 1; }
     .activity-time { font-size: 0.72rem; color: var(--text-muted); flex-shrink: 0; }
 
-    /* ── Health bar ── */
+    /*  Health bar  */
     .health-row {
       display: flex; align-items: center; gap: 0.75rem;
       padding: 0.625rem 0;
@@ -120,7 +120,7 @@
     .health-bar { height: 100%; border-radius: 3px; }
     .health-val { font-size: 0.8rem; font-weight: 700; width: 36px; text-align: right; flex-shrink: 0; }
 
-    /* ── Card sub-header ── */
+    /*  Card sub-header  */
     .card-label {
       font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 0.5rem;
@@ -292,7 +292,7 @@
             <span class="section-toggle-title">Quick actions</span>
             <span class="section-toggle-sub">Frequent admin tasks</span>
           </span>
-          <span class="section-chevron">⌄</span>
+          <span class="section-chevron"></span>
         </button>
         <div class="section-body">
           <div class="action-grid">
@@ -362,7 +362,7 @@
             <span class="section-toggle-title">Platform health</span>
             <span class="section-toggle-sub">Operational signals</span>
           </span>
-          <span class="section-chevron">⌄</span>
+          <span class="section-chevron"></span>
         </button>
         <div class="section-body">
           <div id="healthSection">
@@ -381,7 +381,7 @@
         </span>
         <span style="display:flex;align-items:center;gap:0.75rem">
           <a href="/admin/audit" class="btn btn-ghost btn-sm" style="font-size:0.75rem" onclick="event.stopPropagation()">View audit log →</a>
-          <span class="section-chevron">⌄</span>
+          <span class="section-chevron"></span>
         </span>
       </button>
       <div class="section-body">
@@ -451,7 +451,7 @@ document.querySelectorAll('.dashboard-section .section-toggle').forEach((button)
       badge.style.display = 'flex';
     }
 
-    /* ── Platform health bars ── */
+    /*  Platform health bars  */
     const hItems = [
       { label: 'Verified accounts', val: s.totalUsers > 0 ? Math.round(((s.totalUsers - (s.pendingVerifications ?? 0)) / s.totalUsers) * 100) : 0, color: '#00a344' },
       { label: 'Org approval rate',  val: s.totalOrgs > 0 ? Math.min(100, Math.round((s.totalOrgs / (s.totalOrgs + (s.pendingVerifications ?? 0))) * 100)) : 0, color: '#0066ff' },
@@ -469,7 +469,7 @@ document.querySelectorAll('.dashboard-section .section-toggle').forEach((button)
       </div>
     `;
 
-    /* ── Simulated recent activity (replace with real endpoint when available) ── */
+    /*  Simulated recent activity (replace with real endpoint when available)  */
     const activities = [
       { dot:'blue',  text:`Platform has <strong>${s.totalUsers}</strong> registered accounts across all roles.` },
       { dot:'green', text:`<strong>${s.totalOrgs}</strong> verified organizations actively posting opportunities.` },

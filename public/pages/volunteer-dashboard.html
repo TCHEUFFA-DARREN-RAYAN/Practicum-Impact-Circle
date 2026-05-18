@@ -6,7 +6,7 @@
   <title>My Dashboard | ImpactCircle</title>
   <link rel="stylesheet" href="/css/base.css">
   <style>
-    /* ── KPI cards ── */
+    /*  KPI cards  */
     .kpi-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -36,7 +36,7 @@
     .kpi-value { font-size: 2.1rem; font-weight: 800; color: var(--text); line-height: 1; letter-spacing: -0.04em; }
     .kpi-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.3rem; }
 
-    /* ── Points progress ring ── */
+    /*  Points progress ring  */
     .points-ring-wrap {
       display: flex; align-items: center; gap: 1.25rem;
       padding: 1.125rem 1.375rem;
@@ -59,14 +59,14 @@
     .points-ring-big { font-size: 1.75rem; font-weight: 800; line-height: 1; }
     .points-ring-sub { font-size: 0.76rem; opacity: 0.75; margin-top: 0.3rem; }
 
-    /* ── Content grid ── */
+    /*  Content grid  */
     .content-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1.25rem;
     }
 
-    /* ── Task timeline ── */
+    /*  Task timeline  */
     .task-timeline { list-style: none; padding: 0; margin: 0; }
     .task-row {
       display: flex; align-items: flex-start; gap: 0.875rem;
@@ -87,7 +87,7 @@
     .task-meta { font-size: 0.75rem; color: var(--text-muted); }
     .task-actions { margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
-    /* ── Application list ── */
+    /*  Application list  */
     .app-row {
       display: flex; align-items: center; gap: 0.75rem;
       padding: 0.75rem 0;
@@ -104,7 +104,7 @@
     .app-title { font-size: 0.85rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .app-meta { font-size: 0.73rem; color: var(--text-muted); }
 
-    /* ── Category bars ── */
+    /*  Category bars  */
     .cat-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.55rem 0; border-bottom: 1px solid var(--border); }
     .cat-row:last-child { border-bottom: none; }
     .cat-name { font-size: 0.82rem; flex: 1; }
@@ -112,7 +112,7 @@
     .cat-bar { height: 100%; background: var(--primary); border-radius: 3px; }
     .cat-hrs { font-size: 0.8rem; font-weight: 700; width: 32px; text-align: right; }
 
-    /* ── Reward row ── */
+    /*  Reward row  */
     .reward-row {
       display: flex; align-items: center; gap: 0.75rem;
       padding: 0.75rem 0; border-bottom: 1px solid var(--border);
@@ -123,7 +123,7 @@
     .reward-name { font-size: 0.85rem; font-weight: 600; color: var(--text); }
     .reward-meta { font-size: 0.73rem; color: var(--text-muted); }
 
-    /* ── Card label ── */
+    /*  Card label  */
     .card-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 0.5rem; }
 
     @media (max-width: 1024px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -304,11 +304,11 @@ async function load() {
     const { profile, stats: statsRaw, applications, tasks } = data;
     const stats = statsRaw || {};
 
-    /* ── Header ── */
+    /*  Header  */
     const firstName = profile?.firstName || 'Volunteer';
-    document.getElementById('welcomeMsg').textContent = `Welcome back, ${firstName} 👋`;
+    document.getElementById('welcomeMsg').textContent = `Welcome back, ${firstName} `;
 
-    /* ── KPIs ── */
+    /*  KPIs  */
     document.getElementById('statHours').textContent    = typeof stats.totalVerifiedHours === 'number' ? stats.totalVerifiedHours.toFixed(1) : '0';
     document.getElementById('statGigs').textContent     = stats.gigCount ?? 0;
     document.getElementById('statCompleted').textContent = stats.approvedCount ?? 0;
@@ -320,7 +320,7 @@ async function load() {
       document.getElementById('statActiveSub').textContent = `${pendingApproval} pending org approval`;
     }
 
-    /* ── Active tasks ── */
+    /*  Active tasks  */
     const allTasksForClaim = (tasks || []).filter(t => ['accepted','inProgress','completed'].includes(t.status));
     const claimableTasks   = (tasks || []).filter(t => t.status === 'accepted' || t.status === 'inProgress');
     window._claimableTasks = claimableTasks;
@@ -347,7 +347,7 @@ async function load() {
            No active tasks. <a href="/gigs">Browse gigs →</a>
          </div>`;
 
-    /* ── Category hours ── */
+    /*  Category hours  */
     const catHours = stats.categoryHours || {};
     const catKeys  = Object.keys(catHours);
     const maxHrs   = catKeys.length ? Math.max(...Object.values(catHours), 1) : 1;
@@ -362,7 +362,7 @@ async function load() {
            Complete approved gigs to see your hours breakdown.
          </div>`;
 
-    /* ── Applications ── */
+    /*  Applications  */
     document.getElementById('applications').innerHTML = (applications || []).slice(0, 7).length
       ? applications.slice(0, 7).map(a => {
           const g = a.gig || {};
@@ -382,7 +382,7 @@ async function load() {
            No applications yet. <a href="/gigs">Browse gigs →</a>
          </div>`;
 
-    /* ── Verification banner (non-blocking: must not leave panels on spinners) ── */
+    /*  Verification banner (non-blocking: must not leave panels on spinners)  */
     try {
       const userFull = await API.get('/auth/me');
       const vs = userFull?.data?.user?.verificationStatus;
@@ -391,8 +391,8 @@ async function load() {
         <div class="alert alert-${vs === 'pending' ? 'warning' : 'danger'} mb-4"
              style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem">
           <span>${vs === 'pending'
-            ? '⏳ Your account is pending admin verification. Upload your documents to speed up the process.'
-            : '❌ Verification was rejected. Visit your profile to resubmit documents.'}</span>
+            ? ' Your account is pending admin verification. Upload your documents to speed up the process.'
+            : ' Verification was rejected. Visit your profile to resubmit documents.'}</span>
           <a href="/volunteer-profile" class="btn btn-sm btn-secondary">Go to Profile</a>
         </div>`;
       } else {

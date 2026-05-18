@@ -119,7 +119,7 @@
 <script>
 API.requireAuth('admin');
 
-/* ── View toggle ── */
+/*  View toggle  */
 let currentView = 'list';
 function switchView(v) {
   currentView = v;
@@ -130,7 +130,7 @@ function switchView(v) {
   if (v === 'calendar' && !calLoaded) loadCal();
 }
 
-/* ── LIST VIEW ── */
+/*  LIST VIEW  */
 let listPage = 1;
 const listLimit = 25;
 
@@ -168,7 +168,7 @@ function changeListPage(d) { listPage = Math.max(1, listPage + d); loadList(); }
 document.getElementById('st').addEventListener('change', () => { listPage = 1; loadList(); });
 document.getElementById('scope').addEventListener('change', () => { listPage = 1; loadList(); });
 
-/* ── CALENDAR VIEW ── */
+/*  CALENDAR VIEW  */
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 let calYear = new Date().getFullYear(), calMonth = new Date().getMonth()+1, calData = {}, calSel = null, calLoaded = false;
@@ -215,7 +215,7 @@ function calSelectDate(k) {
   document.getElementById('calDetailShifts').innerHTML = gigs.map(g => {
     const tasks = g.Tasks || [];
     const time = g.startTime&&g.endTime?`${g.startTime}–${g.endTime}`:'';
-    const fullBadge = g.isFull ? '<span class="full-badge">✓ Full</span>' : (g.maxVolunteers ? `<span style="font-size:0.7rem;color:var(--text-muted)">${g.acceptedCount}/${g.maxVolunteers}</span>` : '');
+    const fullBadge = g.isFull ? '<span class="full-badge"> Full</span>' : (g.maxVolunteers ? `<span style="font-size:0.7rem;color:var(--text-muted)">${g.acceptedCount}/${g.maxVolunteers}</span>` : '');
     return `<div class="shift-card${g.isFull?' full':''}">
       <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.2rem">${g.title}${fullBadge}</div>
       <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.4rem">${(g.org&&g.org.orgName)||'—'}${time?' · '+time:''}</div>

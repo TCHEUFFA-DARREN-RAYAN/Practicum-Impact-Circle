@@ -189,7 +189,7 @@
 <script src="/js/api.js"></script>
 <script src="/js/nav.js"></script>
 <script>
-  // ── State ──────────────────────────────────────────────────────────────────
+  //  State 
   const _userRole = API.isLoggedIn() ? (API.getUser()?.role || '') : '';
   const _viewOnly = _userRole === 'org' || _userRole === 'admin';
   let currentPage = 1;
@@ -199,7 +199,7 @@
   let categoryColorMap = {};
   let colorIndex = 0;
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
+  //  Helpers 
   function getCatPillClass(catId) {
     if (!categoryColorMap[catId]) {
       colorIndex = (colorIndex % 8) + 1;
@@ -222,7 +222,7 @@
     bldg: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>`,
   };
 
-  // ── Load Categories ────────────────────────────────────────────────────────
+  //  Load Categories 
   async function loadCategories() {
     try {
       const { data } = await API.get('/public/impact');
@@ -243,7 +243,7 @@
     } catch (_) {}
   }
 
-  // ── Build Query String ─────────────────────────────────────────────────────
+  //  Build Query String 
   function buildQuery() {
     const params = new URLSearchParams();
     params.set('page', currentPage);
@@ -283,7 +283,7 @@
     return base + '1559027615-cd4628902d4a' + q;
   }
 
-  // ── Render Gig Card ────────────────────────────────────────────────────────
+  //  Render Gig Card 
   function renderGigCard(gig) {
     const catName = gig.category?.name || 'General';
     const catId   = gig.category?.id || 'default';
@@ -345,7 +345,7 @@
     window.location.href = '/gigs/' + id;
   }
 
-  // ── Fetch & Render Gigs ────────────────────────────────────────────────────
+  //  Fetch & Render Gigs 
   async function fetchGigs() {
     const container = document.getElementById('gigContainer');
     const pagination = document.getElementById('paginationArea');
@@ -397,7 +397,7 @@
     }
   }
 
-  // ── Filter Change Handling ─────────────────────────────────────────────────
+  //  Filter Change Handling 
   function onFilterChange() {
     currentPage = 1;
     fetchGigs();
@@ -418,7 +418,7 @@
     fetchGigs();
   }
 
-  // ── Pagination ─────────────────────────────────────────────────────────────
+  //  Pagination 
   document.getElementById('prevPage').addEventListener('click', () => {
     if (currentPage > 1) { currentPage--; fetchGigs(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
   });
@@ -426,7 +426,7 @@
     if (currentPage < totalPages) { currentPage++; fetchGigs(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
   });
 
-  // ── Event Listeners ────────────────────────────────────────────────────────
+  //  Event Listeners 
   document.getElementById('filterCategory').addEventListener('change', onFilterChange);
   document.getElementById('filterLocation').addEventListener('change', onFilterChange);
   document.getElementById('filterTime').addEventListener('change', onFilterChange);
@@ -436,7 +436,7 @@
   document.getElementById('filterSearch').addEventListener('input', onSearchInput);
   document.getElementById('clearFilters').addEventListener('click', resetFilters);
 
-  // ── Init ───────────────────────────────────────────────────────────────────
+  //  Init 
   (async () => {
     await loadCategories();
     fetchGigs();

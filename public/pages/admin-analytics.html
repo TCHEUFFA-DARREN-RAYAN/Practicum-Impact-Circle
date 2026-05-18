@@ -7,7 +7,7 @@
   <title>Platform Analytics | Admin | ImpactCircle</title>
   <link rel="stylesheet" href="/css/base.css">
   <style>
-    /* ── KPI cards ── */
+    /*  KPI cards  */
     .kpi-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -36,7 +36,7 @@
     .kpi-value.good   { color: #00a344; }
     .kpi-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.3rem; }
 
-    /* ── Section ── */
+    /*  Section  */
     .card-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 0.6rem; }
     .dash-section {
       background: var(--surface);
@@ -59,7 +59,7 @@
     .section-body { padding: 1.25rem; }
     .dash-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem; }
 
-    /* ── Breakdown rows ── */
+    /*  Breakdown rows  */
     .breakdown-group { margin-bottom: 1.25rem; }
     .breakdown-group:last-child { margin-bottom: 0; }
     .breakdown-label { font-size: 0.75rem; font-weight: 700; color: var(--text); margin-bottom: 0.625rem; text-transform: uppercase; letter-spacing: 0.04em; }
@@ -76,7 +76,7 @@
     .breakdown-bar-wrap { width: 80px; height: 6px; background: var(--border); border-radius: 3px; flex-shrink: 0; }
     .breakdown-bar { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
 
-    /* ── Task pipeline ── */
+    /*  Task pipeline  */
     .pipeline { display: flex; align-items: stretch; gap: 0; margin: 0.5rem 0; }
     .pipeline-step {
       flex: 1;
@@ -94,7 +94,7 @@
     .pipeline-lbl { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-top: 0.25rem; font-weight: 600; }
     .pipeline-arrow { display: flex; align-items: center; padding: 0 0.25rem; color: var(--text-muted); font-size: 1rem; flex-shrink: 0; align-self: center; }
 
-    /* ── Top orgs table ── */
+    /*  Top orgs table  */
     .top-orgs { list-style: none; padding: 0; margin: 0; }
     .top-org-row { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
     .top-org-row:last-child { border-bottom: none; }
@@ -107,7 +107,7 @@
     .top-org-bar-wrap { width: 100px; height: 6px; background: var(--border); border-radius: 3px; flex-shrink: 0; }
     .top-org-bar { height: 100%; border-radius: 3px; background: #00b8d9; }
 
-    /* ── KPI target bars ── */
+    /*  KPI target bars  */
     .target-row { margin-bottom: 1.125rem; }
     .target-row:last-child { margin-bottom: 0; }
     .target-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.375rem; }
@@ -257,7 +257,7 @@ async function exportCSV() {
     document.getElementById('pageSubtitle').textContent =
       'Platform analytics · ' + now.toLocaleDateString('en-CA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-    /* ── KPI Row 1 ── */
+    /*  KPI Row 1  */
     document.getElementById('sUsers').textContent = d.totalUsers;
     document.getElementById('sUsersSub').textContent =
       `${d.volunteers.verified} verified volunteers · ${d.orgs.verified} verified orgs`;
@@ -270,7 +270,7 @@ async function exportCSV() {
     document.getElementById('sGigsSub').textContent =
       `${d.gigs.open} open · ${d.gigs.closed} closed · ${d.gigs.cancelled} cancelled`;
 
-    /* ── KPI Row 2 ── */
+    /*  KPI Row 2  */
     const pendingTotal = d.volunteers.pending + d.orgs.pending;
     document.getElementById('sPending').textContent = pendingTotal;
 
@@ -286,7 +286,7 @@ async function exportCSV() {
     document.getElementById('sFillSub').textContent =
       `${d.gigs.closed} of ${d.totalGigs} gigs closed/filled`;
 
-    /* ── User Breakdown ── */
+    /*  User Breakdown  */
     const volTotal = d.volunteers.total || 1;
     const orgTotal = d.orgs.total || 1;
     document.getElementById('userBreakdown').innerHTML = `
@@ -321,7 +321,7 @@ async function exportCSV() {
         Platform also has ${d.adminCount} admin account${d.adminCount !== 1 ? 's' : ''}.
       </div>`;
 
-    /* ── Gig Ecosystem ── */
+    /*  Gig Ecosystem  */
     const gigTotal = d.gigs.total || 1;
     document.getElementById('gigEcosystem').innerHTML = `
       ${[
@@ -348,7 +348,7 @@ async function exportCSV() {
         </div>
       </div>`;
 
-    /* ── Task Pipeline ── */
+    /*  Task Pipeline  */
     const tasks = d.tasks;
     const pipeTotal = tasks.approved + tasks.rejected + tasks.pending;
     document.getElementById('taskPipeline').innerHTML = `
@@ -377,17 +377,17 @@ async function exportCSV() {
         <div style="font-size:0.82rem;font-weight:600;color:${autoRate >= 10 ? '#d91f45' : '#00a344'}">
           ${autoRate >= 10
             ? `⚠ Auto-approval rate is ${autoRate}% — above the 10% target. Encourage organizations to review task submissions promptly.`
-            : `✓ Auto-approval rate is ${autoRate}% — within the acceptable range (&lt;10%). Organizations are responding to task submissions on time.`}
+            : ` Auto-approval rate is ${autoRate}% — within the acceptable range (&lt;10%). Organizations are responding to task submissions on time.`}
         </div>
         <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem">Auto-approval is triggered when organizations take more than 30 days to review a task submission.</div>
       </div>`;
 
-    /* ── Top Organizations ── */
+    /*  Top Organizations  */
     const topOrgs = d.topOrgs || [];
     if (topOrgs.length === 0) {
       document.getElementById('topOrgsSection').innerHTML = `
         <div style="padding:1.5rem;text-align:center;color:var(--text-muted)">
-          <div style="font-size:2rem;margin-bottom:0.5rem">🏢</div>
+          <div style="font-size:2rem;margin-bottom:0.5rem"></div>
           <div style="font-size:0.875rem">No organizations have facilitated hours yet.</div>
           <div style="font-size:0.8rem;margin-top:0.25rem">This will populate as volunteers complete tasks.</div>
         </div>`;
@@ -406,7 +406,7 @@ async function exportCSV() {
         </ul>`;
     }
 
-    /* ── Top Viewed Gigs ── */
+    /*  Top Viewed Gigs  */
     try {
       const gigsRes = await API.get('/admin/gigs?limit=10&sortBy=viewCount');
       const topViewed = (gigsRes.data.gigs || []).filter(g => g.viewCount > 0).slice(0, 10);
@@ -432,7 +432,7 @@ async function exportCSV() {
       }
     } catch(e) { document.getElementById('topViewedGigsSection').innerHTML = `<div style="padding:1rem;color:var(--text-muted);font-size:0.85rem">Could not load gig views.</div>`; }
 
-    /* ── KPI Targets ── */
+    /*  KPI Targets  */
     const hours = d.totalVerifiedHours || 0;
     const hourTarget = 1000;
     const verifiedVolCount = d.volunteers.verified;
@@ -484,7 +484,7 @@ async function exportCSV() {
         <div class="target-row">
           <div class="target-header">
             <span class="target-label">${t.label}</span>
-            <span class="target-stat" style="color:${color}">${t.display} <span style="font-weight:400;color:var(--text-muted)">/ ${t.targetDisplay} target</span> ${ok ? '✓' : '⏳'}</span>
+            <span class="target-stat" style="color:${color}">${t.display} <span style="font-weight:400;color:var(--text-muted)">/ ${t.targetDisplay} target</span> ${ok ? '' : ''}</span>
           </div>
           <div class="target-bar-wrap">
             <div class="target-bar" style="width:${t.pct.toFixed(1)}%;background:${color}"></div>
