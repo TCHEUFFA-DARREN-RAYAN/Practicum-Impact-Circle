@@ -90,6 +90,19 @@
           return;
         }
 
+        if (user.role === 'org' || user.role === 'admin') {
+          if (gig.id) {
+            actionArea.innerHTML = `
+              <div class="status-msg info" style="margin-bottom:12px;">You are viewing as an organiser.</div>
+              <a href="/org/gigs/${gig.id}/qr-display" class="checkin-btn" style="display:inline-block;text-decoration:none;background:#6366f1">
+                Open QR Poster / Print Page
+              </a>`;
+          } else {
+            actionArea.innerHTML = '<div class="status-msg info">Organiser view — volunteers scan this page to check in.</div>';
+          }
+          return;
+        }
+
         if (user.role !== 'volunteer') {
           actionArea.innerHTML = '<div class="status-msg info">Only volunteers can check in to events.</div>';
           return;

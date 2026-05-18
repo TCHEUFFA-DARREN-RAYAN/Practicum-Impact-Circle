@@ -6,69 +6,113 @@
   <title>Volunteer Tracker | ImpactCircle</title>
   <link rel="stylesheet" href="/css/base.css">
   <style>
-    .filter-tabs { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.5rem; }
-    .filter-tab {
-      padding:0.4rem 1rem; border-radius:999px; font-size:0.85rem; font-weight:600;
-      border:2px solid var(--border); background:white; cursor:pointer; transition:all 0.15s; color:var(--text);
-    }
-    .filter-tab.active { border-color:var(--primary); background:var(--primary-light); color:var(--primary); }
+    .summary-strip { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .s-box { background:#fff; border:1px solid var(--border); border-radius:12px; padding:0.875rem 1.25rem; flex:1; min-width:120px; }
+    .s-val { font-size:1.35rem; font-weight:800; color:var(--primary); }
+    .s-lbl { font-size:0.74rem; color:var(--text-muted); margin-top:0.1rem; }
 
-    .search-bar { margin-bottom:1.25rem; }
-    .search-bar input { width:100%; max-width:360px; padding:0.4rem 0.875rem; border:1px solid var(--border); border-radius:8px; font-size:0.875rem; }
+    .filter-bar { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.25rem; align-items:center; }
+    .filter-btn { padding:0.375rem 0.875rem; border-radius:20px; border:1px solid var(--border); font-size:0.82rem; cursor:pointer; background:#fff; transition:all 0.12s; }
+    .filter-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
 
-    /* Volunteer card */
-    .vol-card {
-      border:1px solid var(--border); border-radius:12px; background:#fff;
-      margin-bottom:0.875rem; overflow:hidden;
-    }
-    .vol-card-header {
-      display:flex; align-items:flex-start; gap:1rem; padding:1rem 1.25rem;
-      cursor:pointer; transition:background 0.12s;
-    }
-    .vol-card-header:hover { background:#f8fafc; }
+    .gigs-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:1.25rem; }
 
-    .vol-avatar {
-      width:44px; height:44px; border-radius:50%; background:var(--primary-light);
+    .gig-cell { display:flex; flex-direction:column; }
+
+    .gig-card {
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:14px;
+      overflow:hidden;
+      transition:box-shadow 0.2s, transform 0.2s;
+      box-shadow:0 2px 8px rgba(0,0,0,0.05);
+    }
+    .gig-card:hover { box-shadow:0 10px 30px rgba(99,102,241,0.12); transform:translateY(-2px); }
+    .gig-card.is-past { opacity:0.76; }
+
+    .gig-card-media {
+      height:148px; overflow:hidden;
+      background:linear-gradient(135deg,#eaf4ff 0%,#e0f2fe 100%);
+      position:relative;
+    }
+    .gig-card-media img { width:100%; height:100%; object-fit:cover; display:block; }
+    .gig-card-status {
+      position:absolute; top:0.625rem; right:0.625rem;
+      padding:3px 10px; border-radius:20px; font-size:0.72rem; font-weight:700;
+      backdrop-filter:blur(4px);
+    }
+    .status-open       { background:rgba(22,163,74,0.88); color:#fff; }
+    .status-inProgress { background:rgba(37,99,235,0.88); color:#fff; }
+    .status-completed  { background:rgba(100,116,139,0.88); color:#fff; }
+    .status-cancelled  { background:rgba(220,38,38,0.88); color:#fff; }
+    .status-closed     { background:rgba(100,116,139,0.88); color:#fff; }
+    .status-draft      { background:rgba(202,138,4,0.88); color:#fff; }
+
+    .gig-card-body { padding:1.125rem 1.25rem 1.25rem; }
+    .gig-card-cat {
+      display:inline-block; font-size:0.72rem; font-weight:700;
+      padding:3px 10px; border-radius:20px; margin-bottom:0.5rem;
+    }
+    .gig-card-title { font-size:0.95rem; font-weight:700; color:#0f172a; margin-bottom:0.25rem; line-height:1.35; }
+    .gig-card-meta {
+      font-size:0.8rem; color:var(--text-muted); margin-bottom:0.35rem;
+      display:flex; align-items:flex-start; gap:0.4rem;
+    }
+    .gig-card-meta svg { flex-shrink:0; margin-top:2px; }
+
+    .gig-card-stats { display:flex; gap:0.625rem; flex-wrap:wrap; margin:0.75rem 0 0; }
+    .stat-chip { font-size:0.75rem; font-weight:600; padding:3px 9px; border-radius:20px; background:#eff6ff; color:#1d4ed8; }
+    .stat-chip.success { background:#dcfce7; color:#166534; }
+    .stat-chip.warn { background:#fef9c3; color:#854d0e; }
+    .stat-chip.danger { background:#fee2e2; color:#991b1b; }
+
+    .gig-actions-top { display:flex; gap:0.5rem; padding-top:0.875rem; margin-top:0.875rem; border-top:1px solid var(--border); }
+    .gig-actions-top > * { flex:1; min-width:120px; text-align:center; font-size:0.8rem; }
+    .gig-attendance-btn {
+      display:block; width:100%; margin-top:0.5rem; text-align:center;
+      padding:0.45rem 0.75rem; font-size:0.8rem; border-radius:8px;
+    }
+
+    .track-panel-wrap {
+      margin-top:0.75rem;
+      background:#fff; border:1px solid var(--border); border-radius:12px;
+      padding:1.25rem 1.35rem 1.5rem;
+      box-shadow:0 4px 20px rgba(0,0,0,0.06);
+    }
+
+    .panel-tabs { display:flex; border-bottom:1px solid var(--border); margin-top:0.5rem; }
+    .panel-tab {
+      flex:1; padding:0.65rem; font-size:0.82rem; font-weight:600; text-align:center;
+      cursor:pointer; border:none; background:#f8fafc; color:var(--text-muted);
+      transition:all 0.15s;
+    }
+    .panel-tab.active { background:#fff; color:var(--primary); border-bottom:2px solid var(--primary); }
+
+    .panel-body { padding:0.875rem 0 0; }
+
+    .vol-row {
+      display:flex; align-items:center; gap:0.875rem;
+      padding:0.75rem 0; border-bottom:1px solid var(--border);
+    }
+    .vol-row:last-child { border-bottom:none; }
+    .vol-av {
+      width:40px; height:40px; border-radius:50%; background:var(--primary);
       display:flex; align-items:center; justify-content:center;
-      font-size:1rem; font-weight:700; color:var(--primary);
-      overflow:hidden; flex-shrink:0;
+      font-size:0.85rem; font-weight:700; color:#fff; overflow:hidden; flex-shrink:0;
     }
-    .vol-avatar img { width:100%; height:100%; object-fit:cover; }
-
+    .vol-av img { width:100%; height:100%; object-fit:cover; }
     .vol-info { flex:1; min-width:0; }
-    .vol-name { font-weight:700; font-size:0.95rem; margin-bottom:0.15rem; }
-    .vol-email { font-size:0.78rem; color:var(--text-muted); margin-bottom:0.5rem; }
-    .vol-chips { display:flex; gap:0.4rem; flex-wrap:wrap; }
-    .chip { font-size:0.73rem; font-weight:600; padding:2px 8px; border-radius:20px; background:#f1f5f9; color:#475569; }
-    .chip.good  { background:#dcfce7; color:#166534; }
-    .chip.warn  { background:#fee2e2; color:#991b1b; }
-    .chip.info  { background:#eff6ff; color:#1d4ed8; }
+    .vol-name { font-weight:700; font-size:0.88rem; }
+    .vol-sub { font-size:0.75rem; color:var(--text-muted); }
+    .vol-right { text-align:right; flex-shrink:0; }
+    .vol-hours { font-size:0.88rem; font-weight:700; color:var(--primary); }
+    .vol-time { font-size:0.72rem; color:var(--text-muted); }
+    .noshow-pill { font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:20px; background:#fee2e2; color:#991b1b; }
 
-    .vol-actions { display:flex; gap:0.5rem; flex-wrap:wrap; align-items:flex-start; padding-top:0.25rem; }
+    .panel-foot { margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border); text-align:center; }
+    .panel-foot a { font-size:0.82rem; }
 
-    /* Expanded panel */
-    .vol-panel { display:none; border-top:1px solid var(--border); padding:1rem 1.25rem; background:#fafcff; }
-    .vol-panel.open { display:block; }
-    .vol-panel-title { font-size:0.82rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.75rem; }
-    .gig-line {
-      display:flex; align-items:center; justify-content:space-between;
-      padding:0.45rem 0; border-bottom:1px solid var(--border); font-size:0.82rem; gap:0.5rem; flex-wrap:wrap;
-    }
-    .gig-line:last-child { border-bottom:none; }
-    .gig-line-title { flex:1; min-width:0; font-weight:600; }
-    .gig-line-date  { color:var(--text-muted); font-size:0.78rem; }
-    .task-badge { font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:20px; }
-    .task-accepted  { background:#dcfce7; color:#166534; }
-    .task-pending   { background:#fef9c3; color:#854d0e; }
-    .task-rejected  { background:#fee2e2; color:#991b1b; }
-    .task-completed { background:#eff6ff; color:#1d4ed8; }
-    .noshow-badge   { background:#fee2e2; color:#991b1b; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:20px; }
-
-    .empty-state { text-align:center; padding:4rem 1rem; color:var(--text-muted); }
-    .stats-summary { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
-    .stat-box { background:#fff; border:1px solid var(--border); border-radius:10px; padding:0.875rem 1.25rem; flex:1; min-width:130px; }
-    .stat-box-val { font-size:1.4rem; font-weight:800; color:var(--primary); }
-    .stat-box-lbl { font-size:0.78rem; color:var(--text-muted); margin-top:0.1rem; }
+    .empty-state { text-align:center; padding:2.25rem 1rem; color:var(--text-muted); font-size:0.875rem; grid-column:1 / -1; }
   </style>
 </head>
 <body>
@@ -79,24 +123,19 @@
   <div class="container">
     <div class="page-header">
       <h1>Volunteer Tracker</h1>
-      <p class="text-muted">All volunteers who have applied to your gigs</p>
+      <p class="text-muted">Same layout as My Posted Gigs: open a gig to see who attended and hours logged.</p>
     </div>
 
-    <div class="stats-summary" id="summaryRow"></div>
+    <div class="summary-strip" id="summaryStrip"></div>
 
-    <div class="filter-tabs">
-      <button class="filter-tab active" onclick="setFilter('all',this)">All</button>
-      <button class="filter-tab" onclick="setFilter('verified',this)">Verified</button>
-      <button class="filter-tab" onclick="setFilter('recurring',this)">Recurring (2+ gigs)</button>
-      <button class="filter-tab" onclick="setFilter('noshows',this)">Had No-shows</button>
+    <div class="filter-bar">
+      <button type="button" class="filter-btn active" onclick="setFilter('all',this)">All gigs</button>
+      <button type="button" class="filter-btn" onclick="setFilter('past',this)">Past</button>
+      <button type="button" class="filter-btn" onclick="setFilter('active',this)">Active &amp; upcoming</button>
     </div>
 
-    <div class="search-bar">
-      <input type="search" id="searchBox" placeholder="Search by name or email..." oninput="render()">
-    </div>
-
-    <div id="volList">
-      <div style="text-align:center;padding:3rem"><div class="spinner"></div></div>
+    <div class="gigs-grid" id="gigGrid">
+      <div style="grid-column:1/-1;text-align:center;padding:3rem"><div class="spinner"></div></div>
     </div>
   </div>
 </div>
@@ -107,119 +146,283 @@
 <script>
 API.requireAuth('org');
 
-let volunteers = [];
-let currentFilter = 'all';
-let expandedId = null;
+const ICON_CAL = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+const ICON_CLOCK = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+const ICON_PIN = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
 
-function initials(name) {
-  return (name || '?').split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase();
+let gigsData = [];
+let openGigId = null;
+let openTab = {}; // gigId -> tab key
+let curFilter = 'all';
+
+function gigImage(catName) {
+  const s = String(catName || '').toLowerCase();
+  const u = 'https://images.unsplash.com/photo-';
+  const q = '?w=600&h=300&fit=crop&auto=format&q=75';
+  if (/food|nutrition|hunger|meal/.test(s)) return u + '1488521787991-ed7bbaae773c' + q;
+  if (/environment|climate|nature|garden|green|disability|special/.test(s)) return u + '1441974231531-c6227db76b6e' + q;
+  if (/youth|child|student|school|education/.test(s)) return u + '1527525443983-6e60c75fff46' + q;
+  if (/health|medical|wellness|care|palliative/.test(s)) return u + '1576091160399-112ba8d25d1d' + q;
+  return u + '1559027615-cd4628902d4a' + q;
+}
+
+function initials(n) {
+  return (n||'?').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+}
+
+function fmtTime(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleTimeString('en-CA', { hour:'2-digit', minute:'2-digit' });
 }
 
 function setFilter(f, btn) {
-  currentFilter = f;
-  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+  curFilter = f;
+  document.querySelectorAll('.filter-bar .filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   render();
 }
 
-function render() {
-  const q = (document.getElementById('searchBox').value || '').toLowerCase();
-  let list = volunteers;
+function toggleTrackPanel(gigId, e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  openGigId = openGigId === gigId ? null : gigId;
+  if (openGigId && openTab[gigId] == null) openTab[gigId] = 'attended';
+  render();
+}
 
-  if (currentFilter === 'verified')  list = list.filter(v => v.vp?.backgroundCheck === 'verified');
-  if (currentFilter === 'recurring') list = list.filter(v => (v.sessionCount || 0) >= 2);
-  if (currentFilter === 'noshows')   list = list.filter(v => (v.noShowCount || 0) > 0);
-  if (q) list = list.filter(v => {
-    const name = `${v.firstName||''} ${v.lastName||''}`.toLowerCase();
-    return name.includes(q) || (v.email||'').toLowerCase().includes(q);
+function switchTab(gigId, tab) {
+  openTab[gigId] = tab;
+  const g = gigsData.find(x => x.id === gigId);
+  if (!g) return;
+  const pb = document.getElementById(`pb-${gigId}`);
+  if (pb) pb.innerHTML = renderTabContent(g, tab);
+  document.querySelectorAll(`#tp-${gigId} .panel-tab`).forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tab);
   });
+}
+
+function renderTabContent(g, tab) {
+  const attendance = g.attendance || [];
+  const approved = g.approvedVolunteers || [];
+
+  if (tab === 'attended') {
+    const list = attendance.filter(a => a.checkInAt);
+    if (!list.length) return '<div class="empty-state" style="padding:1rem">No check-ins yet.</div>';
+    return list.map(a => {
+      const v = a.volunteer || {};
+      const vp = v.volunteerProfile || {};
+      const name = `${vp.firstName||v.firstName||''} ${vp.lastName||v.lastName||''}`.trim() || v.email || 'Volunteer';
+      const avatar = v.avatarUrl || vp.avatarUrl;
+      const hrs = a.hoursWorked != null ? `${parseFloat(a.hoursWorked).toFixed(1)}h` : (a.checkOutAt ? '' : 'In progress');
+      const checkinTime = fmtTime(a.checkInAt);
+      const checkoutTime = a.checkOutAt ? fmtTime(a.checkOutAt) : 'Pending checkout';
+      return `
+      <div class="vol-row">
+        <div class="vol-av">${avatar?`<img src="${avatar}" alt="">`:`${initials(name)}`}</div>
+        <div class="vol-info">
+          <div class="vol-name">${escapeHtml(name)}</div>
+          <div class="vol-sub">${escapeHtml(v.email||'')}</div>
+          <div class="vol-sub">In: ${checkinTime} · Out: ${checkoutTime}</div>
+        </div>
+        <div class="vol-right">
+          ${hrs ? `<div class="vol-hours">${hrs}</div>` : ''}
+          <div class="vol-time">${a.checkOutAt ? 'Completed' : 'Active'}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  if (tab === 'noshow') {
+    const checkedInIds = attendance.filter(a => a.checkInAt).map(a => a.volunteerId);
+    const list = approved.filter(v => !checkedInIds.includes(v.volunteerId));
+    if (!list.length) return '<div class="empty-state" style="padding:1rem">Everyone who was approved checked in.</div>';
+    return list.map(v => {
+      const u = v.volunteer || {};
+      const vp = u.volunteerProfile || {};
+      const name = `${vp.firstName||u.firstName||''} ${vp.lastName||u.lastName||''}`.trim() || u.email || 'Volunteer';
+      const avatar = u.avatarUrl || vp.avatarUrl;
+      return `
+      <div class="vol-row">
+        <div class="vol-av">${avatar?`<img src="${avatar}" alt="">`:`${initials(name)}`}</div>
+        <div class="vol-info">
+          <div class="vol-name">${escapeHtml(name)}</div>
+          <div class="vol-sub">${escapeHtml(u.email||'')}</div>
+        </div>
+        <div class="vol-right"><span class="noshow-pill">No-show</span></div>
+      </div>`;
+    }).join('');
+  }
+
+  if (tab === 'approved') {
+    if (!approved.length) return '<div class="empty-state" style="padding:1rem">No approved volunteers yet.</div>';
+    const checkedInIds = attendance.filter(a => a.checkInAt).map(a => a.volunteerId);
+    return approved.map(v => {
+      const u = v.volunteer || {};
+      const vp = u.volunteerProfile || {};
+      const name = `${vp.firstName||u.firstName||''} ${vp.lastName||u.lastName||''}`.trim() || u.email || 'Volunteer';
+      const avatar = u.avatarUrl || vp.avatarUrl;
+      const didAttend = checkedInIds.includes(v.volunteerId);
+      return `
+      <div class="vol-row">
+        <div class="vol-av">${avatar?`<img src="${avatar}" alt="">`:`${initials(name)}`}</div>
+        <div class="vol-info">
+          <div class="vol-name">${escapeHtml(name)}</div>
+          <div class="vol-sub">${escapeHtml(u.email||'')}</div>
+        </div>
+        <div class="vol-right">
+          ${didAttend
+            ? `<span class="stat-chip success" style="font-size:0.72rem">Attended</span>`
+            : `<span class="noshow-pill">No-show</span>`}
+        </div>
+      </div>`;
+    }).join('');
+  }
+  return '';
+}
+
+function renderExpandedPanel(g) {
+  const attendance = g.attendance || [];
+  const approved = g.approvedVolunteers || [];
+  const checkedIn = attendance.filter(a => a.checkInAt);
+  const checkedInIds = checkedIn.map(a => a.volunteerId);
+  const noShows = approved.filter(v => !checkedInIds.includes(v.volunteerId));
+
+  const tab = openTab[g.id] || 'attended';
+
+  return `
+    <div class="panel-tabs" id="tp-${g.id}">
+      <button type="button" class="panel-tab${tab==='attended'?' active':''}" data-tab="attended" onclick="switchTab(${g.id},'attended')">Attended (${checkedIn.length})</button>
+      <button type="button" class="panel-tab${tab==='noshow'?' active':''}" data-tab="noshow" onclick="switchTab(${g.id},'noshow')">No-shows (${noShows.length})</button>
+      <button type="button" class="panel-tab${tab==='approved'?' active':''}" data-tab="approved" onclick="switchTab(${g.id},'approved')">Approved (${approved.length})</button>
+    </div>
+    <div class="panel-body" id="pb-${g.id}">${renderTabContent(g, tab)}</div>
+    <div class="panel-foot">
+      <a href="/org/attendance/${g.id}" class="btn btn-sm btn-secondary">Open full attendance &amp; QR page</a>
+    </div>
+  `;
+}
+
+function render() {
+  const today = new Date().toISOString().slice(0,10);
+  let list = gigsData.slice();
+  if (curFilter === 'past') list = list.filter(g => g.endDate && g.endDate < today);
+  if (curFilter === 'active') list = list.filter(g => !g.endDate || g.endDate >= today);
 
   if (!list.length) {
-    document.getElementById('volList').innerHTML = '<div class="empty-state">No volunteers found.</div>';
+    document.getElementById('gigGrid').innerHTML = '<div class="empty-state">No gigs found.</div>';
     return;
   }
 
-  document.getElementById('volList').innerHTML = list.map(v => {
-    const vp      = v.vp || {};
-    const name    = `${v.firstName||''} ${v.lastName||''}`.trim() || v.email;
-    const avatar  = v.avatarUrl || vp.avatarUrl;
-    const hours   = v.qrHours != null && v.qrHours > 0 ? `${v.qrHours}h QR-tracked` : (vp.verifiedHours ? `${vp.verifiedHours}h verified` : null);
-    const isOpen  = expandedId === v.id;
+  document.getElementById('gigGrid').innerHTML = list.map(g => {
+    const attendance = g.attendance || [];
+    const approved = g.approvedVolunteers || [];
+    const checkedIn = attendance.filter(a => a.checkInAt);
+    const totalHours = attendance.reduce((s, a) => s + (parseFloat(a.hoursWorked)||0), 0);
+    const checkedInIds = checkedIn.map(a => a.volunteerId);
+    const noShows = approved.filter(v => !checkedInIds.includes(v.volunteerId)).length;
 
-    const chips = [];
-    if (v.sessionCount)  chips.push(`<span class="chip info">${v.sessionCount} gig${v.sessionCount!==1?'s':''}</span>`);
-    if (hours)           chips.push(`<span class="chip good">${hours}</span>`);
-    if (v.noShowCount)   chips.push(`<span class="chip warn">${v.noShowCount} no-show${v.noShowCount!==1?'s':''}</span>`);
-    if (vp.points)       chips.push(`<span class="chip">${vp.points} pts</span>`);
-    if (vp.backgroundCheck === 'verified') chips.push(`<span class="chip good">BG checked</span>`);
-    if (vp.country)      chips.push(`<span class="chip">${vp.country}</span>`);
-    if (vp.languages?.length) chips.push(`<span class="chip">${vp.languages.slice(0,2).join(', ')}</span>`);
-    if (vp.skills?.length)    chips.push(`<span class="chip">${vp.skills.slice(0,2).join(', ')}</span>`);
+    const isPast = g.endDate && g.endDate < today;
+    const catName = g.category?.name || '';
+    const catColor = g.category?.colorHex || '#6366f1';
+    const imgSrc = gigImage(catName);
 
-    const gigLines = (v.tasks || []).map(t => {
-      const gig = t.gig || {};
-      const dateStr = gig.startDate ? new Date(gig.startDate+'T00:00:00').toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'}) : '';
-      const today = new Date().toISOString().slice(0,10);
-      const isPast = gig.endDate && gig.endDate < today;
-      const isNoShow = isPast && ['approved','completed'].includes(t.status) && !t.attended;
-      return `
-      <div class="gig-line">
-        <span class="gig-line-title">${gig.title || 'Gig'}</span>
-        ${dateStr ? `<span class="gig-line-date">${dateStr}</span>` : ''}
-        <span class="task-badge task-${t.status}">${t.status}</span>
-        ${isNoShow ? `<span class="noshow-badge">No-show</span>` : ''}
-      </div>`;
-    }).join('');
+    const fmt = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-CA', { year:'numeric', month:'short', day:'numeric' }) : '';
+    const dateStr = g.startDate
+      ? fmt(g.startDate) + (g.endDate && g.endDate !== g.startDate ? ' - ' + fmt(g.endDate) : '')
+      : '';
+
+    const statusClass = `status-${g.status || 'open'}`;
+    const statusLabel = { open:'Open', inProgress:'In Progress', completed:'Completed', cancelled:'Cancelled', closed:'Closed', draft:'Draft' }[g.status] || g.status || 'Open';
+
+    let timeLine = '';
+    if (g.startTime) timeLine = `${g.startTime}${g.endTime ? ' – ' + g.endTime : ''}`;
+    else if (g.estimatedHours) timeLine = `${g.estimatedHours}h per session`;
+
+    let locLine = '';
+    if (g.locationType === 'remote') locLine = 'Remote';
+    else if (g.locationType === 'hybrid') locLine = g.locationAddress ? `Hybrid · ${g.locationAddress}` : 'Hybrid';
+    else locLine = g.locationAddress || (g.locationType === 'in-person' ? 'In-person' : '');
+
+    const totalApps = g.totalApplicants ?? 0;
+    const approvedCount = typeof g.approvedApplicants === 'number' ? g.approvedApplicants : approved.length;
+
+    let statsHtml = '';
+    if (totalApps > 0) statsHtml += `<span class="stat-chip">${totalApps} applicant${totalApps !== 1 ? 's' : ''}</span>`;
+    if (approvedCount > 0) statsHtml += `<span class="stat-chip success">${approvedCount} approved</span>`;
+    statsHtml += `<span class="stat-chip">${checkedIn.length} checked in</span>`;
+    if (totalHours > 0) statsHtml += `<span class="stat-chip">${totalHours.toFixed(1)}h logged</span>`;
+    if (noShows > 0) statsHtml += `<span class="stat-chip danger">${noShows} no-show${noShows !== 1 ? 's' : ''}</span>`;
+
+    const panelOpen = openGigId === g.id;
 
     return `
-    <div class="vol-card" id="vc-${v.id}">
-      <div class="vol-card-header" onclick="toggleVol(${v.id})">
-        <div class="vol-avatar">
-          ${avatar ? `<img src="${avatar}" alt="${name}">` : initials(name)}
+    <div class="gig-cell">
+      <div class="gig-card${isPast ? ' is-past' : ''}">
+        <div class="gig-card-media">
+          <img src="${imgSrc}" alt="" loading="lazy">
+          <span class="gig-card-status ${statusClass}">${statusLabel}${isPast ? ' (Past)' : ''}</span>
         </div>
-        <div class="vol-info">
-          <div class="vol-name">${name}</div>
-          <div class="vol-email">${v.email || ''}</div>
-          <div class="vol-chips">${chips.join('')}</div>
-        </div>
-        <div class="vol-actions">
-          <a href="/org/applications?vol=${v.id}" class="btn btn-sm btn-secondary" onclick="event.stopPropagation()">Manage</a>
+        <div class="gig-card-body">
+          ${catName ? `<span class="gig-card-cat" style="background:${catColor}22;color:${catColor}">${escapeHtml(catName)}</span>` : ''}
+          <div class="gig-card-title">${escapeHtml(g.title)}</div>
+          ${dateStr ? `<div class="gig-card-meta">${ICON_CAL}<span>${dateStr}</span></div>` : ''}
+          ${timeLine ? `<div class="gig-card-meta">${ICON_CLOCK}<span>${escapeHtml(timeLine)}</span></div>` : ''}
+          ${locLine ? `<div class="gig-card-meta">${ICON_PIN}<span>${escapeHtml(locLine)}</span></div>` : ''}
+          <div class="gig-card-stats">${statsHtml}</div>
+          <div class="gig-actions-top">
+            <a href="/org/gigs/${g.id}" class="btn btn-sm btn-secondary">View &amp; Edit</a>
+            <a href="/org/gigs/${g.id}/applicants" class="btn btn-sm btn-secondary">Applicants</a>
+          </div>
+          <button type="button" class="btn btn-sm btn-secondary gig-attendance-btn" onclick="toggleTrackPanel(${g.id},event)">Attendance</button>
         </div>
       </div>
-      <div class="vol-panel${isOpen ? ' open' : ''}" id="vp-${v.id}">
-        ${v.tasks && v.tasks.length
-          ? `<div class="vol-panel-title">Gig History (${v.tasks.length})</div>${gigLines}`
-          : '<div style="color:var(--text-muted);font-size:0.85rem">No gig history.</div>'}
-      </div>
+      ${panelOpen ? `
+      <div class="track-panel-wrap">
+        <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.25rem;color:#0f172a">Attendance: ${escapeHtml(g.title)}</div>
+        ${renderExpandedPanel(g)}
+      </div>` : ''}
     </div>`;
   }).join('');
 }
 
-function toggleVol(id) {
-  expandedId = expandedId === id ? null : id;
-  render();
-}
-
 async function load() {
   try {
-    const { data } = await API.get('/orgs/me/volunteers');
-    volunteers = data.volunteers || [];
+    const { data } = await API.get('/orgs/me/gigs-stats');
+    gigsData = (data.gigs || []).map(g => ({
+      ...g,
+      attendance: g.attendance || [],
+      approvedVolunteers: g.approvedVolunteers || [],
+    }));
 
-    /* Summary row */
-    const totalVols  = volunteers.length;
-    const totalHours = volunteers.reduce((s, v) => s + (v.qrHours || v.vp?.verifiedHours || 0), 0);
-    const noShows    = volunteers.filter(v => (v.noShowCount || 0) > 0).length;
-    const recurring  = volunteers.filter(v => (v.sessionCount || 0) >= 2).length;
-    document.getElementById('summaryRow').innerHTML = [
-      { val: totalVols,            lbl: 'Total Volunteers' },
-      { val: totalHours.toFixed(1), lbl: 'Total Hours' },
-      { val: recurring,             lbl: 'Recurring Volunteers' },
-      { val: noShows,               lbl: 'Had No-shows' },
-    ].map(s => `<div class="stat-box"><div class="stat-box-val">${s.val}</div><div class="stat-box-lbl">${s.lbl}</div></div>`).join('');
+    const today = new Date().toISOString().slice(0,10);
+    gigsData.sort((a, b) => {
+      const aA = !a.endDate || a.endDate >= today;
+      const bA = !b.endDate || b.endDate >= today;
+      if (aA !== bA) return aA ? -1 : 1;
+      return new Date(b.startDate || 0) - new Date(a.startDate || 0);
+    });
+
+    const totalAttend = gigsData.reduce((s,g) => s + (g.attendance||[]).filter(a=>a.checkInAt).length, 0);
+    const totalHours = gigsData.reduce((s,g) => s + (g.attendance||[]).reduce((h,a)=>h+(parseFloat(a.hoursWorked)||0),0), 0);
+    const totalNoShow = gigsData.reduce((s,g) => {
+      const ids = (g.attendance||[]).filter(a=>a.checkInAt).map(a=>a.volunteerId);
+      return s + (g.approvedVolunteers||[]).filter(v=>!ids.includes(v.volunteerId)).length;
+    }, 0);
+
+    document.getElementById('summaryStrip').innerHTML = [
+      { val: gigsData.length, lbl: 'Gigs' },
+      { val: totalAttend, lbl: 'Total check-ins' },
+      { val: totalHours.toFixed(1), lbl: 'Hours tracked' },
+      { val: totalNoShow, lbl: 'No-shows' },
+    ].map(x => `<div class="s-box"><div class="s-val">${x.val}</div><div class="s-lbl">${x.lbl}</div></div>`).join('');
 
     render();
   } catch (e) {
-    document.getElementById('volList').innerHTML = `<div class="empty-state">${e.message || 'Could not load volunteers.'}</div>`;
+    document.getElementById('gigGrid').innerHTML = `<div class="empty-state">${e.message||'Could not load data.'}</div>`;
   }
 }
 

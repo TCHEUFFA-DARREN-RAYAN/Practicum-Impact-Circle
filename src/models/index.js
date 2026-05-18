@@ -132,11 +132,11 @@ const Gig = sequelize.define('Gig', {
   startDate:        { type: DataTypes.DATEONLY, allowNull: false },
   endDate:          { type: DataTypes.DATEONLY, allowNull: false },
   estimatedHours:   { type: DataTypes.FLOAT, allowNull: false },
-  locationType:     { type: DataTypes.ENUM('in-person', 'remote'), defaultValue: 'in-person' },
+  locationType:     { type: DataTypes.ENUM('in-person', 'remote', 'hybrid'), defaultValue: 'in-person' },
   locationAddress:  { type: DataTypes.STRING(255) },
   requiredSkills:   { type: DataTypes.JSON, defaultValue: [] },
   verifiedOnly:     { type: DataTypes.BOOLEAN, defaultValue: false },
-  status:           { type: DataTypes.ENUM('open', 'closed', 'cancelled'), defaultValue: 'open' },
+  status:           { type: DataTypes.ENUM('open', 'inProgress', 'completed', 'cancelled', 'closed', 'draft'), defaultValue: 'open' },
   applicantCount:   { type: DataTypes.INTEGER, defaultValue: 0 },
   /* Time of day */
   timeOfDay:        { type: DataTypes.ENUM('morning', 'afternoon', 'evening', 'flexible'), allowNull: true },

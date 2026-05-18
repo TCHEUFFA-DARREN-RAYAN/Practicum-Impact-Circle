@@ -102,11 +102,23 @@ router.get('/:id', async (req, res, next) => {
     });
     if (!gig) return res.status(404).json({ success: false, message: 'Gig not found.' });
 
-    const approvedCount = await Application.count({ where: { gigId: gig.id, status: 'approved' } });
+    const [applicantCount, approvedCount] = await Promise.all([
+      Application.count({ where: { gigId: gig.id } }),
+      Application.count({ where: { gigId: gig.id, status: 'approved' } }),
+    ]);
+
+    let attendedCount = 0;
+    try {
+      const { Attendance } = require('../models/index');
+      attendedCount = await Attendance.count({ where: { gigId: gig.id, checkOutAt: { [Op.ne]: null } } });
+    } catch (_) {}
+
     const gigData = gig.toJSON();
-    gigData.approvedVolunteers = approvedCount;
-    gigData.spotsRemaining = gig.maxVolunteers ? Math.max(0, gig.maxVolunteers - approvedCount) : null;
-    gigData.isFull = gig.maxVolunteers ? approvedCount >= gig.maxVolunteers : false;
+    gigData.applicantCount      = applicantCount;
+    gigData.approvedApplicants  = approvedCount;
+    gigData.attendedCount       = attendedCount;
+    gigData.spotsRemaining      = gig.maxVolunteers ? Math.max(0, gig.maxVolunteers - approvedCount) : null;
+    gigData.isFull              = gig.maxVolunteers ? approvedCount >= gig.maxVolunteers : false;
 
     res.json({ success: true, data: { gig: gigData } });
   } catch (err) { next(err); }
@@ -159,24 +171,46 @@ router.post('/', requireAuth, requireRole('org'), [
   } catch (err) { next(err); }
 });
 
-router.put('/:id', requireAuth, requireRole('org'), async (req, res, next) => {
+async function updateGig(req, res, next) {
   try {
     const org = await Organization.findOne({ where: { userId: req.user.id } });
+    if (!org) return res.status(403).json({ success: false, message: 'Organization not found.' });
     const gig = await Gig.findOne({ where: { id: req.params.id, orgId: org.id } });
     if (!gig) return res.status(404).json({ success: false, message: 'Gig not found.' });
 
-    const allowed = ['title', 'description', 'startDate', 'endDate', 'estimatedHours', 'requiredSkills', 'verifiedOnly', 'status',
-      'timeOfDay', 'startTime', 'endTime', 'isRecurring', 'recurrenceType', 'recurrenceDays', 'hoursPerOccurrence', 'maxVolunteers'];
+    const allowed = ['title', 'description', 'categoryId', 'startDate', 'endDate', 'estimatedHours', 'requiredSkills', 'verifiedOnly', 'status',
+      'timeOfDay', 'startTime', 'endTime', 'isRecurring', 'recurrenceType', 'recurrenceDays', 'hoursPerOccurrence', 'maxVolunteers',
+      'locationType', 'locationAddress'];
     const updates = {};
-    allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
+    allowed.forEach(k => {
+      if (req.body[k] !== undefined) {
+        updates[k] = (k === 'categoryId' && req.body[k] !== null) ? parseInt(req.body[k]) : req.body[k];
+      }
+    });
     if (req.body.location) {
       updates.locationType = req.body.location.type;
       updates.locationAddress = req.body.location.address;
     }
     await gig.update(updates);
-    res.json({ success: true, message: 'Gig updated.', data: { gig } });
+
+    const refreshed = await Gig.findByPk(gig.id, {
+      include: [{ model: Category, as: 'category', attributes: ['id', 'name', 'colorHex', 'icon'] }],
+    });
+    const [applicantCount, approvedCount] = await Promise.all([
+      Application.count({ where: { gigId: gig.id } }),
+      Application.count({ where: { gigId: gig.id, status: 'approved' } }),
+    ]);
+    const out = refreshed.toJSON();
+    out.applicantCount     = applicantCount;
+    out.approvedApplicants = approvedCount;
+    out.spotsRemaining     = refreshed.maxVolunteers ? Math.max(0, refreshed.maxVolunteers - approvedCount) : null;
+
+    res.json({ success: true, message: 'Gig updated.', data: { gig: out } });
   } catch (err) { next(err); }
-});
+}
+
+router.put('/:id', requireAuth, requireRole('org'), updateGig);
+router.patch('/:id', requireAuth, requireRole('org'), updateGig);
 
 router.delete('/:id', requireAuth, requireRole('org'), async (req, res, next) => {
   try {

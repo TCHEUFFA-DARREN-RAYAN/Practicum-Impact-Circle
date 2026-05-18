@@ -46,6 +46,15 @@
 
     .toggle-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem; font-size:0.875rem; }
     .toggle-row label { font-weight:600; }
+
+    .img-preview { width:100%; height:160px; border-radius:10px; overflow:hidden; margin-bottom:1rem; background:linear-gradient(135deg,#eaf4ff 0%,#e0f2fe 100%); border:1px solid var(--border); }
+    .img-preview img { width:100%; height:100%; object-fit:cover; display:block; }
+
+    .day-pills { display:flex; flex-wrap:wrap; gap:0.4rem; margin-top:0.25rem; }
+    .day-pills label { display:inline-flex; align-items:center; gap:0.3rem; font-size:0.82rem; padding:0.25rem 0.625rem; border:1px solid var(--border); border-radius:999px; cursor:pointer; }
+    .day-pills input[type="checkbox"] { width:auto; accent-color:var(--primary); }
+
+    .sub-section { margin-top:0.5rem; padding-top:0.875rem; border-top:1px dashed var(--border); }
   </style>
 </head>
 <body>
@@ -76,6 +85,13 @@
       <div>
         <div class="card">
           <h2>Gig Details</h2>
+          <div class="img-preview"><img id="gigImgPreview" src="" alt=""></div>
+          <div class="field-row">
+            <label>Category</label>
+            <select id="fCategory" onchange="onCategoryChange()">
+              <option value="">Loading categories...</option>
+            </select>
+          </div>
           <div class="field-row">
             <label>Title</label>
             <input type="text" id="fTitle" placeholder="Gig title">
@@ -141,9 +157,47 @@
             <label for="fVerifiedOnly">Verified volunteers only</label>
             <input type="checkbox" id="fVerifiedOnly" style="width:auto">
           </div>
+
+          <div class="sub-section">
+            <div class="toggle-row">
+              <label for="fIsRecurring">Recurring gig</label>
+              <input type="checkbox" id="fIsRecurring" style="width:auto" onchange="toggleRecurring()">
+            </div>
+            <div id="recurringFields" style="display:none">
+              <div class="row2">
+                <div class="field-row">
+                  <label>Frequency</label>
+                  <select id="fRecType" onchange="toggleDayPills()">
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                </div>
+                <div class="field-row">
+                  <label>Hours per Session</label>
+                  <input type="number" id="fHoursPerOcc" min="0.5" step="0.5" placeholder="e.g. 3">
+                </div>
+              </div>
+              <div class="field-row" id="dayPillsRow">
+                <label>Days of the Week</label>
+                <div class="day-pills">
+                  <label><input type="checkbox" class="rec-day" value="Mon"> Mon</label>
+                  <label><input type="checkbox" class="rec-day" value="Tue"> Tue</label>
+                  <label><input type="checkbox" class="rec-day" value="Wed"> Wed</label>
+                  <label><input type="checkbox" class="rec-day" value="Thu"> Thu</label>
+                  <label><input type="checkbox" class="rec-day" value="Fri"> Fri</label>
+                  <label><input type="checkbox" class="rec-day" value="Sat"> Sat</label>
+                  <label><input type="checkbox" class="rec-day" value="Sun"> Sun</label>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <button class="btn btn-primary" onclick="saveGig()" style="width:100%">Save Changes</button>
+        <div style="display:flex;gap:0.75rem">
+          <a href="/org/opportunities" class="btn btn-secondary" style="flex:1;text-align:center">Cancel</a>
+          <button id="saveBtn" class="btn btn-primary" onclick="saveGig()" style="flex:2">Save Changes</button>
+        </div>
       </div>
 
       <!-- Right: stats + links -->
@@ -180,11 +234,14 @@
 
         <div class="card" id="qrCard" style="display:none">
           <h2>QR Check-in Code</h2>
-          <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.875rem">Volunteers scan this QR code to check in on-site.</p>
+          <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.875rem">Volunteers scan this QR code to check in on-site. Display on screen or print and place at the entrance.</p>
           <div id="qrWrap" style="text-align:center">
             <img id="qrImg" src="" alt="QR Code" style="max-width:200px;border-radius:8px;border:1px solid var(--border)">
           </div>
-          <a id="qrLink" href="#" target="_blank" class="btn btn-secondary" style="display:block;text-align:center;margin-top:0.875rem;font-size:0.82rem">Open Check-in Page</a>
+          <div style="display:flex;gap:0.5rem;margin-top:0.875rem;flex-direction:column">
+            <a id="qrPosterLink" href="#" target="_blank" class="btn btn-primary" style="text-align:center;font-size:0.85rem">🖨 Display / Print QR Poster</a>
+            <a id="qrLink" href="#" target="_blank" class="btn btn-secondary" style="text-align:center;font-size:0.82rem">Open Volunteer Check-in Page</a>
+          </div>
         </div>
       </div>
 
@@ -200,28 +257,71 @@ API.requireAuth('org');
 
 const gigId = location.pathname.split('/').pop();
 let gigData = null;
+let categories = [];
+
+function gigImage(catName) {
+  const s = String(catName || '').toLowerCase();
+  const u = 'https://images.unsplash.com/photo-';
+  const q = '?w=900&h=400&fit=crop&auto=format&q=75';
+  if (/food|nutrition|hunger|meal/.test(s)) return u + '1488521787991-ed7bbaae773c' + q;
+  if (/environment|climate|nature|garden|green|disability|special/.test(s)) return u + '1441974231531-c6227db76b6e' + q;
+  if (/youth|child|student|school|education/.test(s)) return u + '1527525443983-6e60c75fff46' + q;
+  if (/senior|elder|aging|older/.test(s)) return u + '1573496359142-b8d87734a5a2' + q;
+  if (/health|medical|wellness|care|palliative/.test(s)) return u + '1576091160399-112ba8d25d1d' + q;
+  return u + '1559027615-cd4628902d4a' + q;
+}
 
 function toggleAddress() {
   const v = document.getElementById('fLocType').value;
   document.getElementById('addrRow').style.display = v === 'remote' ? 'none' : '';
 }
 
+function toggleRecurring() {
+  const on = document.getElementById('fIsRecurring').checked;
+  document.getElementById('recurringFields').style.display = on ? '' : 'none';
+  if (on) toggleDayPills();
+}
+
+function toggleDayPills() {
+  const t = document.getElementById('fRecType').value;
+  document.getElementById('dayPillsRow').style.display = t === 'weekly' ? '' : 'none';
+}
+
+function onCategoryChange() {
+  const sel = document.getElementById('fCategory');
+  const opt = sel.options[sel.selectedIndex];
+  const catName = opt ? opt.textContent : '';
+  document.getElementById('gigImgPreview').src = gigImage(catName);
+  document.getElementById('gigSubtitle').textContent = catName || '';
+}
+
+async function loadCategories() {
+  try {
+    const { data } = await API.get('/public/categories');
+    categories = data.categories || [];
+    const sel = document.getElementById('fCategory');
+    sel.innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  } catch (_) {
+    document.getElementById('fCategory').innerHTML = '<option value="">Could not load categories</option>';
+  }
+}
+
 function showAlert(type, msg) {
-  const el = document.getElementById(type === 'success' ? 'alertSuccess' : 'alertError');
-  el.textContent = msg;
-  el.style.display = 'block';
-  setTimeout(() => { el.style.display = 'none'; }, 4000);
+  if (type === 'success') Toast.success(msg);
+  else Toast.error(msg);
 }
 
 function populateForm(g) {
   document.getElementById('gigTitleDisplay').textContent = g.title || 'Gig Detail';
   document.getElementById('gigSubtitle').textContent = g.category?.name || '';
+  document.getElementById('gigImgPreview').src = gigImage(g.category?.name);
 
   const badge = document.getElementById('statusBadge');
   const statusLabel = { open:'Open', inProgress:'In Progress', completed:'Completed', cancelled:'Cancelled', closed:'Closed', draft:'Draft' };
   badge.textContent = statusLabel[g.status] || g.status || '';
   badge.className   = `status-badge status-${g.status || 'open'}`;
 
+  if (g.categoryId) document.getElementById('fCategory').value = String(g.categoryId);
   document.getElementById('fTitle').value        = g.title || '';
   document.getElementById('fDesc').value         = g.description || '';
   document.getElementById('fStart').value        = g.startDate || '';
@@ -236,6 +336,13 @@ function populateForm(g) {
   document.getElementById('fVerifiedOnly').checked = !!g.verifiedOnly;
   toggleAddress();
 
+  document.getElementById('fIsRecurring').checked = !!g.isRecurring;
+  document.getElementById('fRecType').value       = g.recurrenceType || 'weekly';
+  document.getElementById('fHoursPerOcc').value   = g.hoursPerOccurrence || '';
+  const days = Array.isArray(g.recurrenceDays) ? g.recurrenceDays : [];
+  document.querySelectorAll('.rec-day').forEach(cb => { cb.checked = days.includes(cb.value); });
+  toggleRecurring();
+
   /* Stats */
   const total    = g.applicantCount || 0;
   const approved = g.approvedApplicants || 0;
@@ -247,7 +354,7 @@ function populateForm(g) {
   document.getElementById('sSpots').textContent    = spots !== null ? spots : 'Unlimited';
 
   /* Links */
-  document.getElementById('lnkApps').href       = `/org/applications?gig=${g.id}`;
+  document.getElementById('lnkApps').href       = `/org/gigs/${g.id}/applicants`;
   document.getElementById('lnkAttendance').href  = `/org/attendance/${g.id}`;
 
   /* QR code */
@@ -259,9 +366,12 @@ function populateForm(g) {
 }
 
 async function saveGig() {
+  const isRec = document.getElementById('fIsRecurring').checked;
+  const recType = document.getElementById('fRecType').value;
   const body = {
     title:          document.getElementById('fTitle').value.trim(),
     description:    document.getElementById('fDesc').value.trim(),
+    categoryId:     parseInt(document.getElementById('fCategory').value) || null,
     startDate:      document.getElementById('fStart').value || null,
     endDate:        document.getElementById('fEnd').value || null,
     startTime:      document.getElementById('fStartTime').value || null,
@@ -272,26 +382,61 @@ async function saveGig() {
     locationAddress:document.getElementById('fAddr').value.trim() || null,
     status:         document.getElementById('fStatus').value,
     verifiedOnly:   document.getElementById('fVerifiedOnly').checked,
+    isRecurring:    isRec,
+    recurrenceType: isRec ? recType : null,
+    recurrenceDays: isRec && recType === 'weekly'
+      ? [...document.querySelectorAll('.rec-day:checked')].map(c => c.value)
+      : [],
+    hoursPerOccurrence: isRec ? (parseFloat(document.getElementById('fHoursPerOcc').value) || null) : null,
   };
 
+  const btn = document.getElementById('saveBtn');
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
   try {
-    await API.patch(`/gigs/${gigId}`, body);
+    const { data } = await API.patch(`/gigs/${gigId}`, body);
     showAlert('success', 'Gig saved successfully.');
-    document.getElementById('gigTitleDisplay').textContent = body.title;
-    const badge = document.getElementById('statusBadge');
-    const statusLabel = { open:'Open', inProgress:'In Progress', completed:'Completed', cancelled:'Cancelled', closed:'Closed', draft:'Draft' };
-    badge.textContent = statusLabel[body.status] || body.status;
-    badge.className   = `status-badge status-${body.status}`;
+    if (data?.gig) {
+      gigData = { ...gigData, ...data.gig };
+      populateForm(gigData);
+    } else {
+      document.getElementById('gigTitleDisplay').textContent = body.title;
+      const badge = document.getElementById('statusBadge');
+      const statusLabel = { open:'Open', inProgress:'In Progress', completed:'Completed', cancelled:'Cancelled', closed:'Closed', draft:'Draft' };
+      badge.textContent = statusLabel[body.status] || body.status;
+      badge.className   = `status-badge status-${body.status}`;
+    }
   } catch (e) {
     showAlert('error', e.message || 'Could not save gig.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
   }
 }
 
 async function load() {
   try {
+    await loadCategories();
     const { data } = await API.get(`/gigs/${gigId}`);
     gigData = data.gig || data;
     populateForm(gigData);
+
+    // load QR code separately
+    try {
+      const qrRes = await API.get(`/attendance/gig/${gigId}/qr`);
+      if (qrRes.data) {
+        document.getElementById('qrCard').style.display = '';
+        if (qrRes.data.qrCode) {
+          document.getElementById('qrImg').src = qrRes.data.qrCode;
+          document.getElementById('qrImg').style.display = '';
+        } else {
+          document.getElementById('qrImg').style.display = 'none';
+        }
+        document.getElementById('qrLink').href       = qrRes.data.checkinUrl || `/checkin/${qrRes.data.token}`;
+        document.getElementById('qrPosterLink').href = `/org/gigs/${gigId}/qr-display`;
+      }
+    } catch (_) { /* QR not available */ }
   } catch (e) {
     document.getElementById('gigTitleDisplay').textContent = 'Error loading gig';
     showAlert('error', e.message || 'Could not load gig details.');

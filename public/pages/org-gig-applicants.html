@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gig Applicants | ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    .page-back { display:inline-flex; align-items:center; gap:0.4rem; font-size:0.85rem; color:var(--text-muted); text-decoration:none; margin-bottom:1rem; transition:color 0.12s; }
+    .page-back:hover { color:var(--primary); }
+
+    .gig-banner {
+      background:#fff; border:1px solid var(--border); border-radius:14px;
+      padding:1.25rem 1.5rem; margin-bottom:1.5rem;
+      box-shadow:0 2px 8px rgba(0,0,0,0.04);
+    }
+    .gb-top { display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; margin-bottom:0.5rem; }
+    .gb-title { font-size:1.1rem; font-weight:700; margin:0; }
+    .gb-meta { display:flex; flex-wrap:wrap; gap:0.875rem; font-size:0.82rem; color:var(--text-muted); }
+    .gb-meta span { display:inline-flex; align-items:center; gap:0.3rem; }
+
+    .status-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.78rem; font-weight:700; }
+    .status-open       { background:rgba(22,163,74,0.12); color:#166534; }
+    .status-inProgress { background:rgba(37,99,235,0.12); color:#1d4ed8; }
+    .status-completed  { background:rgba(100,116,139,0.12); color:#475569; }
+    .status-cancelled  { background:rgba(220,38,38,0.12); color:#991b1b; }
+    .status-closed     { background:rgba(100,116,139,0.12); color:#475569; }
+    .status-draft      { background:rgba(202,138,4,0.12); color:#854d0e; }
+
+    .summary-strip { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+    .s-box { background:#fff; border:1px solid var(--border); border-radius:12px; padding:0.75rem 1rem; flex:1; min-width:120px; text-align:center; }
+    .s-val { font-size:1.35rem; font-weight:800; color:var(--primary); }
+    .s-lbl { font-size:0.72rem; color:var(--text-muted); margin-top:0.1rem; text-transform:uppercase; letter-spacing:.04em; }
+
+    .filter-row { display:flex; gap:0.4rem; flex-wrap:wrap; align-items:center; margin-bottom:1rem; }
+    .af-btn {
+      padding:0.32rem 0.875rem; border-radius:999px; border:1px solid var(--border);
+      font-size:0.82rem; cursor:pointer; background:#fff; font-weight:600; color:var(--text);
+      transition:background 0.12s,color 0.12s,border 0.12s;
+    }
+    .af-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+    .filter-row input[type="search"] {
+      margin-left:auto; padding:0.4rem 0.75rem; border:1px solid var(--border);
+      border-radius:8px; font-size:0.875rem; min-width:200px;
+    }
+
+    .apps-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:1rem; }
+
+    .app-card {
+      border:1px solid var(--border); border-radius:12px; padding:1rem 1.1rem;
+      background:#fff; display:flex; gap:1rem; align-items:flex-start;
+      box-shadow:0 1px 3px rgba(0,0,0,0.04);
+    }
+    .vol-av {
+      width:48px; height:48px; border-radius:50%; background:var(--primary);
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.05rem; font-weight:700; color:#fff; overflow:hidden; flex-shrink:0;
+    }
+    .vol-av img { width:100%; height:100%; object-fit:cover; }
+    .app-body { flex:1; min-width:0; }
+    .app-name { font-weight:700; font-size:0.95rem; margin-bottom:0.2rem; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; }
+    .app-email { font-size:0.78rem; color:var(--text-muted); margin-bottom:0.5rem; }
+    .app-chips { display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:0.5rem; }
+    .achip { font-size:0.72rem; font-weight:600; padding:2px 8px; border-radius:20px; background:#f1f5f9; color:#475569; }
+    .achip.ok   { background:#dcfce7; color:#166534; }
+    .achip.warn { background:#fef9c3; color:#92400e; }
+    .app-note {
+      font-size:0.82rem; color:#555; background:#f8fafc; padding:0.5rem 0.75rem;
+      border-radius:8px; margin-bottom:0.625rem; border-left:3px solid var(--primary-light);
+    }
+    .app-actions { display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem; }
+    .status-pill { display:inline-block; padding:2px 10px; border-radius:20px; font-size:0.73rem; font-weight:700; }
+    .sp-status-pending  { background:#fef9c3; color:#92400e; }
+    .sp-status-approved { background:#dcfce7; color:#166534; }
+    .sp-status-rejected { background:#fee2e2; color:#991b1b; }
+
+    .empty-state { text-align:center; padding:3rem 1rem; color:var(--text-muted); grid-column:1 / -1; }
+  </style>
+</head>
+<body>
+<nav id="navbar"></nav>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside id="sidebar" class="sidebar"></aside>
+<div class="page-content">
+  <div class="container">
+    <a id="backLink" href="/org/applications" class="page-back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      All Applications
+    </a>
+
+    <div class="page-header">
+      <h1>Applicants</h1>
+      <p class="text-muted" id="pageSubtitle">Review and decide on volunteer applications</p>
+    </div>
+
+    <div id="gigBanner" class="gig-banner" style="display:none">
+      <div class="gb-top">
+        <h2 class="gb-title" id="gigTitle"></h2>
+        <span id="gigStatus" class="status-badge"></span>
+        <span id="gigCat" class="status-badge" style="background:rgba(99,102,241,0.12);color:#4338ca"></span>
+      </div>
+      <div class="gb-meta">
+        <span id="gigDates"></span>
+        <span id="gigTime"></span>
+        <span id="gigLoc"></span>
+      </div>
+    </div>
+
+    <div class="summary-strip" id="summaryStrip" style="display:none">
+      <div class="s-box"><div class="s-val" id="sTotal">0</div><div class="s-lbl">Total</div></div>
+      <div class="s-box"><div class="s-val" id="sPending" style="color:#92400e">0</div><div class="s-lbl">Pending</div></div>
+      <div class="s-box"><div class="s-val" id="sApproved" style="color:#166534">0</div><div class="s-lbl">Approved</div></div>
+      <div class="s-box"><div class="s-val" id="sRejected" style="color:#991b1b">0</div><div class="s-lbl">Rejected</div></div>
+      <div class="s-box"><div class="s-val" id="sSpots">—</div><div class="s-lbl">Spots Left</div></div>
+    </div>
+
+    <div class="filter-row" id="filterRow" style="display:none">
+      <button type="button" class="af-btn active" onclick="setFilter('all',this)">All</button>
+      <button type="button" class="af-btn" onclick="setFilter('pending',this)">Pending</button>
+      <button type="button" class="af-btn" onclick="setFilter('approved',this)">Approved</button>
+      <button type="button" class="af-btn" onclick="setFilter('rejected',this)">Rejected</button>
+      <input type="search" id="appSearch" placeholder="Search by name or email..." oninput="render()">
+    </div>
+
+    <div class="apps-grid" id="appsGrid">
+      <div style="grid-column:1/-1;text-align:center;padding:3rem"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/footer.js"></script>
+<script>
+API.requireAuth('org');
+
+const pathParts = location.pathname.split('/').filter(Boolean);
+const gigId = parseInt(pathParts[pathParts.indexOf('gigs') + 1], 10);
+
+let gigInfo = null;
+let applications = [];
+let curFilter = 'all';
+
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+}
+
+function initials(n) {
+  return (n||'?').split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase();
+}
+
+function setFilter(f, btn) {
+  curFilter = f;
+  document.querySelectorAll('.filter-row .af-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function renderBanner() {
+  if (!gigInfo) return;
+  document.getElementById('gigBanner').style.display = '';
+  document.getElementById('pageSubtitle').textContent = `for "${gigInfo.title}"`;
+  document.getElementById('gigTitle').textContent = gigInfo.title || '';
+
+  const statusLabel = { open:'Open', inProgress:'In Progress', completed:'Completed', cancelled:'Cancelled', closed:'Closed', draft:'Draft' };
+  const st = document.getElementById('gigStatus');
+  st.textContent = statusLabel[gigInfo.status] || gigInfo.status || '';
+  st.className = `status-badge status-${gigInfo.status || 'open'}`;
+
+  const cat = document.getElementById('gigCat');
+  if (gigInfo.category?.name) {
+    cat.textContent = gigInfo.category.name;
+    cat.style.display = '';
+  } else { cat.style.display = 'none'; }
+
+  const fmt = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-CA', { year:'numeric', month:'short', day:'numeric' }) : '';
+  const dateStr = gigInfo.startDate
+    ? fmt(gigInfo.startDate) + (gigInfo.endDate && gigInfo.endDate !== gigInfo.startDate ? ' – ' + fmt(gigInfo.endDate) : '')
+    : '';
+  document.getElementById('gigDates').textContent = dateStr;
+
+  let timeLine = '';
+  if (gigInfo.startTime) timeLine = `${gigInfo.startTime}${gigInfo.endTime ? ' – ' + gigInfo.endTime : ''}`;
+  else if (gigInfo.estimatedHours) timeLine = `${gigInfo.estimatedHours}h / session`;
+  document.getElementById('gigTime').textContent = timeLine;
+
+  let locLine = '';
+  if (gigInfo.locationType === 'remote') locLine = 'Remote';
+  else if (gigInfo.locationType === 'hybrid') locLine = gigInfo.locationAddress ? `Hybrid · ${gigInfo.locationAddress}` : 'Hybrid';
+  else locLine = gigInfo.locationAddress || (gigInfo.locationType === 'in-person' ? 'In-person' : '');
+  document.getElementById('gigLoc').textContent = locLine;
+}
+
+function renderSummary() {
+  document.getElementById('summaryStrip').style.display = '';
+  document.getElementById('filterRow').style.display = '';
+  const total = applications.length;
+  const pending = applications.filter(a => a.status === 'pending').length;
+  const approved = applications.filter(a => a.status === 'approved').length;
+  const rejected = applications.filter(a => a.status === 'rejected').length;
+  document.getElementById('sTotal').textContent    = total;
+  document.getElementById('sPending').textContent  = pending;
+  document.getElementById('sApproved').textContent = approved;
+  document.getElementById('sRejected').textContent = rejected;
+  const spots = gigInfo?.maxVolunteers ? Math.max(0, gigInfo.maxVolunteers - approved) : null;
+  document.getElementById('sSpots').textContent = spots !== null ? spots : '∞';
+}
+
+function render() {
+  renderSummary();
+  const q = (document.getElementById('appSearch').value || '').toLowerCase();
+  let list = applications.slice();
+  if (curFilter !== 'all') list = list.filter(a => a.status === curFilter);
+  if (q) list = list.filter(a => {
+    const v = a.volunteer || {};
+    const vp = v.volunteerProfile || {};
+    const name = `${vp.firstName||''} ${vp.lastName||''}`.toLowerCase();
+    return name.includes(q) || (v.email || '').toLowerCase().includes(q);
+  });
+
+  if (!list.length) {
+    document.getElementById('appsGrid').innerHTML = `<div class="empty-state">No ${curFilter === 'all' ? '' : curFilter + ' '}applications${q ? ' match your search' : ' yet'}.</div>`;
+    return;
+  }
+
+  document.getElementById('appsGrid').innerHTML = list.map(a => renderAppCard(a)).join('');
+}
+
+function renderAppCard(a) {
+  const v = a.volunteer || {};
+  const vp = v.volunteerProfile || {};
+  const name = `${vp.firstName||''} ${vp.lastName||''}`.trim() || v.email || 'Volunteer';
+  const avatarSrc = v.avatarUrl;
+
+  const chips = [];
+  if (vp.country) chips.push(`<span class="achip">${escapeHtml(vp.country)}</span>`);
+  if (v.verificationStatus === 'verified') chips.push(`<span class="achip ok">Verified</span>`);
+  if (vp.backgroundCheckStatus === 'approved') chips.push(`<span class="achip ok">BG checked</span>`);
+  else if (vp.backgroundCheckStatus === 'pending') chips.push(`<span class="achip warn">BG pending</span>`);
+  if (vp.languages?.length) chips.push(`<span class="achip">${vp.languages.slice(0,2).map(escapeHtml).join(', ')}</span>`);
+  if (vp.skills?.length) chips.push(`<span class="achip">${vp.skills.slice(0,2).map(escapeHtml).join(', ')}</span>`);
+
+  let actionBtns = '';
+  if (a.status === 'pending') {
+    actionBtns = `
+      <button type="button" class="btn btn-sm btn-primary" onclick="decide(${a.id},'approved',this)">Approve</button>
+      <button type="button" class="btn btn-sm btn-danger" onclick="decide(${a.id},'rejected',this)">Reject</button>`;
+  } else if (a.status === 'approved') {
+    actionBtns = `
+      <button type="button" class="btn btn-sm btn-secondary" onclick="decide(${a.id},'pending',this)">Move to pending</button>
+      <button type="button" class="btn btn-sm btn-danger" onclick="decide(${a.id},'rejected',this)">Revoke</button>`;
+  } else if (a.status === 'rejected') {
+    actionBtns = `
+      <button type="button" class="btn btn-sm btn-secondary" onclick="decide(${a.id},'pending',this)">Reconsider</button>`;
+  }
+
+  const dateStr = a.createdAt ? new Date(a.createdAt).toLocaleDateString('en-CA', { month:'short', day:'numeric', year:'numeric' }) : '';
+
+  return `
+  <div class="app-card">
+    <div class="vol-av">${avatarSrc ? `<img src="${avatarSrc}" alt="">` : escapeHtml(initials(name))}</div>
+    <div class="app-body">
+      <div class="app-name">
+        <span>${escapeHtml(name)}</span>
+        <span class="status-pill sp-status-${a.status}">${a.status.charAt(0).toUpperCase() + a.status.slice(1)}</span>
+      </div>
+      <div class="app-email">${escapeHtml(v.email || '')}${dateStr ? ` · Applied ${dateStr}` : ''}</div>
+      ${chips.length ? `<div class="app-chips">${chips.join('')}</div>` : ''}
+      ${a.personalStatement ? `<div class="app-note">&ldquo;${escapeHtml(a.personalStatement)}&rdquo;</div>` : ''}
+      <div class="app-actions">${actionBtns}</div>
+    </div>
+  </div>`;
+}
+
+async function decide(appId, decision, btn) {
+  if (btn) btn.disabled = true;
+  try {
+    await API.patch(`/gigs/applications/${appId}/decide`, { decision });
+    await load(true);
+    Toast.success(`Application ${decision}.`);
+  } catch (e) {
+    Toast.error(e.message || 'Could not update application.');
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function load(silent) {
+  try {
+    const { data } = await API.get(`/gigs/${gigId}/applications`);
+    gigInfo = data.gig || null;
+    applications = data.applications || [];
+    renderBanner();
+    render();
+  } catch (e) {
+    if (!silent) {
+      document.getElementById('appsGrid').innerHTML = `<div class="empty-state">${escapeHtml(e.message || 'Could not load applicants.')}</div>`;
+    }
+  }
+}
+
+document.getElementById('backLink').href = `/org/gigs/${gigId}`;
+load();
+</script>
+</body>
+</html>

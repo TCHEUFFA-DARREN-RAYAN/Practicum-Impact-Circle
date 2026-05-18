@@ -93,6 +93,9 @@ const pages = [
   // ── Organization dashboard (logged in) ──
   ['/org-dashboard', 'pages/org-dashboard.html'],
   ['/org-gig-create', 'pages/org-gig-create.html'],
+  ['/org/gigs/:id/applicants', 'pages/org-gig-applicants.html'],
+  ['/org/gigs/:id/qr-display', 'pages/qr-display.html'],
+  ['/org/gigs/:id', 'pages/org-gig-detail.html'],
   ['/org/analytics', 'pages/org-analytics.html'],
   ['/org/application/:id', 'pages/org-application-detail.html'],
   ['/org/volunteers', 'pages/org-volunteers.html'],
@@ -100,7 +103,6 @@ const pages = [
   ['/org/schedule', 'pages/org-schedule.html'],
   ['/org/opportunities', 'pages/org-opportunities.html'],
   ['/org/applications', 'pages/org-applications.html'],
-  ['/org/gigs/:id', 'pages/org-gig-detail.html'],
   ['/org/announcements', 'pages/org-announcements.html'],
 
   // ── Opportunity detail ──

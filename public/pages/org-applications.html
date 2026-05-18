@@ -6,67 +6,114 @@
   <title>Volunteer Applications | ImpactCircle</title>
   <link rel="stylesheet" href="/css/base.css">
   <style>
-    /* Gig rows */
-    .gig-row {
-      border:1px solid var(--border); border-radius:12px; background:#fff;
-      margin-bottom:0.875rem; overflow:hidden;
-    }
-    .gig-row-header {
-      display:flex; align-items:center; justify-content:space-between;
-      padding:1rem 1.25rem; cursor:pointer; gap:1rem; flex-wrap:wrap;
-      transition:background 0.12s;
-    }
-    .gig-row-header:hover { background:#f8fafc; }
-    .gig-row-header.open { background:#f0f6ff; }
-    .gig-row-info { flex:1; min-width:0; }
-    .gig-row-title { font-weight:700; font-size:0.95rem; margin-bottom:0.25rem; }
-    .gig-row-meta { font-size:0.8rem; color:var(--text-muted); display:flex; gap:0.75rem; flex-wrap:wrap; }
-    .gig-row-badges { display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; }
-    .badge { font-size:0.75rem; font-weight:600; padding:3px 10px; border-radius:20px; }
-    .badge-pending  { background:#fef9c3; color:#854d0e; }
-    .badge-total    { background:#eff6ff; color:#1d4ed8; }
-    .badge-approved { background:#dcfce7; color:#166534; }
-    .chevron { transition:transform 0.2s; flex-shrink:0; }
-    .gig-row-header.open .chevron { transform:rotate(180deg); }
-
-    /* Applications panel */
-    .apps-panel { display:none; border-top:1px solid var(--border); padding:1.25rem; }
-    .apps-panel.open { display:block; }
-
-    .filter-bar { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem; align-items:center; }
-    .filter-btn { padding:0.3rem 0.75rem; border-radius:20px; border:1px solid var(--border); font-size:0.8rem; cursor:pointer; background:#fff; transition:all 0.12s; }
+    .filter-bar { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.25rem; align-items:center; }
+    .filter-btn { padding:0.375rem 0.875rem; border-radius:20px; border:1px solid var(--border); font-size:0.82rem; cursor:pointer; background:#fff; transition:all 0.12s; }
     .filter-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+    .filter-bar input[type="search"] { margin-left:auto; padding:0.375rem 0.75rem; border:1px solid var(--border); border-radius:8px; font-size:0.875rem; min-width:180px; }
 
-    /* Application card */
+    .gigs-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:1.25rem; }
+
+    .gig-cell { display:flex; flex-direction:column; gap:0; }
+
+    .gig-card {
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:14px;
+      overflow:hidden;
+      transition:box-shadow 0.2s, transform 0.2s;
+      box-shadow:0 2px 8px rgba(0,0,0,0.05);
+    }
+    .gig-card:hover { box-shadow:0 10px 30px rgba(99,102,241,0.12); transform:translateY(-2px); }
+    .gig-card.is-past { opacity:0.76; }
+
+    .gig-card-media {
+      height:148px; overflow:hidden;
+      background:linear-gradient(135deg,#eaf4ff 0%,#e0f2fe 100%);
+      position:relative;
+    }
+    .gig-card-media img { width:100%; height:100%; object-fit:cover; display:block; }
+    .gig-card-status {
+      position:absolute; top:0.625rem; right:0.625rem;
+      padding:3px 10px; border-radius:20px; font-size:0.72rem; font-weight:700;
+      backdrop-filter:blur(4px);
+    }
+    .status-open       { background:rgba(22,163,74,0.88); color:#fff; }
+    .status-inProgress { background:rgba(37,99,235,0.88); color:#fff; }
+    .status-completed  { background:rgba(100,116,139,0.88); color:#fff; }
+    .status-cancelled  { background:rgba(220,38,38,0.88); color:#fff; }
+    .status-closed     { background:rgba(100,116,139,0.88); color:#fff; }
+    .status-draft      { background:rgba(202,138,4,0.88); color:#fff; }
+
+    .gig-card-body { padding:1.125rem 1.25rem 1.25rem; }
+    .gig-card-cat {
+      display:inline-block; font-size:0.72rem; font-weight:700;
+      padding:3px 10px; border-radius:20px; margin-bottom:0.5rem;
+    }
+    .gig-card-title { font-size:0.95rem; font-weight:700; color:#0f172a; margin-bottom:0.25rem; line-height:1.35; }
+    .gig-card-meta {
+      font-size:0.8rem; color:var(--text-muted); margin-bottom:0.35rem;
+      display:flex; align-items:flex-start; gap:0.4rem;
+    }
+    .gig-card-meta svg { flex-shrink:0; margin-top:2px; }
+
+    .gig-card-stats { display:flex; gap:0.625rem; flex-wrap:wrap; margin:0.75rem 0 0; }
+    .stat-chip { font-size:0.75rem; font-weight:600; padding:3px 9px; border-radius:20px; background:#eff6ff; color:#1d4ed8; }
+    .stat-chip.warn { background:#fef9c3; color:#854d0e; }
+    .stat-chip.success { background:#dcfce7; color:#166534; }
+    .stat-chip.muted { background:#f1f5f9; color:#64748b; }
+    .stat-chip.danger { background:#fee2e2; color:#991b1b; }
+
+    .gig-actions-top { display:flex; gap:0.5rem; padding-top:0.875rem; margin-top:0.875rem; border-top:1px solid var(--border); }
+    .gig-actions-top > * { flex:1; min-width:120px; text-align:center; font-size:0.8rem; }
+    .gig-attendance-btn {
+      display:block; width:100%; margin-top:0.5rem; text-align:center;
+      padding:0.45rem 0.75rem; font-size:0.8rem; border-radius:8px;
+    }
+
+    .apps-panel-wrap {
+      margin-top:0.75rem;
+      background:#fff; border:1px solid var(--border); border-radius:12px;
+      padding:1.25rem 1.35rem 1.5rem;
+      margin-top:0;
+      box-shadow:0 4px 20px rgba(0,0,0,0.06);
+    }
+
+    .apps-filter-row { display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:1rem; }
+    .af-btn {
+      padding:0.28rem 0.75rem; border-radius:999px; border:1px solid var(--border);
+      font-size:0.78rem; cursor:pointer; background:#fff; font-weight:600;
+      transition:background 0.12s,color 0.12s,border 0.12s;
+    }
+    .af-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+
     .app-card {
-      border:1px solid var(--border); border-radius:10px; padding:1rem;
+      border:1px solid var(--border); border-radius:12px; padding:1rem 1.1rem;
       background:#fafcff; margin-bottom:0.75rem; display:flex; gap:1rem; align-items:flex-start;
     }
     .vol-av {
-      width:42px; height:42px; border-radius:50%; background:var(--primary);
+      width:44px; height:44px; border-radius:50%; background:var(--primary);
       display:flex; align-items:center; justify-content:center;
       font-size:1rem; font-weight:700; color:#fff; overflow:hidden; flex-shrink:0;
     }
     .vol-av img { width:100%; height:100%; object-fit:cover; }
     .app-body { flex:1; min-width:0; }
     .app-name { font-weight:700; font-size:0.9rem; margin-bottom:0.2rem; }
-    .app-meta { font-size:0.78rem; color:var(--text-muted); margin-bottom:0.5rem; display:flex; gap:0.625rem; flex-wrap:wrap; }
-    .vol-stats { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.625rem; }
-    .vs-chip { font-size:0.73rem; font-weight:600; padding:2px 8px; border-radius:20px;
-      background:#f1f5f9; color:#475569; }
-    .vs-chip.ok { background:#dcfce7; color:#166534; }
-    .vs-chip.warn { background:#fef9c3; color:#854d0e; }
-    .app-note { font-size:0.82rem; color:#555; background:#f8fafc; padding:0.5rem 0.75rem;
-      border-radius:8px; margin-bottom:0.625rem; border-left:3px solid var(--border); }
+    .app-email { font-size:0.78rem; color:var(--text-muted); margin-bottom:0.5rem; }
+    .app-chips { display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:0.5rem; }
+    .achip { font-size:0.72rem; font-weight:600; padding:2px 8px; border-radius:20px; background:#f1f5f9; color:#475569; }
+    .achip.ok   { background:#dcfce7; color:#166534; }
+    .achip.warn { background:#fef9c3; color:#92400e; }
+    .app-note {
+      font-size:0.82rem; color:#555; background:#f8fafc; padding:0.5rem 0.75rem;
+      border-radius:8px; margin-bottom:0.625rem; border-left:3px solid var(--primary-light);
+    }
     .app-actions { display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem; }
-    .status-badge { display:inline-block; padding:2px 10px; border-radius:20px; font-size:0.75rem; font-weight:700; }
-    .status-pending  { background:#fef9c3; color:#854d0e; }
-    .status-approved { background:#dcfce7; color:#166534; }
-    .status-rejected { background:#fee2e2; color:#991b1b; }
+    .status-pill { display:inline-block; padding:2px 10px; border-radius:20px; font-size:0.73rem; font-weight:700; }
+    .sp-status-pending  { background:#fef9c3; color:#92400e; }
+    .sp-status-approved { background:#dcfce7; color:#166534; }
+    .sp-status-rejected { background:#fee2e2; color:#991b1b; }
 
-    .empty-state { text-align:center; padding:2rem 1rem; color:var(--text-muted); }
-    .global-filter { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.25rem; align-items:center; }
-    .global-filter input { margin-left:auto; padding:0.375rem 0.75rem; border:1px solid var(--border); border-radius:8px; font-size:0.875rem; min-width:180px; }
+    .empty-state { text-align:center; padding:3rem 1rem; color:var(--text-muted); grid-column:1 / -1; }
   </style>
 </head>
 <body>
@@ -77,15 +124,18 @@
   <div class="container">
     <div class="page-header">
       <h1>Volunteer Applications</h1>
-      <p class="text-muted">Select a gig to review its applications</p>
+      <p class="text-muted">Browse your gigs like your posted opportunities, then manage applicants.</p>
     </div>
 
-    <div class="global-filter">
-      <input type="search" id="gigSearch" placeholder="Search gigs..." oninput="renderGigs()">
+    <div class="filter-bar">
+      <button type="button" class="filter-btn active" onclick="setFilter('',this)">Active & upcoming</button>
+      <button type="button" class="filter-btn" onclick="setFilter('past',this)">Past</button>
+      <button type="button" class="filter-btn" onclick="setFilter('all',this)">All</button>
+      <input type="search" id="gigSearch" placeholder="Search gigs..." oninput="render()">
     </div>
 
-    <div id="gigList">
-      <div style="text-align:center;padding:3rem"><div class="spinner"></div></div>
+    <div class="gigs-grid" id="gigGrid">
+      <div style="grid-column:1/-1;text-align:center;padding:3rem"><div class="spinner"></div></div>
     </div>
   </div>
 </div>
@@ -96,184 +146,151 @@
 <script>
 API.requireAuth('org');
 
-let gigsData = [];
-let openGigId = null;
+const ICON_CAL = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+const ICON_CLOCK = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+const ICON_PIN = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
 
-/* Build initials avatar */
-function initials(name) {
-  return (name || '?').split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase();
+let gigsData = [];
+let curFilter = '';
+
+function gigImage(catName) {
+  const s = String(catName || '').toLowerCase();
+  const u = 'https://images.unsplash.com/photo-';
+  const q = '?w=600&h=300&fit=crop&auto=format&q=75';
+  if (/food|nutrition|hunger|meal/.test(s)) return u + '1488521787991-ed7bbaae773c' + q;
+  if (/environment|climate|nature|garden|green|disability|special/.test(s)) return u + '1441974231531-c6227db76b6e' + q;
+  if (/youth|child|student|school|education/.test(s)) return u + '1527525443983-6e60c75fff46' + q;
+  if (/senior|elder|aging|older/.test(s)) return u + '1573496359142-b8d87734a5a2' + q;
+  if (/health|medical|wellness|care|palliative/.test(s)) return u + '1576091160399-112ba8d25d1d' + q;
+  return u + '1559027615-cd4628902d4a' + q;
 }
 
-/* Render gig list */
-function renderGigs() {
+function setFilter(f, btn) {
+  curFilter = f;
+  document.querySelectorAll('.filter-bar .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function render() {
   const q = (document.getElementById('gigSearch').value || '').toLowerCase();
-  let list = gigsData;
+  const today = new Date().toISOString().slice(0, 10);
+  let list = gigsData.slice();
+
+  if (curFilter === '') list = list.filter(g => !g.endDate || g.endDate >= today);
+  else if (curFilter === 'past') list = list.filter(g => g.endDate && g.endDate < today);
+  // 'all' = no extra filter
+
   if (q) list = list.filter(g => (g.title || '').toLowerCase().includes(q));
 
   if (!list.length) {
-    document.getElementById('gigList').innerHTML = '<div class="empty-state">No gigs found.</div>';
+    document.getElementById('gigGrid').innerHTML = '<div class="empty-state">No gigs found.</div>';
     return;
   }
 
-  document.getElementById('gigList').innerHTML = list.map(g => {
-    const pending  = (g.applications || []).filter(a => a.status === 'pending').length;
-    const approved = (g.applications || []).filter(a => a.status === 'approved').length;
-    const total    = (g.applications || []).length;
-    const isOpen   = openGigId === g.id;
+  document.getElementById('gigGrid').innerHTML = list.map(g => {
+    const apps = g.applications || [];
+    const pending = apps.filter(a => a.status === 'pending').length;
+    const approved = apps.filter(a => a.status === 'approved').length;
+    const total = apps.length;
+    const rejected = apps.filter(a => a.status === 'rejected').length;
+    const isPast = g.endDate && g.endDate < today;
+
+    const catName = g.category?.name || '';
+    const catColor = g.category?.colorHex || '#6366f1';
+    const imgSrc = gigImage(catName);
+
+    const fmt = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-CA', { year:'numeric', month:'short', day:'numeric' }) : '';
+    const dateStr = g.startDate
+      ? fmt(g.startDate) + (g.endDate && g.endDate !== g.startDate ? ' - ' + fmt(g.endDate) : '')
+      : '';
+
+    const statusClass = `status-${g.status || 'open'}`;
+    const statusLabel = { open:'Open', inProgress:'In Progress', completed:'Completed', cancelled:'Cancelled', closed:'Closed', draft:'Draft' }[g.status] || g.status || 'Open';
+    let timeLine = '';
+    if (g.startTime) {
+      timeLine = `${g.startTime}${g.endTime ? ' – ' + g.endTime : ''}`;
+    } else if (g.estimatedHours) {
+      timeLine = `${g.estimatedHours}h per session`;
+    }
+    let locLine = '';
+    if (g.locationType === 'remote') locLine = 'Remote';
+    else if (g.locationType === 'hybrid') locLine = g.locationAddress ? `Hybrid · ${g.locationAddress}` : 'Hybrid';
+    else locLine = g.locationAddress || (g.locationType === 'in-person' ? 'In-person' : '');
+
+    const isFull = g.maxVolunteers && approved >= g.maxVolunteers;
+
+    let statsHtml = `<span class="stat-chip">${total} applicant${total !== 1 ? 's' : ''}</span>`;
+    if (pending > 0) statsHtml += `<span class="stat-chip warn">${pending} pending</span>`;
+    if (approved > 0) statsHtml += `<span class="stat-chip success">${approved} approved</span>`;
+    if (rejected > 0) statsHtml += `<span class="stat-chip muted">${rejected} rejected</span>`;
+    if (g.maxVolunteers) statsHtml += `<span class="stat-chip muted">${approved}/${g.maxVolunteers} spots</span>`;
+    if (isFull) statsHtml += `<span class="stat-chip danger">Full</span>`;
+    else if (g.status === 'closed') statsHtml += `<span class="stat-chip muted">Closed</span>`;
+
+
     return `
-    <div class="gig-row" id="gig-row-${g.id}">
-      <div class="gig-row-header${isOpen ? ' open' : ''}" onclick="toggleGig(${g.id})">
-        <div class="gig-row-info">
-          <div class="gig-row-title">${g.title}</div>
-          <div class="gig-row-meta">
-            ${g.startDate ? `<span>${new Date(g.startDate + 'T00:00:00').toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'})}</span>` : ''}
-            ${g.locationAddress || g.locationType === 'remote' ? `<span>${g.locationType === 'remote' ? 'Remote' : g.locationAddress}</span>` : ''}
+    <div class="gig-cell">
+      <div class="gig-card${isPast ? ' is-past' : ''}">
+        <div class="gig-card-media">
+          <img src="${imgSrc}" alt="" loading="lazy">
+          <span class="gig-card-status ${statusClass}">${statusLabel}${isPast ? ' (Past)' : ''}</span>
+        </div>
+        <div class="gig-card-body">
+          ${catName ? `<span class="gig-card-cat" style="background:${catColor}22;color:${catColor}">${escapeHtml(catName)}</span>` : ''}
+          <div class="gig-card-title">${escapeHtml(g.title)}</div>
+          ${dateStr ? `<div class="gig-card-meta">${ICON_CAL}<span>${dateStr}</span></div>` : ''}
+          ${timeLine ? `<div class="gig-card-meta">${ICON_CLOCK}<span>${escapeHtml(timeLine)}</span></div>` : ''}
+          ${locLine ? `<div class="gig-card-meta">${ICON_PIN}<span>${escapeHtml(locLine)}</span></div>` : ''}
+          <div class="gig-card-stats">${statsHtml}</div>
+          <div class="gig-actions-top">
+            <a href="/org/gigs/${g.id}" class="btn btn-sm btn-secondary">View &amp; Edit</a>
+            <a href="/org/gigs/${g.id}/applicants" class="btn btn-sm btn-primary">Applicants${pending > 0 ? ` (${pending})` : ''}</a>
           </div>
+          <a href="/org/attendance/${g.id}" class="btn btn-sm btn-secondary gig-attendance-btn">Attendance</a>
         </div>
-        <div class="gig-row-badges">
-          <span class="badge badge-total">${total} total</span>
-          ${pending  > 0 ? `<span class="badge badge-pending">${pending} pending</span>` : ''}
-          ${approved > 0 ? `<span class="badge badge-approved">${approved} approved</span>` : ''}
-        </div>
-        <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-      </div>
-      <div class="apps-panel${isOpen ? ' open' : ''}" id="panel-${g.id}">
-        ${renderAppsPanel(g)}
       </div>
     </div>`;
   }).join('');
 }
 
-function renderAppsPanel(g) {
-  const apps = g.applications || [];
-  if (!apps.length) return '<div class="empty-state">No applications for this gig yet.</div>';
-
-  const fBtns = ['all','pending','approved','rejected'].map(s =>
-    `<button class="filter-btn${s==='all'?' active':''}" onclick="filterApps(${g.id},'${s}',this)">${s.charAt(0).toUpperCase()+s.slice(1)}</button>`
-  ).join('');
-
-  const cards = apps.map(a => renderAppCard(a, g.id)).join('');
-  return `
-    <div class="filter-bar" id="filter-bar-${g.id}">${fBtns}</div>
-    <div id="apps-${g.id}">${cards}</div>`;
-}
-
-function renderAppCard(a, gigId) {
-  const v   = a.volunteer || {};
-  const vp  = v.volunteerProfile || {};
-  const name = `${v.firstName || ''} ${v.lastName || ''}`.trim() || v.email || 'Volunteer';
-  const avatarSrc = v.avatarUrl || vp.avatarUrl;
-
-  const chips = [];
-  if (vp.verifiedHours  != null) chips.push(`<span class="vs-chip ok">${vp.verifiedHours}h verified</span>`);
-  if (vp.points         != null) chips.push(`<span class="vs-chip">${vp.points} pts</span>`);
-  if (vp.country)                chips.push(`<span class="vs-chip">${vp.country}</span>`);
-  if (vp.backgroundCheck === 'verified') chips.push(`<span class="vs-chip ok">BG checked</span>`);
-  else if (vp.backgroundCheck === 'pending') chips.push(`<span class="vs-chip warn">BG pending</span>`);
-  if (vp.languages && vp.languages.length) chips.push(`<span class="vs-chip">${vp.languages.slice(0,2).join(', ')}</span>`);
-  if (vp.skills && vp.skills.length) chips.push(`<span class="vs-chip">${vp.skills.slice(0,2).join(', ')}</span>`);
-
-  let actionBtns = '';
-  if (a.status === 'pending') {
-    actionBtns = `
-      <button class="btn btn-sm btn-primary" onclick="decide(${a.id},'approved',${gigId})">Approve</button>
-      <button class="btn btn-sm btn-danger"  onclick="decide(${a.id},'rejected',${gigId})">Reject</button>`;
-  } else if (a.status === 'approved') {
-    actionBtns = `
-      <button class="btn btn-sm btn-secondary" onclick="decide(${a.id},'pending',${gigId})">Move to Pending</button>
-      <button class="btn btn-sm btn-danger"    onclick="decide(${a.id},'rejected',${gigId})">Revoke Approval</button>`;
-  } else if (a.status === 'rejected') {
-    actionBtns = `
-      <button class="btn btn-sm btn-secondary" onclick="decide(${a.id},'pending',${gigId})">Reconsider</button>`;
-  }
-
-  return `
-  <div class="app-card" id="app-${a.id}" data-status="${a.status}">
-    <div class="vol-av">
-      ${avatarSrc ? `<img src="${avatarSrc}" alt="${name}">` : initials(name)}
-    </div>
-    <div class="app-body">
-      <div class="app-name">${name}
-        <span class="status-badge status-${a.status}" style="margin-left:0.5rem">${a.status.charAt(0).toUpperCase()+a.status.slice(1)}</span>
-      </div>
-      <div class="app-meta">
-        <span>${v.email || ''}</span>
-        ${a.appliedAt ? `<span>Applied ${new Date(a.appliedAt).toLocaleDateString()}</span>` : ''}
-      </div>
-      ${chips.length ? `<div class="vol-stats">${chips.join('')}</div>` : ''}
-      ${a.coverLetter ? `<div class="app-note">${a.coverLetter}</div>` : ''}
-      <div class="app-actions">${actionBtns}</div>
-    </div>
-  </div>`;
-}
-
-function filterApps(gigId, status, btn) {
-  document.querySelectorAll(`#filter-bar-${gigId} .filter-btn`).forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll(`#apps-${gigId} .app-card`).forEach(card => {
-    card.style.display = (status === 'all' || card.dataset.status === status) ? '' : 'none';
-  });
-}
-
-function toggleGig(gigId) {
-  if (openGigId === gigId) {
-    openGigId = null;
-  } else {
-    openGigId = gigId;
-  }
-  renderGigs();
-}
-
-async function decide(appId, decision, gigId) {
-  try {
-    await API.patch(`/gigs/applications/${appId}/decide`, { decision });
-    await loadGig(gigId);
-    renderGigs();
-  } catch (e) {
-    alert(e.message || 'Could not update application.');
-  }
-}
-
-async function loadGig(gigId) {
-  try {
-    const { data } = await API.get(`/orgs/me/applications?gigId=${gigId}`);
-    const idx = gigsData.findIndex(g => g.id === gigId);
-    if (idx !== -1 && data.applications) {
-      gigsData[idx].applications = data.applications;
-    }
-  } catch {}
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
 }
 
 async function load() {
+  /* Legacy deep-link support: /org/applications?gig=ID now redirects to the
+     dedicated per-gig page so large applicant lists don't bloat this view. */
+  const params = new URLSearchParams(location.search);
+  const linked = params.get('gig');
+  if (linked && /^\d+$/.test(linked)) {
+    location.replace(`/org/gigs/${linked}/applicants`);
+    return;
+  }
+
   try {
     const { data } = await API.get('/orgs/me/applications');
-    /* Group by gig */
     const gigMap = {};
     (data.applications || []).forEach(a => {
       const gig = a.gig || {};
-      if (!gigMap[gig.id]) {
-        gigMap[gig.id] = { ...gig, applications: [] };
-      }
+      if (!gig.id) return;
+      if (!gigMap[gig.id]) gigMap[gig.id] = { ...gig, applications: [] };
       gigMap[gig.id].applications.push(a);
     });
 
-    const today = new Date().toISOString().slice(0, 10);
+    const today = new Date().toISOString().slice(0,10);
     gigsData = Object.values(gigMap).sort((a, b) => {
-      const aActive = !a.endDate || a.endDate >= today;
-      const bActive = !b.endDate || b.endDate >= today;
-      if (aActive !== bActive) return aActive ? -1 : 1;
+      const aA = !a.endDate || a.endDate >= today;
+      const bA = !b.endDate || b.endDate >= today;
+      if (aA !== bA) return aA ? -1 : 1;
       return (b.applications.filter(x => x.status === 'pending').length) -
              (a.applications.filter(x => x.status === 'pending').length);
     });
 
-    /* Auto-open if a specific gig was linked */
-    const params = new URLSearchParams(location.search);
-    const linked = params.get('gig');
-    if (linked) openGigId = parseInt(linked);
-
-    renderGigs();
+    render();
   } catch (e) {
-    document.getElementById('gigList').innerHTML = `<div class="empty-state">${e.message || 'Could not load applications.'}</div>`;
+    document.getElementById('gigGrid').innerHTML = `<div class="empty-state">${e.message || 'Could not load applications.'}</div>`;
   }
 }
 

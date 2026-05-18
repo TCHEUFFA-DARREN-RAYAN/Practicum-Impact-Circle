@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Check-in Poster — ImpactCircle</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f4ff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 24px 16px 40px;
+    }
+
+    /* Toolbar — hidden when printing */
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      align-items: center;
+    }
+    .btn {
+      padding: 10px 22px;
+      border-radius: 10px;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-print  { background: #2563eb; color: #fff; }
+    .btn-back   { background: #fff; color: #374151; border: 1px solid #d1d5db; }
+
+    /* Poster card */
+    .poster {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+      width: 100%;
+      max-width: 520px;
+      padding: 40px 36px 36px;
+      text-align: center;
+    }
+
+    .logo-wrap {
+      margin-bottom: 20px;
+    }
+    .logo-wrap img { height: 40px; }
+    .logo-text {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #2563eb;
+      letter-spacing: -0.02em;
+    }
+
+    .event-title {
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.25;
+      margin-bottom: 6px;
+    }
+    .org-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #6366f1;
+      margin-bottom: 20px;
+    }
+
+    .event-meta {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+    .meta-row {
+      display: flex;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: #475569;
+      padding: 4px 0;
+    }
+    .meta-row strong { color: #1e293b; min-width: 80px; }
+
+    .qr-wrap {
+      background: #fff;
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 20px;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+    .qr-wrap img {
+      width: 240px;
+      height: 240px;
+      display: block;
+    }
+    .qr-url-fallback {
+      font-size: 0.78rem;
+      color: #64748b;
+      word-break: break-all;
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 20px;
+      font-family: monospace;
+    }
+
+    .scan-instruction {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #16a34a;
+      margin-bottom: 6px;
+    }
+    .scan-sub {
+      font-size: 0.875rem;
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #e2e8f0;
+      margin: 20px 0;
+    }
+
+    .footer-brand {
+      font-size: 0.78rem;
+      color: #94a3b8;
+    }
+    .footer-brand span { color: #2563eb; font-weight: 600; }
+
+    .loading { color: #64748b; font-size: 1rem; padding: 60px; }
+    .error-msg { color: #dc2626; font-size: 1rem; padding: 40px; }
+
+    /* ── Print styles ── */
+    @media print {
+      body { background: #fff; padding: 0; }
+      .toolbar { display: none !important; }
+      .poster {
+        box-shadow: none;
+        border-radius: 0;
+        max-width: 100%;
+        padding: 30px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toolbar (hidden on print) -->
+  <div class="toolbar" id="toolbar">
+    <button class="btn btn-back" onclick="history.back()">← Back</button>
+    <button class="btn btn-print" onclick="window.print()">
+      🖨 Print QR Poster
+    </button>
+  </div>
+
+  <!-- Poster -->
+  <div class="poster" id="poster">
+    <div class="loading" id="loadingMsg">Loading event details…</div>
+    <div id="content" style="display:none">
+      <div class="logo-wrap">
+        <div class="logo-text">ImpactCircle</div>
+      </div>
+
+      <div class="event-title" id="eventTitle"></div>
+      <div class="org-name" id="orgName"></div>
+
+      <div class="event-meta" id="eventMeta"></div>
+
+      <div class="qr-wrap" id="qrWrap">
+        <img id="qrImg" src="" alt="QR Code" style="display:none">
+      </div>
+      <div class="qr-url-fallback" id="qrUrl" style="display:none"></div>
+
+      <div class="scan-instruction">📱 Scan to Check In</div>
+      <div class="scan-sub">Volunteers — scan this QR code with your phone<br>to check in for this event.</div>
+
+      <hr class="divider">
+      <div class="footer-brand">Powered by <span>ImpactCircle</span></div>
+    </div>
+    <div class="error-msg" id="errorMsg" style="display:none"></div>
+  </div>
+
+<script src="/js/api.js"></script>
+<script>
+API.requireAuth('org');
+
+const gigId = location.pathname.split('/').slice(-2)[0]; // /org/gigs/:id/qr-display
+
+async function load() {
+  try {
+    const [gigRes, qrRes] = await Promise.all([
+      API.get(`/gigs/${gigId}`),
+      API.get(`/attendance/gig/${gigId}/qr`),
+    ]);
+
+    const gig = gigRes.data.gig || gigRes.data;
+    const qr  = qrRes.data;
+
+    document.getElementById('loadingMsg').style.display = 'none';
+    document.getElementById('content').style.display = '';
+
+    document.getElementById('eventTitle').textContent = gig.title || 'Event';
+    document.getElementById('orgName').textContent    = gig.org?.orgName || '';
+    document.title = `QR Poster — ${gig.title}`;
+
+    // Meta block
+    const rows = [];
+    if (gig.startDate) {
+      const dateStr = gig.endDate && gig.endDate !== gig.startDate
+        ? `${gig.startDate} — ${gig.endDate}` : gig.startDate;
+      rows.push(`<div class="meta-row"><strong>Date:</strong> ${dateStr}</div>`);
+    }
+    if (gig.startTime) {
+      rows.push(`<div class="meta-row"><strong>Time:</strong> ${gig.startTime}${gig.endTime ? ' – ' + gig.endTime : ''}</div>`);
+    } else {
+      rows.push(`<div class="meta-row"><strong>Time:</strong> Flexible</div>`);
+    }
+    const loc = gig.locationType === 'remote' ? 'Remote' : (gig.locationAddress || 'In-person');
+    rows.push(`<div class="meta-row"><strong>Location:</strong> ${loc}</div>`);
+    if (gig.category?.name) rows.push(`<div class="meta-row"><strong>Category:</strong> ${gig.category.name}</div>`);
+    document.getElementById('eventMeta').innerHTML = rows.join('');
+
+    // QR code
+    if (qr.qrCode) {
+      document.getElementById('qrImg').src = qr.qrCode;
+      document.getElementById('qrImg').style.display = 'block';
+    } else {
+      // No qrcode package installed — show the URL they should navigate to
+      document.getElementById('qrWrap').style.display = 'none';
+      document.getElementById('qrUrl').textContent = qr.checkinUrl;
+      document.getElementById('qrUrl').style.display = 'block';
+    }
+  } catch (e) {
+    document.getElementById('loadingMsg').style.display = 'none';
+    document.getElementById('errorMsg').textContent = e.message || 'Could not load event details.';
+    document.getElementById('errorMsg').style.display = 'block';
+  }
+}
+
+load();
+</script>
+</body>
+</html>

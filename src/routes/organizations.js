@@ -421,20 +421,33 @@ router.get('/me/gigs-stats', requireAuth, requireRole('org'), async (req, res, n
       order: [['startDate', 'DESC']],
     });
 
+    const volInclude = [{
+      model: User, as: 'volunteer', attributes: ['id', 'email', 'avatarUrl'],
+      include: [{ model: VolunteerProfile, as: 'volunteerProfile', attributes: ['firstName', 'lastName', 'skills', 'languages', 'country'] }],
+    }];
+
     const gigsWithStats = await Promise.all(gigs.map(async (g) => {
-      const [totalApplicants, approvedApplicants, attendanceCount] = await Promise.all([
-        Application.count({ where: { gigId: g.id } }),
-        Application.count({ where: { gigId: g.id, status: 'approved' } }),
-        Attendance.count({ where: { gigId: g.id } }),
+      const [attendance, approvedApps] = await Promise.all([
+        Attendance.findAll({
+          where: { gigId: g.id },
+          include: volInclude,
+          order: [['checkInAt', 'DESC']],
+        }),
+        Application.findAll({
+          where: { gigId: g.id, status: 'approved' },
+          include: volInclude,
+        }),
       ]);
       const isPast = new Date(g.endDate) < new Date();
       return {
         ...g.toJSON(),
-        totalApplicants,
-        approvedApplicants,
-        attendanceCount,
+        attendance: attendance.map(a => a.toJSON()),
+        approvedVolunteers: approvedApps.map(a => ({ volunteerId: a.volunteerId, volunteer: a.volunteer })),
+        totalApplicants: await Application.count({ where: { gigId: g.id } }),
+        approvedApplicants: approvedApps.length,
+        attendanceCount: attendance.filter(a => a.checkInTime).length,
         isPast,
-        spotsRemaining: g.maxVolunteers ? Math.max(0, g.maxVolunteers - approvedApplicants) : null,
+        spotsRemaining: g.maxVolunteers ? Math.max(0, g.maxVolunteers - approvedApps.length) : null,
       };
     }));
 
