@@ -23,6 +23,9 @@ const csrRoutes = require('./src/routes/csr');
 const publicRoutes = require('./src/routes/public');
 const uploadRoutes = require('./src/routes/uploads');
 const messageRoutes = require('./src/routes/messages');
+const attendanceRoutes = require('./src/routes/attendance');
+const orgRolesRoutes = require('./src/routes/orgRoles');
+const exportRoutes = require('./src/routes/export');
 
 const app = express();
 
@@ -46,6 +49,9 @@ app.use('/api/csr', csrRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api/org-roles', orgRolesRoutes);
+app.use('/api/export', exportRoutes);
 
 app.use('/api', auditLog);
 
@@ -100,6 +106,13 @@ const pages = [
   ['/gigs', 'pages/gig-list.html'],
   ['/gigs/:id', 'pages/gig-detail.html'],
 
+  // ── QR Check-in ──
+  ['/checkin/:token', 'pages/checkin.html'],
+  ['/org/attendance/:gigId', 'pages/org-attendance.html'],
+  ['/org/roles', 'pages/org-roles.html'],
+  ['/admin/export', 'pages/admin-export.html'],
+  ['/admin/attendance/:gigId', 'pages/admin-attendance.html'],
+
   // ── Admin panel ──
   ['/admin', 'pages/admin-dashboard.html'],
   ['/admin/users', 'pages/admin-users.html'],
@@ -144,6 +157,9 @@ async function startServer() {
       console.log(`\n  ImpactCircle running → http://localhost:${PORT}`);
       console.log(`  Environment: ${process.env.NODE_ENV || 'development'}\n`);
       require('./src/services/autoApproval').start();
+      require('./src/services/autoCheckout').start();
+      require('./src/services/backgroundCheckReminder').start();
+      require('./src/services/activityReminder').start();
     });
   }
 }

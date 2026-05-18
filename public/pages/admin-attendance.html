@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gig Attendance — Admin — ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    .page-container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    .page-header h1 { font-size: 1.5rem; color: #1e293b; margin-bottom: 8px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: #fff; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .stat-card .value { font-size: 1.8rem; font-weight: 700; color: #6366f1; }
+    .stat-card .label { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
+    .section { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .section h2 { font-size: 1.1rem; margin-bottom: 16px; color: #1e293b; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
+    th { background: #f8fafc; font-weight: 600; color: #475569; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .badge-green { background: #dcfce7; color: #166534; }
+    .badge-red { background: #fef2f2; color: #991b1b; }
+    .gig-info { background: #f8fafc; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+    .gig-info h2 { margin-bottom: 8px; }
+    .gig-info p { color: #475569; font-size: 0.9rem; margin: 4px 0; }
+  </style>
+</head>
+<body>
+  <div id="nav-placeholder"></div>
+  <div class="page-container">
+    <div class="page-header">
+      <h1>Gig Attendance Details</h1>
+    </div>
+
+    <div class="gig-info" id="gigInfo"></div>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="value" id="statSignedUp">0</div><div class="label">Signed Up</div></div>
+      <div class="stat-card"><div class="value" id="statAttended">0</div><div class="label">Attended</div></div>
+      <div class="stat-card"><div class="value" id="statAbsent">0</div><div class="label">Absent</div></div>
+      <div class="stat-card"><div class="value" id="statHours">0</div><div class="label">Total Hours</div></div>
+    </div>
+
+    <div class="section">
+      <h2>Attendance Records</h2>
+      <table>
+        <thead><tr><th>Volunteer</th><th>Email</th><th>Check-in</th><th>Check-out</th><th>Hours</th><th>Auto?</th></tr></thead>
+        <tbody id="attendanceTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/nav.js"></script>
+  <script>
+    const authToken = localStorage.getItem('ic_token');
+    const headers = { Authorization: `Bearer ${authToken}` };
+    const gigId = window.location.pathname.split('/admin/attendance/')[1];
+
+    async function load() {
+      const resp = await fetch(`/api/admin/gigs/${gigId}/attendance`, { headers });
+      const data = await resp.json();
+      if (!data.success) { document.getElementById('gigInfo').innerHTML = '<p>Error loading data.</p>'; return; }
+
+      const { gig, attendances, stats } = data.data;
+      document.getElementById('gigInfo').innerHTML = `
+        <h2>${gig.title}</h2>
+        <p><strong>Organization:</strong> ${gig.org?.orgName || 'Unknown'}</p>
+        <p><strong>Dates:</strong> ${gig.startDate} — ${gig.endDate}</p>
+        <p><strong>Category:</strong> ${gig.category?.name || ''}</p>
+      `;
+      document.getElementById('statSignedUp').textContent = stats.totalSignedUp;
+      document.getElementById('statAttended').textContent = stats.totalAttended;
+      document.getElementById('statAbsent').textContent = stats.totalAbsent;
+      document.getElementById('statHours').textContent = parseFloat(stats.totalHours).toFixed(1);
+
+      document.getElementById('attendanceTable').innerHTML = attendances.map(a => {
+        const name = a.volunteer?.volunteerProfile ? `${a.volunteer.volunteerProfile.firstName || ''} ${a.volunteer.volunteerProfile.lastName || ''}` : 'Unknown';
+        return `<tr>
+          <td>${name}</td>
+          <td>${a.volunteer?.email || ''}</td>
+          <td>${new Date(a.checkInAt).toLocaleString()}</td>
+          <td>${a.checkOutAt ? new Date(a.checkOutAt).toLocaleString() : '<span class="badge badge-green">Active</span>'}</td>
+          <td>${a.hoursWorked || '—'}</td>
+          <td>${a.autoCheckedOut ? 'Yes' : 'No'}</td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="6" style="text-align:center;color:#94a3b8;">No records.</td></tr>';
+    }
+
+    load();
+  </script>
+</body>
+</html>

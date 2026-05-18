@@ -4,7 +4,9 @@ const fs = require('fs');
 const multer = require('multer');
 const { fn, col, Op } = require('sequelize');
 const { requireAuth, requireRole } = require('../middleware/auth');
-const { Organization, Gig, Application, Task, HourRecord, Category, User, VolunteerProfile, Notification } = require('../models/index');
+const { Organization, Gig, Application, Task, HourRecord, Category, User, VolunteerProfile, Notification, Attendance } = require('../models/index');
+const { sendEmail } = require('../services/email');
+const { createNotification } = require('../services/notifications');
 
 const logoStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -318,6 +320,136 @@ router.post('/me/announcements', requireAuth, requireRole('org'), async (req, re
       success: true,
       message: `Announcement sent to ${volunteerIds.length} volunteer${volunteerIds.length !== 1 ? 's' : ''}.`,
       data: { recipientCount: volunteerIds.length },
+    });
+  } catch (err) { next(err); }
+});
+
+/* POST /api/orgs/me/email-volunteers — send email + notification to all org's volunteers */
+router.post('/me/email-volunteers', requireAuth, requireRole('org'), async (req, res, next) => {
+  try {
+    const { subject, body } = req.body;
+    if (!subject || !body)
+      return res.status(400).json({ success: false, message: 'subject and body are required.' });
+
+    const org = await Organization.findOne({ where: { userId: req.user.id } });
+    if (!org) return res.status(404).json({ success: false, message: 'Organization not found.' });
+
+    const gigs = await Gig.findAll({ where: { orgId: org.id }, attributes: ['id'] });
+    const gigIds = gigs.map(g => g.id);
+    if (!gigIds.length)
+      return res.json({ success: true, message: 'No volunteers to email.', data: { recipientCount: 0 } });
+
+    const applications = await Application.findAll({
+      where: { gigId: { [Op.in]: gigIds }, status: 'approved' },
+      attributes: ['volunteerId'],
+    });
+    const volunteerIds = [...new Set(applications.map(a => a.volunteerId))];
+    if (!volunteerIds.length)
+      return res.json({ success: true, message: 'No approved volunteers to email.', data: { recipientCount: 0 } });
+
+    const volunteers = await User.findAll({
+      where: { id: { [Op.in]: volunteerIds } },
+      attributes: ['id', 'email'],
+    });
+
+    await Notification.bulkCreate(volunteers.map(u => ({
+      userId: u.id,
+      message: `${org.orgName}: ${subject} — ${body.substring(0, 100)}${body.length > 100 ? '…' : ''}`,
+      type: 'general',
+      link: null,
+    })));
+
+    for (const u of volunteers) {
+      try {
+        await sendEmail(u.email, `${org.orgName}: ${subject}`,
+          `<h2>${subject}</h2><p>${body.replace(/\n/g, '<br>')}</p><p style="color:#64748b;font-size:13px;">Sent by ${org.orgName} via ImpactCircle</p>`);
+      } catch (_) {}
+    }
+
+    res.json({
+      success: true,
+      message: `Email sent to ${volunteers.length} volunteers.`,
+      data: { recipientCount: volunteers.length },
+    });
+  } catch (err) { next(err); }
+});
+
+/* GET /api/orgs/me/gigs-stats — get all gigs with applicant counts and attendance */
+router.get('/me/gigs-stats', requireAuth, requireRole('org'), async (req, res, next) => {
+  try {
+    const org = await Organization.findOne({ where: { userId: req.user.id } });
+    if (!org) return res.status(404).json({ success: false, message: 'Organization not found.' });
+
+    const gigs = await Gig.findAll({
+      where: { orgId: org.id },
+      include: [{ model: Category, as: 'category', attributes: ['name', 'colorHex', 'icon'] }],
+      order: [['startDate', 'DESC']],
+    });
+
+    const gigsWithStats = await Promise.all(gigs.map(async (g) => {
+      const [totalApplicants, approvedApplicants, attendanceCount] = await Promise.all([
+        Application.count({ where: { gigId: g.id } }),
+        Application.count({ where: { gigId: g.id, status: 'approved' } }),
+        Attendance.count({ where: { gigId: g.id } }),
+      ]);
+      const isPast = new Date(g.endDate) < new Date();
+      return {
+        ...g.toJSON(),
+        totalApplicants,
+        approvedApplicants,
+        attendanceCount,
+        isPast,
+        spotsRemaining: g.maxVolunteers ? Math.max(0, g.maxVolunteers - approvedApplicants) : null,
+      };
+    }));
+
+    res.json({ success: true, data: { gigs: gigsWithStats } });
+  } catch (err) { next(err); }
+});
+
+/* GET /api/orgs/me/attendance/:gigId — org attendance tracking for a specific gig */
+router.get('/me/attendance/:gigId', requireAuth, requireRole('org'), async (req, res, next) => {
+  try {
+    const org = await Organization.findOne({ where: { userId: req.user.id } });
+    if (!org) return res.status(404).json({ success: false, message: 'Organization not found.' });
+
+    const gig = await Gig.findOne({ where: { id: req.params.gigId, orgId: org.id } });
+    if (!gig) return res.status(404).json({ success: false, message: 'Gig not found.' });
+
+    const attendances = await Attendance.findAll({
+      where: { gigId: gig.id },
+      include: [{
+        model: User, as: 'volunteer', attributes: ['id', 'email', 'avatarUrl'],
+        include: [{ model: VolunteerProfile, as: 'volunteerProfile', attributes: ['firstName', 'lastName', 'phone', 'skills'] }],
+      }],
+      order: [['checkInAt', 'DESC']],
+    });
+
+    const tasks = await Task.findAll({
+      where: { gigId: gig.id, status: { [Op.in]: ['accepted', 'inProgress'] } },
+      include: [{
+        model: User, as: 'volunteer', attributes: ['id', 'email'],
+        include: [{ model: VolunteerProfile, as: 'volunteerProfile', attributes: ['firstName', 'lastName'] }],
+      }],
+    });
+
+    const attendedIds = attendances.map(a => a.volunteerId);
+    const absentees = tasks.filter(t => !attendedIds.includes(t.volunteerId));
+
+    res.json({
+      success: true,
+      data: {
+        gig: { id: gig.id, title: gig.title, startDate: gig.startDate, endDate: gig.endDate, startTime: gig.startTime, endTime: gig.endTime },
+        attendances,
+        absentees,
+        stats: {
+          totalSignedUp: tasks.length,
+          totalAttended: attendances.length,
+          currentlyCheckedIn: attendances.filter(a => !a.checkOutAt).length,
+          totalAbsent: absentees.length,
+          totalHours: parseFloat(attendances.reduce((sum, a) => sum + (a.hoursWorked || 0), 0).toFixed(2)),
+        },
+      },
     });
   } catch (err) { next(err); }
 });

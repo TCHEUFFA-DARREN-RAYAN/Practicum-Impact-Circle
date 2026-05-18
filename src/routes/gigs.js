@@ -101,7 +101,14 @@ router.get('/:id', async (req, res, next) => {
       ],
     });
     if (!gig) return res.status(404).json({ success: false, message: 'Gig not found.' });
-    res.json({ success: true, data: { gig } });
+
+    const approvedCount = await Application.count({ where: { gigId: gig.id, status: 'approved' } });
+    const gigData = gig.toJSON();
+    gigData.approvedVolunteers = approvedCount;
+    gigData.spotsRemaining = gig.maxVolunteers ? Math.max(0, gig.maxVolunteers - approvedCount) : null;
+    gigData.isFull = gig.maxVolunteers ? approvedCount >= gig.maxVolunteers : false;
+
+    res.json({ success: true, data: { gig: gigData } });
   } catch (err) { next(err); }
 });
 
@@ -201,6 +208,12 @@ router.post('/:id/apply', requireAuth, requireRole('volunteer'), [
     if (!gig) return res.status(404).json({ success: false, message: 'Gig not found.' });
     if (gig.status !== 'open') return res.status(400).json({ success: false, message: 'This gig is no longer accepting applications.' });
 
+    if (gig.maxVolunteers) {
+      const approvedCount = await Application.count({ where: { gigId: gig.id, status: 'approved' } });
+      if (approvedCount >= gig.maxVolunteers)
+        return res.status(400).json({ success: false, message: `This gig has reached its volunteer limit (${gig.maxVolunteers}).` });
+    }
+
     if (gig.verifiedOnly) {
       const user = await User.findByPk(req.user.id);
       if (user.verificationStatus !== 'verified')
@@ -259,6 +272,13 @@ router.patch('/applications/:appId/decide', requireAuth, requireRole('org'), [
         applicationId: app.id, gigId: app.gigId,
         volunteerId: app.volunteerId, orgId: org.id, status: 'accepted',
       });
+
+      if (app.gig.maxVolunteers) {
+        const approvedCount = await Application.count({ where: { gigId: app.gigId, status: 'approved' } });
+        if (approvedCount >= app.gig.maxVolunteers) {
+          await Gig.update({ status: 'closed' }, { where: { id: app.gigId } });
+        }
+      }
     }
 
     const volUser = await User.findByPk(app.volunteerId);

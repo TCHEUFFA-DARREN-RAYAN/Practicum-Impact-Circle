@@ -146,6 +146,33 @@ const templates = {
       <p style="color:#64748b;font-size:13px;">This link expires in one hour. If you did not request a reset, you can ignore this email.</p>
     `,
   }),
+  backgroundCheckReminder: (name, isExpired) => ({
+    subject: isExpired ? 'Your background check has expired' : 'Reminder: Complete your background check',
+    html: `
+      <h2>Hi ${name},</h2>
+      <p>${isExpired
+        ? 'Your background check has expired. Some gigs require a valid background check — please renew it.'
+        : 'To access all volunteer opportunities on ImpactCircle, please complete your background check.'
+      }</p>
+      <p>Upload your document in your profile settings.</p>
+      <p style="color:#64748b;font-size:13px;">This is an automated reminder from ImpactCircle.</p>
+    `,
+  }),
+  activityReminder: (name, gigTitle, date, time, location, orgName) => ({
+    subject: `Reminder: "${gigTitle}" starts tomorrow!`,
+    html: `
+      <h2>Hi ${name},</h2>
+      <p>This is a friendly reminder that <strong>${gigTitle}</strong> starts tomorrow (${date}).</p>
+      ${time ? `<p><strong>Time:</strong> ${time}</p>` : ''}
+      ${location ? `<p><strong>Location:</strong> ${location}</p>` : ''}
+      <p><strong>Organization:</strong> ${orgName}</p>
+      <p style="color:#64748b;font-size:13px;">This is an automated reminder from ImpactCircle.</p>
+    `,
+  }),
+  massEmail: (subject, body, senderName) => ({
+    subject,
+    html: `<h2>${subject}</h2><p>${body.replace(/\n/g, '<br>')}</p><p style="color:#64748b;font-size:13px;">Sent by ${senderName} via ImpactCircle</p>`,
+  }),
 };
 
 module.exports = { sendEmail, templates, publicAppUrl, resetTransporterCache };

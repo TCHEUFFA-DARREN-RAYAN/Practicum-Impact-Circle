@@ -96,13 +96,15 @@ function renderGrid() {
   const first = new Date(year, month-1, 1).getDay();
   const days = new Date(year, month, 0).getDate();
   const td = new Date(), isToday = d => td.getFullYear()===year&&td.getMonth()+1===month&&td.getDate()===d;
+  const isPast = d => new Date(year, month-1, d) < new Date(td.getFullYear(), td.getMonth(), td.getDate());
   let html = DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
   for (let i=0; i<first; i++) html += '<div class="cal-cell empty"></div>';
   for (let d=1; d<=days; d++) {
     const k = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const gigs = calData[k] || [];
     const vols = gigs.reduce((s,g)=>s+(g.Tasks||[]).length, 0);
-    html += `<div class="cal-cell${isToday(d)?' today':''}${sel===k?' selected':''}" onclick="selectDate('${k}')">
+    const pastStyle = isPast(d) ? 'opacity:0.5;' : '';
+    html += `<div class="cal-cell${isToday(d)?' today':''}${sel===k?' selected':''}" style="${pastStyle}" onclick="selectDate('${k}')">
       <div class="cal-dn">${d}</div>
       ${gigs.length?`<div class="cal-dots">${gigs.slice(0,4).map(g=>`<div class="cal-dot${g.isFull?' full':''}"></div>`).join('')}</div><div class="cal-cnt">${gigs.length}g·${vols}v</div>`:''}
     </div>`;

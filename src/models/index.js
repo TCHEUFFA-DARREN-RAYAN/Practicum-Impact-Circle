@@ -1,5 +1,6 @@
 const { DataTypes, Sequelize: Sq } = require('sequelize');
 const bcrypt = require('bcryptjs');
+const { v4: uuidv4 } = require('uuid');
 const { sequelize } = require('../config/db');
 
 /* ───────────────────────────────── USER ──────────────────────────────────── */
@@ -55,6 +56,11 @@ const VolunteerProfile = sequelize.define('VolunteerProfile', {
   hasDrivingLicense:            { type: DataTypes.BOOLEAN, defaultValue: false },
   province:                     { type: DataTypes.STRING(100), allowNull: true },
   city:                         { type: DataTypes.STRING(100), allowNull: true },
+  gender:                       { type: DataTypes.STRING(30), allowNull: true },
+  country:                      { type: DataTypes.STRING(100), allowNull: true },
+  backgroundCheckStatus:        { type: DataTypes.ENUM('not_submitted', 'pending', 'approved', 'expired'), defaultValue: 'not_submitted' },
+  backgroundCheckExpiry:        { type: DataTypes.DATEONLY, allowNull: true },
+  backgroundCheckReminded:      { type: DataTypes.DATE, allowNull: true },
 });
 
 /* ────────────────────── VOLUNTEER CATEGORY HOURS ────────────────────────── */
@@ -232,7 +238,7 @@ const Notification = sequelize.define('Notification', {
   id:      { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   userId:  { type: DataTypes.INTEGER, allowNull: false },
   message: { type: DataTypes.TEXT, allowNull: false },
-  type:    { type: DataTypes.ENUM('verification', 'application', 'task', 'points', 'reward', 'general'), defaultValue: 'general' },
+  type:    { type: DataTypes.ENUM('verification', 'application', 'task', 'points', 'reward', 'general', 'attendance', 'reminder'), defaultValue: 'general' },
   link:    { type: DataTypes.STRING(255) },
   isRead:  { type: DataTypes.BOOLEAN, defaultValue: false },
 });
@@ -276,6 +282,43 @@ const Announcement = sequelize.define('Announcement', {
   sentBy:      { type: DataTypes.INTEGER, allowNull: true },
   recipientCount: { type: DataTypes.INTEGER, defaultValue: 0 },
 }, { updatedAt: false });
+
+/* ─────────────────────────── ATTENDANCE (QR Check-in/out) ────────────────── */
+const Attendance = sequelize.define('Attendance', {
+  id:            { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  gigId:        { type: DataTypes.INTEGER, allowNull: false },
+  volunteerId:  { type: DataTypes.INTEGER, allowNull: false },
+  checkInAt:    { type: DataTypes.DATE, allowNull: false },
+  checkOutAt:   { type: DataTypes.DATE, allowNull: true },
+  hoursWorked:  { type: DataTypes.FLOAT, allowNull: true },
+  autoCheckedOut: { type: DataTypes.BOOLEAN, defaultValue: false },
+});
+
+/* ─────────────────────────── GIG QR CODE ─────────────────────────────────── */
+const GigQrCode = sequelize.define('GigQrCode', {
+  id:       { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  gigId:    { type: DataTypes.INTEGER, allowNull: false, unique: true },
+  token:    { type: DataTypes.STRING(64), allowNull: false, unique: true, defaultValue: () => uuidv4() },
+  isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
+});
+
+/* ─────────────────────────── ORG ROLE (Role-based access) ────────────────── */
+const OrgRole = sequelize.define('OrgRole', {
+  id:          { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  orgId:       { type: DataTypes.INTEGER, allowNull: false },
+  name:        { type: DataTypes.STRING(100), allowNull: false },
+  permissions: { type: DataTypes.JSON, defaultValue: [] },
+});
+
+/* ─────────────────────────── ORG MEMBER ──────────────────────────────────── */
+const OrgMember = sequelize.define('OrgMember', {
+  id:        { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  orgId:     { type: DataTypes.INTEGER, allowNull: false },
+  userId:    { type: DataTypes.INTEGER, allowNull: false },
+  roleId:    { type: DataTypes.INTEGER, allowNull: true },
+  inviteEmail: { type: DataTypes.STRING(191), allowNull: true },
+  status:    { type: DataTypes.ENUM('active', 'invited', 'removed'), defaultValue: 'invited' },
+});
 
 /* ─────────────────────────── ASSOCIATIONS ───────────────────────────────── */
 User.hasOne(VolunteerProfile, { foreignKey: 'userId', as: 'volunteerProfile' });
@@ -335,6 +378,24 @@ ChatMessage.belongsTo(Conversation, { foreignKey: 'conversationId' });
 User.hasMany(ChatMessage, { foreignKey: 'senderId', as: 'sentMessages' });
 ChatMessage.belongsTo(User, { foreignKey: 'senderId', as: 'sender' });
 
+/* Attendance */
+Gig.hasMany(Attendance, { foreignKey: 'gigId', as: 'attendances' });
+Attendance.belongsTo(Gig, { foreignKey: 'gigId', as: 'gig' });
+User.hasMany(Attendance, { foreignKey: 'volunteerId', as: 'attendances' });
+Attendance.belongsTo(User, { foreignKey: 'volunteerId', as: 'volunteer' });
+
+/* GigQrCode */
+Gig.hasOne(GigQrCode, { foreignKey: 'gigId', as: 'qrCode' });
+GigQrCode.belongsTo(Gig, { foreignKey: 'gigId' });
+
+/* OrgRole & OrgMember */
+Organization.hasMany(OrgRole, { foreignKey: 'orgId', as: 'roles' });
+OrgRole.belongsTo(Organization, { foreignKey: 'orgId' });
+Organization.hasMany(OrgMember, { foreignKey: 'orgId', as: 'members' });
+OrgMember.belongsTo(Organization, { foreignKey: 'orgId' });
+OrgMember.belongsTo(OrgRole, { foreignKey: 'roleId', as: 'role' });
+OrgMember.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
 module.exports = {
   sequelize,
   User,
@@ -355,4 +416,8 @@ module.exports = {
   Conversation,
   ChatMessage,
   Announcement,
+  Attendance,
+  GigQrCode,
+  OrgRole,
+  OrgMember,
 };

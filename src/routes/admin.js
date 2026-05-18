@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const { fn, col, literal, Op } = require('sequelize');
 const { requireAuth, requireRole } = require('../middleware/auth');
-const { User, VolunteerProfile, Organization, Category, Gig, Application, Reward, Task, HourRecord, AuditLog, Notification, Announcement } = require('../models/index');
+const { User, VolunteerProfile, Organization, Category, Gig, Application, Reward, Task, HourRecord, AuditLog, Notification, Announcement, Attendance } = require('../models/index');
 const { createNotification } = require('../services/notifications');
 const { sendEmail, templates } = require('../services/email');
 
@@ -539,6 +539,83 @@ router.post('/announcements', ...adminAuth, async (req, res, next) => {
     });
 
     res.status(201).json({ success: true, message: `Announcement sent to ${targets.length} users.`, data: { announcement } });
+  } catch (err) { next(err); }
+});
+
+/* ── Mass Email to All Volunteers ── */
+router.post('/email-volunteers', ...adminAuth, async (req, res, next) => {
+  try {
+    const { subject, body: emailBody, targetGroup = 'volunteers' } = req.body;
+    if (!subject || !emailBody)
+      return res.status(400).json({ success: false, message: 'subject and body are required.' });
+
+    const where = {};
+    if (targetGroup === 'volunteers') where.role = 'volunteer';
+    else if (targetGroup === 'orgs') where.role = 'org';
+    else where.role = { [Op.in]: ['volunteer', 'org'] };
+
+    const users = await User.findAll({ where, attributes: ['id', 'email'] });
+
+    if (users.length > 0) {
+      await Notification.bulkCreate(users.map(u => ({
+        userId: u.id,
+        message: `${subject}: ${emailBody.substring(0, 120)}${emailBody.length > 120 ? '…' : ''}`,
+        type: 'general',
+        link: null,
+      })));
+
+      for (const u of users) {
+        try {
+          await sendEmail(u.email, subject, `<h2>${subject}</h2><p>${emailBody.replace(/\n/g, '<br>')}</p><p style="color:#64748b;font-size:13px;">Sent by ImpactCircle Admin</p>`);
+        } catch (_) {}
+      }
+    }
+
+    res.json({ success: true, message: `Email sent to ${users.length} users.`, data: { recipientCount: users.length } });
+  } catch (err) { next(err); }
+});
+
+/* ── Gig attendance overview (admin) ── */
+router.get('/gigs/:id/attendance', ...adminAuth, async (req, res, next) => {
+  try {
+    const gig = await Gig.findByPk(req.params.id, {
+      include: [
+        { model: Organization, as: 'org', attributes: ['orgName'] },
+        { model: Category, as: 'category', attributes: ['name'] },
+      ],
+    });
+    if (!gig) return res.status(404).json({ success: false, message: 'Gig not found.' });
+
+    const attendances = await Attendance.findAll({
+      where: { gigId: gig.id },
+      include: [{
+        model: User, as: 'volunteer', attributes: ['id', 'email', 'avatarUrl'],
+        include: [{ model: VolunteerProfile, as: 'volunteerProfile', attributes: ['firstName', 'lastName', 'phone'] }],
+      }],
+      order: [['checkInAt', 'DESC']],
+    });
+
+    const tasks = await Task.findAll({
+      where: { gigId: gig.id, status: { [Op.in]: ['accepted', 'inProgress'] } },
+      attributes: ['volunteerId'],
+    });
+
+    const attendedIds = attendances.map(a => a.volunteerId);
+    const absentVolunteerIds = tasks.filter(t => !attendedIds.includes(t.volunteerId)).map(t => t.volunteerId);
+
+    res.json({
+      success: true,
+      data: {
+        gig,
+        attendances,
+        stats: {
+          totalSignedUp: tasks.length,
+          totalAttended: attendances.length,
+          totalAbsent: absentVolunteerIds.length,
+          totalHours: attendances.reduce((sum, a) => sum + (a.hoursWorked || 0), 0),
+        },
+      },
+    });
   } catch (err) { next(err); }
 });
 

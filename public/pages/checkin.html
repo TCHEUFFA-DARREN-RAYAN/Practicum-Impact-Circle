@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Check-in — ImpactCircle</title>
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    .checkin-container { max-width: 600px; margin: 40px auto; padding: 24px; }
+    .event-card { background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); padding: 32px; text-align: center; }
+    .event-card h1 { font-size: 1.5rem; margin-bottom: 8px; color: #1e293b; }
+    .event-card .org-name { color: #6366f1; font-weight: 600; margin-bottom: 16px; }
+    .event-details { text-align: left; margin: 20px 0; padding: 16px; background: #f8fafc; border-radius: 12px; }
+    .event-details p { margin: 8px 0; color: #475569; font-size: 0.95rem; }
+    .event-details strong { color: #1e293b; }
+    .checkin-btn { display: inline-block; padding: 16px 48px; background: #16a34a; color: #fff; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .checkin-btn:hover { background: #15803d; transform: translateY(-1px); }
+    .checkin-btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none; }
+    .checkout-btn { background: #dc2626; }
+    .checkout-btn:hover { background: #b91c1c; }
+    .status-msg { margin-top: 16px; padding: 12px; border-radius: 8px; font-weight: 500; }
+    .status-msg.success { background: #dcfce7; color: #166534; }
+    .status-msg.error { background: #fef2f2; color: #991b1b; }
+    .status-msg.info { background: #dbeafe; color: #1e40af; }
+    .login-prompt { margin-top: 20px; padding: 16px; background: #fef3c7; border-radius: 8px; color: #92400e; }
+    .login-prompt a { color: #d97706; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="checkin-container">
+    <div class="event-card" id="eventCard">
+      <div id="loading"><p>Loading event details...</p></div>
+      <div id="eventContent" style="display:none;">
+        <h1 id="eventTitle"></h1>
+        <p class="org-name" id="orgName"></p>
+        <div class="event-details">
+          <p><strong>Date:</strong> <span id="eventDate"></span></p>
+          <p><strong>Time:</strong> <span id="eventTime"></span></p>
+          <p><strong>Location:</strong> <span id="eventLocation"></span></p>
+          <p><strong>Category:</strong> <span id="eventCategory"></span></p>
+          <p id="eventDesc"></p>
+        </div>
+        <div id="actionArea"></div>
+        <div id="statusMsg"></div>
+      </div>
+      <div id="errorContent" style="display:none;">
+        <h2 style="color:#dc2626;">Error</h2>
+        <p id="errorMsg"></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    const token = window.location.pathname.split('/checkin/')[1];
+    const user = JSON.parse(localStorage.getItem('ic_user') || 'null');
+    const authToken = localStorage.getItem('ic_token');
+
+    async function loadEvent() {
+      try {
+        const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
+        const resp = await fetch(`/api/attendance/checkin/${token}`, { headers });
+        const data = await resp.json();
+
+        if (!data.success) {
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('errorContent').style.display = 'block';
+          document.getElementById('errorMsg').textContent = data.message;
+          return;
+        }
+
+        const gig = data.data.gig;
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('eventContent').style.display = 'block';
+        document.getElementById('eventTitle').textContent = gig.title;
+        document.getElementById('orgName').textContent = gig.organization?.orgName || '';
+        document.getElementById('eventDate').textContent = `${gig.startDate} — ${gig.endDate}`;
+        document.getElementById('eventTime').textContent = gig.startTime ? `${gig.startTime} - ${gig.endTime || 'End'}` : 'Flexible';
+        document.getElementById('eventLocation').textContent = gig.locationType === 'remote' ? 'Remote' : (gig.locationAddress || 'In-person');
+        document.getElementById('eventCategory').textContent = gig.category?.name || '';
+        document.getElementById('eventDesc').textContent = gig.description?.substring(0, 200) || '';
+
+        const actionArea = document.getElementById('actionArea');
+
+        if (!user || !authToken) {
+          actionArea.innerHTML = `
+            <div class="login-prompt">
+              <p>Please <a href="/login?redirect=/checkin/${token}">log in</a> to check in to this event.</p>
+            </div>`;
+          return;
+        }
+
+        if (user.role !== 'volunteer') {
+          actionArea.innerHTML = '<div class="status-msg info">Only volunteers can check in to events.</div>';
+          return;
+        }
+
+        if (data.data.alreadyCheckedIn) {
+          actionArea.innerHTML = `
+            <button class="checkin-btn checkout-btn" onclick="checkOut(${gig.id})">Check Out</button>
+            <div class="status-msg info" style="margin-top:12px;">You are currently checked in.</div>`;
+        } else {
+          actionArea.innerHTML = `<button class="checkin-btn" onclick="checkIn()">Check In</button>`;
+        }
+      } catch (err) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('errorContent').style.display = 'block';
+        document.getElementById('errorMsg').textContent = 'Failed to load event details.';
+      }
+    }
+
+    async function checkIn() {
+      try {
+        const resp = await fetch(`/api/attendance/checkin/${token}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+        });
+        const data = await resp.json();
+        const statusMsg = document.getElementById('statusMsg');
+        if (data.success) {
+          statusMsg.className = 'status-msg success';
+          statusMsg.textContent = 'Successfully checked in! You will be automatically checked out at the end of the event.';
+          document.getElementById('actionArea').innerHTML = `
+            <button class="checkin-btn checkout-btn" onclick="checkOut(${data.data.attendance.gigId})">Check Out Early</button>`;
+        } else {
+          statusMsg.className = 'status-msg error';
+          statusMsg.textContent = data.message;
+        }
+      } catch (err) {
+        document.getElementById('statusMsg').className = 'status-msg error';
+        document.getElementById('statusMsg').textContent = 'Check-in failed. Please try again.';
+      }
+    }
+
+    async function checkOut(gigId) {
+      try {
+        const resp = await fetch(`/api/attendance/checkout/${gigId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+        });
+        const data = await resp.json();
+        const statusMsg = document.getElementById('statusMsg');
+        if (data.success) {
+          statusMsg.className = 'status-msg success';
+          statusMsg.textContent = `Checked out! Hours logged: ${data.data.hoursWorked} hours.`;
+          document.getElementById('actionArea').innerHTML = '<div class="status-msg success">Session complete. Thank you!</div>';
+        } else {
+          statusMsg.className = 'status-msg error';
+          statusMsg.textContent = data.message;
+        }
+      } catch (err) {
+        document.getElementById('statusMsg').className = 'status-msg error';
+        document.getElementById('statusMsg').textContent = 'Check-out failed. Please try again.';
+      }
+    }
+
+    loadEvent();
+  </script>
+</body>
+</html>

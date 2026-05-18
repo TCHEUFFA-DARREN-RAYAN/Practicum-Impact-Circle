@@ -158,7 +158,7 @@ async function loadList(p) {
         <td style="font-size:0.8rem;color:var(--text-muted)">${g.startDate} → ${g.endDate}</td>
         <td style="text-align:center;color:var(--text-muted)">${g.viewCount || 0}</td>
         <td><span class="badge ${statusClass}">${g.status}</span></td>
-        <td><a class="btn btn-sm btn-secondary" href="/gigs/${g.id}">View</a></td>
+        <td><a class="btn btn-sm btn-secondary" href="/gigs/${g.id}">View</a> <a class="btn btn-sm btn-secondary" href="/admin/attendance/${g.id}">Attendance</a></td>
       </tr>`;
     }).join('') : '<tr><td colspan="7" class="text-center text-muted" style="padding:2rem">No gigs found.</td></tr>';
   } catch (e) { Toast.error(e.message); }
@@ -189,13 +189,15 @@ function renderCalGrid() {
   const first = new Date(calYear, calMonth-1, 1).getDay();
   const days = new Date(calYear, calMonth, 0).getDate();
   const td = new Date(), isToday = d => td.getFullYear()===calYear&&td.getMonth()+1===calMonth&&td.getDate()===d;
+  const isPast = d => new Date(calYear, calMonth-1, d) < new Date(td.getFullYear(), td.getMonth(), td.getDate());
   let html = DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
   for (let i=0; i<first; i++) html += '<div class="cal-cell empty"></div>';
   for (let d=1; d<=days; d++) {
     const k = `${calYear}-${String(calMonth).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const gigs = calData[k] || [];
     const vols = gigs.reduce((s,g)=>s+(g.Tasks||[]).length, 0);
-    html += `<div class="cal-cell${isToday(d)?' today':''}${calSel===k?' selected':''}" onclick="calSelectDate('${k}')">
+    const pastStyle = isPast(d) ? 'opacity:0.5;' : '';
+    html += `<div class="cal-cell${isToday(d)?' today':''}${calSel===k?' selected':''}" style="${pastStyle}" onclick="calSelectDate('${k}')">
       <div class="cal-dn">${d}</div>
       ${gigs.length?`<div class="cal-dots">${gigs.slice(0,4).map(g=>`<div class="cal-dot${g.isFull?' full':''}"></div>`).join('')}</div><div class="cal-cnt">${gigs.length}g·${vols}v</div>`:''}
     </div>`;
