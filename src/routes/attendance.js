@@ -7,6 +7,21 @@ const { createNotification } = require('../services/notifications');
 let QRCode;
 try { QRCode = require('qrcode'); } catch (_) { QRCode = null; }
 
+/* Build the public base URL for QR / check-in links. Order of preference:
+   1. Explicit env override (PUBLIC_APP_URL / CLIENT_URL) — set this on prod.
+   2. The host the org is currently using to access the app. This lets a gig
+      created on a hosted domain produce a hosted-domain QR, while a gig
+      created during local dev produces a localhost QR — automatically.
+   3. Localhost fallback (shouldn't normally hit this). */
+function getBaseUrl(req) {
+  if (process.env.PUBLIC_APP_URL) return process.env.PUBLIC_APP_URL.replace(/\/+$/, '');
+  if (process.env.CLIENT_URL)     return process.env.CLIENT_URL.replace(/\/+$/, '');
+  const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+  const host  = req.headers['x-forwarded-host']  || req.get('host');
+  if (host) return `${proto}://${host}`;
+  return `http://localhost:${process.env.PORT || 5000}`;
+}
+
 /**
  * GET /api/attendance/gig/:gigId/qr
  * Generate or retrieve the QR code for a gig (org only)
@@ -24,8 +39,7 @@ router.get('/gig/:gigId/qr', requireAuth, requireRole('org'), async (req, res, n
       qrRecord = await GigQrCode.create({ gigId: gig.id });
     }
 
-    const baseUrl = process.env.PUBLIC_APP_URL || process.env.CLIENT_URL || `http://localhost:${process.env.PORT || 5000}`;
-    const checkinUrl = `${baseUrl}/checkin/${qrRecord.token}`;
+    const checkinUrl = `${getBaseUrl(req)}/checkin/${qrRecord.token}`;
 
     let qrDataUrl = null;
     if (QRCode) {
@@ -60,6 +74,48 @@ router.patch('/gig/:gigId/qr/toggle', requireAuth, requireRole('org'), async (re
 
     await qrRecord.update({ isActive: !qrRecord.isActive });
     res.json({ success: true, data: { isActive: qrRecord.isActive } });
+  } catch (err) { next(err); }
+});
+
+/**
+ * POST /api/attendance/gig/:gigId/qr/regenerate
+ * Rotate the QR token (org only). The old QR stops scanning, but volunteers
+ * who already checked in stay checked in — attendance rows are keyed by
+ * gigId + volunteerId, not by the token, and user logins are JWT-based so
+ * they are unaffected.
+ */
+router.post('/gig/:gigId/qr/regenerate', requireAuth, requireRole('org'), async (req, res, next) => {
+  try {
+    const org = await Organization.findOne({ where: { userId: req.user.id } });
+    if (!org) return res.status(403).json({ success: false, message: 'Organization not found.' });
+
+    const gig = await Gig.findOne({ where: { id: req.params.gigId, orgId: org.id } });
+    if (!gig) return res.status(404).json({ success: false, message: 'Gig not found.' });
+
+    let qrRecord = await GigQrCode.findOne({ where: { gigId: gig.id } });
+    const newToken = require('crypto').randomUUID();
+    if (qrRecord) {
+      await qrRecord.update({ token: newToken, isActive: true });
+    } else {
+      qrRecord = await GigQrCode.create({ gigId: gig.id, token: newToken });
+    }
+
+    const checkinUrl = `${getBaseUrl(req)}/checkin/${qrRecord.token}`;
+    let qrDataUrl = null;
+    if (QRCode) {
+      qrDataUrl = await QRCode.toDataURL(checkinUrl, { width: 400, margin: 2 });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        qrCode: qrDataUrl,
+        checkinUrl,
+        token: qrRecord.token,
+        gigTitle: gig.title,
+        isActive: qrRecord.isActive,
+      },
+    });
   } catch (err) { next(err); }
 });
 

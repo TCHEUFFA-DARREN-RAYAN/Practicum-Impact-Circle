@@ -29,6 +29,10 @@ const exportRoutes = require('./src/routes/export');
 
 const app = express();
 
+/* Honor X-Forwarded-* headers from upstream reverse proxies (Render, Heroku,
+   nginx, etc.) so req.protocol / req.get('host') reflect the public URL. */
+app.set('trust proxy', 1);
+
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: process.env.NODE_ENV === 'production' ? process.env.CLIENT_URL : '*' }));
 app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));

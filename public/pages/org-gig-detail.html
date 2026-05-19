@@ -241,7 +241,9 @@
           <div style="display:flex;gap:0.5rem;margin-top:0.875rem;flex-direction:column">
             <a id="qrPosterLink" href="#" target="_blank" class="btn btn-primary" style="text-align:center;font-size:0.85rem">🖨 Display / Print QR Poster</a>
             <a id="qrLink" href="#" target="_blank" class="btn btn-secondary" style="text-align:center;font-size:0.82rem">Open Volunteer Check-in Page</a>
+            <button id="qrRegenBtn" type="button" onclick="regenerateQr()" class="btn btn-secondary" style="font-size:0.82rem;color:#b45309;border-color:#fcd34d;background:#fffbeb">🔄 Regenerate QR Code</button>
           </div>
+          <p style="font-size:0.72rem;color:var(--text-muted);margin-top:0.5rem;line-height:1.4">Regenerating creates a new code and disables the previous one. Volunteers already checked in stay checked in.</p>
         </div>
       </div>
 
@@ -409,6 +411,37 @@ async function saveGig() {
     }
   } catch (e) {
     showAlert('error', e.message || 'Could not save gig.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+}
+
+async function regenerateQr() {
+  const ok = confirm(
+    'Regenerate this QR code?\n\n' +
+    '• The previous QR will stop working — any printed posters become invalid.\n' +
+    '• Volunteers who already checked in stay checked in and signed in.\n' +
+    '• A fresh poster will be available immediately.'
+  );
+  if (!ok) return;
+
+  const btn = document.getElementById('qrRegenBtn');
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Regenerating…';
+  try {
+    const { data } = await API.post(`/attendance/gig/${gigId}/qr/regenerate`);
+    if (data?.qrCode) {
+      document.getElementById('qrImg').src = data.qrCode;
+      document.getElementById('qrImg').style.display = '';
+    }
+    if (data?.checkinUrl) {
+      document.getElementById('qrLink').href = data.checkinUrl;
+    }
+    showAlert('success', 'New QR code generated. Print a fresh poster to replace the old one.');
+  } catch (e) {
+    showAlert('error', e.message || 'Could not regenerate QR code.');
   } finally {
     btn.disabled = false;
     btn.textContent = orig;
